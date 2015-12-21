@@ -4,6 +4,11 @@
  * Module for bespoke IDS IMS customisations
  */
 define('IDSIMS_ENTITY_NEXT_ID_START', 100000);
+/*
+ * Constants for import term IDs etc
+ */
+define('IDSIMS_GROUPING_SOURCE_TID', 96375);
+define('IDSIMS_GROUPING_PROJECT_TID', 96376);
 
 
 /*
