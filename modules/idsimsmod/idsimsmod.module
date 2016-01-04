@@ -192,6 +192,8 @@ function _idsimsmod_process_import_post_process_update_node(&$node, &$context) {
 	/*
 	 * Create node references from asset IDs
 	 */
+	$node_updated = FALSE;
+	
 	if(isset($node->field_publisher_id[LANGUAGE_NONE])){
 		$node->field_publishers[LANGUAGE_NONE] = array();
 		$cnt = 0;
@@ -218,7 +220,10 @@ function _idsimsmod_process_import_post_process_update_node(&$node, &$context) {
 				$cnt++;
 			}
 		}
-
+		$node_updated = TRUE;
+	}
+	
+	if($node_updated){
 		node_save($node);
 	}
 
