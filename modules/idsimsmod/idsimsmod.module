@@ -197,12 +197,35 @@ function _idsimsmod_process_import_extras_update_node(&$node, &$field_data) {
 		}
 		$node_updated = TRUE;
 	}
+	
 	/*
-	 * 
+	 * process subjects (Eldis)
 	 */
+	if(isset($field_data['subjectList'])){
+		_idsimsmod_process_import_extras_update_node_subjects($node, $field_data['subjectList']);
+		$node_updated = TRUE;
+	}
+	
+	/*
+	 * process sectors (BRIDGE)
+	 */
+	if(isset($field_data['SectorList'])){
+		_idsimsmod_process_import_extras_update_node_sectors($node, $field_data['SectorList']);
+		$node_updated = TRUE;
+	}
+	
+	
 	if($node_updated){
 		node_save($node);
 	}
+}
+
+function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects){
+	drupal_set_message('::SUBJECTS=' . print_r($subjects, TRUE));
+}
+
+function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors){
+	drupal_set_message('::SECTORS=' . print_r($sectors, TRUE));
 }
 
 /**
