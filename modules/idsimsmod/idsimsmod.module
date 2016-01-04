@@ -8,18 +8,34 @@ define('IDSIMS_ENTITY_NEXT_ID_START', 100000);
  * Constants for import term IDs etc
  */
 
+define('IDSIMS_GROUPINGS_VOC_NAME', 'ids_eldis_subjects');
+
 define('IDSIMS_BRIDGE_ORGANISATION_ID', 2921);
-define('IDSIMS_GROUPING_SOURCE_TID', 96375);
-define('IDSIMS_GROUPING_PROJECT_TID', 96376);
-define('IDSIMS_GROUPING_UPDATES_TID', 96380);
-define('IDSIMS_GROUPING_UPDATES_2007_TID', 96381);
-define('IDSIMS_GROUPING_UPDATES_2008_TID', 96382);
-define('IDSIMS_GROUPING_UPDATES_2009_TID', 96383);
-define('IDSIMS_GROUPING_UPDATES_2010_TID', 96384);
-define('IDSIMS_GROUPING_UPDATES_2011_TID', 96385);
-define('IDSIMS_GROUPING_UPDATES_2012_TID', 96386);
-define('IDSIMS_GROUPING_UPDATES_2013_TID', 96387);
-define('IDSIMS_GROUPING_UPDATES_2014_TID', 96388);
+
+/*
+ * Subject IDs
+ */
+define('IDSIMS_BRIDGE_ORG_LINK_BIBLIO_SID', 1798);
+define('IDSIMS_BRIDGE_ORG_LINK_BRIEF_SID', 1797);
+define('IDSIMS_BRIDGE_ORG_LINK_REPORT_SID', 1796);
+
+define('IDSIMS_FLAG_ABSTRACT_SID', 1900);
+define('IDSIMS_FLAG_SENTINEL_OUTPUT_SID', 1952);
+define('IDSIMS_FLAG_RECOMMENDED_READING_SID', 12);
+
+define('IDSIMS_GROUPING_UPDATES_SID', 1800);
+define('IDSIMS_GROUPING_UPDATES_2007_SID', 1806);
+define('IDSIMS_GROUPING_UPDATES_2008_SID', 1805);
+define('IDSIMS_GROUPING_UPDATES_2009_SID', 1804);
+define('IDSIMS_GROUPING_UPDATES_2010_SID', 1803);
+define('IDSIMS_GROUPING_UPDATES_2011_SID', 1801);
+define('IDSIMS_GROUPING_UPDATES_2012_SID', 1858);
+define('IDSIMS_GROUPING_UPDATES_2013_SID', 1895);
+define('IDSIMS_GROUPING_UPDATES_2014_SID', 1998);
+
+define('IDSIMS_FUNDER_PARENT_SID', 1842);
+define('IDSIMS_CONTENT_PARTNER_PARENT_SID', 1957);
+
 
 /*
  * Implimentation of hook_init()
@@ -164,6 +180,11 @@ function _idsimsmod_process_import_extras($nid, &$context) {
 }
 
 function _idsimsmod_process_import_extras_update_node(&$node, &$field_data) {
+	/*
+	 * Publication date uncertain field
+	 */
+	$node_updated = FALSE;
+	
 	if(isset($field_data['field_publication_date_uncertain'])){
 		$node->field_publication_date_uncertain[LANGUAGE_NONE] = array();
 		$cnt = 0;
@@ -174,8 +195,14 @@ function _idsimsmod_process_import_extras_update_node(&$node, &$field_data) {
 				$cnt++;
 			}
 		}
+		$node_updated = TRUE;
 	}
-	node_save($node);
+	/*
+	 * 
+	 */
+	if($node_updated){
+		node_save($node);
+	}
 }
 
 /**
