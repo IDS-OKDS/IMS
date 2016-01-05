@@ -370,7 +370,11 @@ function idsimsmod_get_endpoint_response($endpoint_url){
 	return false;
 }
 
-
+/*
+ * Implimentaion of hook_entity_presave
+ * 
+ * Create Object ID for new Nodes/Terms
+ */
 function idsimsmod_entity_presave($entity, $type) {
 	/* Add an Object ID if there isn't one */
   	$field_language = field_language($type, $entity, 'field_object_id');
