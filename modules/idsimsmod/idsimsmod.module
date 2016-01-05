@@ -228,17 +228,20 @@ function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects
 		$subjects = $temp_array;
 	}
 	drupal_set_message('::SUBJECTS=' . print_r($subjects, TRUE));
-	/*
-	 * Process Content Partners
-	 */
-	
-	/*
-	 * Process Funders
-	 */
-	
-	/*
-	 * Process Flags
-	 */
+	foreach($subjects as $item){
+		/*
+		 * Process Content Partners
+		 */
+		_idsimsmod_get_parent_term($item['object_id'], IDSIMS_COLLECTIONS_VOC_NAME);
+		
+		/*
+		 * Process Funders
+		 */
+		
+		/*
+		 * Process Flags
+		 */
+	}
 }
 
 function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors){
@@ -249,17 +252,31 @@ function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors){
 		$sectors = $temp_array;
 	}
 	drupal_set_message('::SECTORS=' . print_r($sectors, TRUE));
-	/*
-	 * Process Updates (as a Collection)
-	 */
-	
-	/*
-	 * Process BRIDGE Bibliography, Briefing or Report 
-	 */
-	
-	/*
-	 * Process remaining Sectors as Document Types
-	 */
+	foreach($sectors as $item){
+		/*
+		 * Process Updates (as a Collection)
+		 */
+		
+		/*
+		 * Process BRIDGE Bibliography, Briefing or Report 
+		 */
+		
+		/*
+		 * Process remaining Sectors as Document Types
+		 */
+	}
+}
+
+function _idsimsmod_get_parent_term($object_id, $voc_name){
+	/* lookup organisation */
+	$query = new EntityFieldQuery();
+	$query->entityCondition('entity_type', 'taxonomy_term')
+	->entityCondition('bundle', $voc_name)
+	->fieldCondition('field_object_id', 'value', $object_id, '=')
+	->addMetaData('account', user_load(1)); // Run the query as user 1.
+		
+	$result = $query->execute();	
+	drupal_set_message('PARENT=' . print_r($result, TRUE));
 }
 
 /**
