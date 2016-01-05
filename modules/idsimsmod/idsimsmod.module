@@ -8,7 +8,7 @@ define('IDSIMS_ENTITY_NEXT_ID_START', 100000);
  * Constants for import term IDs etc
  */
 
-define('IDSIMS_GROUPINGS_VOC_NAME', 'ids_eldis_subjects');
+define('IDSIMS_COLLECTIONS_VOC_NAME', 'ids_eldis_subjects');
 
 define('IDSIMS_BRIDGE_ORGANISATION_ID', 2921);
 
@@ -23,15 +23,15 @@ define('IDSIMS_FLAG_ABSTRACT_SID', 1900);
 define('IDSIMS_FLAG_SENTINEL_OUTPUT_SID', 1952);
 define('IDSIMS_FLAG_RECOMMENDED_READING_SID', 12);
 
-define('IDSIMS_GROUPING_UPDATES_SID', 1800);
-define('IDSIMS_GROUPING_UPDATES_2007_SID', 1806);
-define('IDSIMS_GROUPING_UPDATES_2008_SID', 1805);
-define('IDSIMS_GROUPING_UPDATES_2009_SID', 1804);
-define('IDSIMS_GROUPING_UPDATES_2010_SID', 1803);
-define('IDSIMS_GROUPING_UPDATES_2011_SID', 1801);
-define('IDSIMS_GROUPING_UPDATES_2012_SID', 1858);
-define('IDSIMS_GROUPING_UPDATES_2013_SID', 1895);
-define('IDSIMS_GROUPING_UPDATES_2014_SID', 1998);
+define('IDSIMS_COLLECTION_UPDATES_SID', 1800);
+define('IDSIMS_COLLECTION_UPDATES_2007_SID', 1806);
+define('IDSIMS_COLLECTION_UPDATES_2008_SID', 1805);
+define('IDSIMS_COLLECTION_UPDATES_2009_SID', 1804);
+define('IDSIMS_COLLECTION_UPDATES_2010_SID', 1803);
+define('IDSIMS_COLLECTION_UPDATES_2011_SID', 1801);
+define('IDSIMS_COLLECTION_UPDATES_2012_SID', 1858);
+define('IDSIMS_COLLECTION_UPDATES_2013_SID', 1895);
+define('IDSIMS_COLLECTION_UPDATES_2014_SID', 1998);
 
 define('IDSIMS_FUNDER_PARENT_SID', 1842);
 define('IDSIMS_CONTENT_PARTNER_PARENT_SID', 1957);
@@ -197,11 +197,12 @@ function _idsimsmod_process_import_extras_update_node(&$node, &$field_data) {
 		}
 		$node_updated = TRUE;
 	}
-	
+
+	$site = isset($node->field_site[LANGUAGE_NONE][0]['value']) ? $node->field_site[LANGUAGE_NONE][0]['value']:'';
 	/*
 	 * process subjects (Eldis)
 	 */
-	if(isset($field_data['subjectList'])){
+	if(isset($field_data['subjectList']) && $site == 'eldis'){
 		_idsimsmod_process_import_extras_update_node_subjects($node, $field_data['subjectList']);
 		$node_updated = TRUE;
 	}
@@ -209,11 +210,10 @@ function _idsimsmod_process_import_extras_update_node(&$node, &$field_data) {
 	/*
 	 * process sectors (BRIDGE)
 	 */
-	if(isset($field_data['SectorList'])){
+	if(isset($field_data['SectorList']) && $site == 'bridge'){
 		_idsimsmod_process_import_extras_update_node_sectors($node, $field_data['SectorList']);
 		$node_updated = TRUE;
 	}
-	
 	
 	if($node_updated){
 		node_save($node);
@@ -221,11 +221,45 @@ function _idsimsmod_process_import_extras_update_node(&$node, &$field_data) {
 }
 
 function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects){
+	if(isset($subjects['subject']['object_id'])){
+		/* make single level array multivalue for consistency (and so loop below works) */
+		$temp_array = array();
+		$temp_array[0] = $subjects['subject'];
+		$subjects = $temp_array;
+	}
 	drupal_set_message('::SUBJECTS=' . print_r($subjects, TRUE));
+	/*
+	 * Process Content Partners
+	 */
+	
+	/*
+	 * Process Funders
+	 */
+	
+	/*
+	 * Process Flags
+	 */
 }
 
 function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors){
+	if(isset($sectors['Sector']['object_id'])){
+		/* make single level array multivalue for consistency (and so loop below works) */
+		$temp_array = array();
+		$temp_array[0] = $sectors['Sector'];
+		$sectors = $temp_array;
+	}
 	drupal_set_message('::SECTORS=' . print_r($sectors, TRUE));
+	/*
+	 * Process Updates (as a Collection)
+	 */
+	
+	/*
+	 * Process BRIDGE Bibliography, Briefing or Report 
+	 */
+	
+	/*
+	 * Process remaining Sectors as Document Types
+	 */
 }
 
 /**
