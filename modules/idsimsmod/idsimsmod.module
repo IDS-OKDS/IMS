@@ -170,15 +170,16 @@ function idsimsmod_import_post_process_form_submit(&$form, &$form_state) {
 function _idsimsmod_process_import_extras($nid, &$context) {
 	$node = node_load($nid);
 	$xml_feed_path_root = 'http://isudev.ids.ac.uk/devrob/oryx-extras/?xml=true&aid=';
-	$assetid = substr($node->field_object_id[LANGUAGE_NONE][0]['value'], 1);/*remove 'A' at front of asset ID */
-	$xml_feed_path_full = $xml_feed_path_root . $assetid;
+	$assetid = $node->field_object_id[LANGUAGE_NONE][0]['value'];
+	$raw_assetid = substr($assetid, 1);/*remove 'A' at front of asset ID */
+	$xml_feed_path_full = $xml_feed_path_root . $raw_assetid;
 	$field_data = idsimsmod_get_endpoint_response($xml_feed_path_full);
 	$field_data = _idsimsmod_simpleXML2array($field_data);
-	_idsimsmod_process_import_extras_update_node($node, $field_data);
+	_idsimsmod_process_import_extras_update_node($node, $field_data, $assetid);
 	$context['message'] = t('Updating node %title : Asset ID = %assetid', array('%title' => $node->title, '%assetid' => $assetid));
 }
 
-function _idsimsmod_process_import_extras_update_node(&$node, &$field_data) {
+function _idsimsmod_process_import_extras_update_node(&$node, &$field_data, $assetid) {
 	/*
 	 * Publication date uncertain field
 	 */
@@ -202,7 +203,7 @@ function _idsimsmod_process_import_extras_update_node(&$node, &$field_data) {
 	 * process subjects (Eldis)
 	 */
 	if(isset($field_data['subjectList']) && $site == 'eldis'){
-		_idsimsmod_process_import_extras_update_node_subjects($node, $field_data['subjectList']);
+		_idsimsmod_process_import_extras_update_node_subjects($node, $field_data['subjectList'], $assetid);
 		$node_updated = TRUE;
 	}
 	
@@ -210,7 +211,7 @@ function _idsimsmod_process_import_extras_update_node(&$node, &$field_data) {
 	 * process sectors (BRIDGE)
 	 */
 	if(isset($field_data['SectorList']) && $site == 'bridge'){
-		_idsimsmod_process_import_extras_update_node_sectors($node, $field_data['SectorList']);
+		_idsimsmod_process_import_extras_update_node_sectors($node, $field_data['SectorList'], $assetid);
 		$node_updated = TRUE;
 	}
 	
@@ -220,12 +221,9 @@ function _idsimsmod_process_import_extras_update_node(&$node, &$field_data) {
 }
 
 function _idsimsmod_apply_organsation_ref(&$node, $field_ref, $object_id_arr){
-	if(isset($node->field_{$field_ref}[LANGUAGE_NONE])){
-		$cnt = count($node->field_{$field_ref}[LANGUAGE_NONE]);
-	} else {
-		$cnt = 0;
-		$node->field_{$field_ref}[LANGUAGE_NONE] = array();
-	}
+	$field_ref = 'field_' . $field_ref;
+	$cnt = 0;
+	$node->{$field_ref}[LANGUAGE_NONE] = array();
 	
 	/* lookup organisation */
 	$query = new EntityFieldQuery();
@@ -236,18 +234,18 @@ function _idsimsmod_apply_organsation_ref(&$node, $field_ref, $object_id_arr){
 	->addMetaData('account', user_load(1)); // Run the query as user 1.
 		
 	$result = $query->execute();
-	//drupal_set_message('_idsimsmod_apply_organsation_ref'.print_r($result,TRUE));
+	drupal_set_message('_idsimsmod_apply_organsation_ref'.$cnt.':'.print_r($result,TRUE));
 	if (!empty($result['node'])) {
 		foreach($result['node'] as $organisation_nid => $organisation_node){
-			$node->field_{$field_ref}[LANGUAGE_NONE][$cnt]['target_id'] = $organisation_nid;
-			$node->field_{$field_ref}[LANGUAGE_NONE][$cnt]['entity'] = $organisation_node;
-			$node->field_{$field_ref}[LANGUAGE_NONE][$cnt]['access'] = 1;
+			$node->{$field_ref}[LANGUAGE_NONE][$cnt]['target_id'] = $organisation_nid;
+			$node->{$field_ref}[LANGUAGE_NONE][$cnt]['entity'] = $organisation_node;
+			$node->{$field_ref}[LANGUAGE_NONE][$cnt]['access'] = 1;
 			$cnt++;
 		}
 	}	
 }
 
-function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects){
+function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects, $assetid){
 	if(isset($subjects['subject']['object_id'])){
 		/* make single level array multivalue for consistency (and so loop below works) */
 		$temp_array = array();
@@ -256,23 +254,24 @@ function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects
 	} else {
 		$subjects = $subjects['subject'];
 	}
-	drupal_set_message('::SUBJECTS=' . print_r($subjects, TRUE));
+	//drupal_set_message('::SUBJECTS=' . print_r($subjects, TRUE));
 	foreach($subjects as $item){
 		$tid = _idsimsmod_get_tid_from_object_id($item['object_id'], IDSIMS_COLLECTIONS_VOC_NAME);
-		$parent_tid = _idsimsmod_get_parent_object_id($tid, $item['object_id']);
+		$parent_object_id = _idsimsmod_get_parent_object_id($tid, $item['object_id']);
+		drupal_set_message($assetid);
 		drupal_set_message('return term id='.$tid);
-		drupal_set_message('return parent object='.$parent_tid);
+		drupal_set_message('return parent object='.$parent_object_id);
 		/*
 		 * Process Content Partners
 		 */
-		if($parent_tid == IDSIMS_CONTENT_PARTNER_PARENT_SID){
-			_idsimsmod_apply_organsation_ref($node, 'content_partner_ref', array('A' . $item['object_id']));
+		if($parent_object_id == IDSIMS_CONTENT_PARTNER_PARENT_SID){
+			_idsimsmod_apply_organsation_ref($node, 'content_partner_ref', array($assetid));
 		}
 		/*
 		 * Process Funders
 		 */
-		if($parent_tid == IDSIMS_FUNDER_PARENT_SID){
-			_idsimsmod_apply_organsation_ref($node, 'funder_ref', array('A' . $item['object_id']));
+		if($parent_object_id == IDSIMS_FUNDER_PARENT_SID){
+			_idsimsmod_apply_organsation_ref($node, 'funder_ref', array($assetid));
 		}
 		
 		/*
@@ -281,7 +280,7 @@ function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects
 	}
 }
 
-function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors){
+function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors, $assetid){
 	if(isset($sectors['Sector']['object_id'])){
 		/* make single level array multivalue for consistency (and so loop below works) */
 		$temp_array = array();
@@ -365,6 +364,8 @@ function _idsimsmod_process_import_post_process($nid, &$context) {
 function _idsimsmod_process_import_post_process_update_node(&$node, &$context) {
 	/*
 	 * Create node references from asset IDs
+	 * 
+	 * Publisher IDs from IDS API Module import to Publisher Node reference
 	 */
 	$node_updated = FALSE;
 	
@@ -380,8 +381,8 @@ function _idsimsmod_process_import_post_process_update_node(&$node, &$context) {
 
 		$node_updated = TRUE;
 	}
-	
 	if($node_updated){
+		drupal_set_message(print_r($node->field_publishers[LANGUAGE_NONE], TRUE));
 		node_save($node);
 	}
 
