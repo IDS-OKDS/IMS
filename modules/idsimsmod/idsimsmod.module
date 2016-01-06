@@ -36,7 +36,6 @@ define('IDSIMS_COLLECTION_UPDATES_2014_SID', 1998);
 define('IDSIMS_FUNDER_PARENT_SID', 1842);
 define('IDSIMS_CONTENT_PARTNER_PARENT_SID', 1957);
 
-
 /*
  * Implimentation of hook_init()
  */
@@ -220,23 +219,61 @@ function _idsimsmod_process_import_extras_update_node(&$node, &$field_data) {
 	}
 }
 
+function _idsimsmod_apply_organsation_ref(&$node, $field_ref, $object_id_arr){
+	if(isset($node->field_{$field_ref}[LANGUAGE_NONE])){
+		$cnt = count($node->field_{$field_ref}[LANGUAGE_NONE]);
+	} else {
+		$cnt = 0;
+		$node->field_{$field_ref}[LANGUAGE_NONE] = array();
+	}
+	
+	/* lookup organisation */
+	$query = new EntityFieldQuery();
+	$query->entityCondition('entity_type', 'node')
+	->entityCondition('bundle', 'ids_organisation')
+	->propertyCondition('status', NODE_PUBLISHED)
+	->fieldCondition('field_object_id', 'value', $object_id_arr, 'IN')
+	->addMetaData('account', user_load(1)); // Run the query as user 1.
+		
+	$result = $query->execute();
+	//drupal_set_message('_idsimsmod_apply_organsation_ref'.print_r($result,TRUE));
+	if (!empty($result['node'])) {
+		foreach($result['node'] as $organisation_nid => $organisation_node){
+			$node->field_{$field_ref}[LANGUAGE_NONE][$cnt]['target_id'] = $organisation_nid;
+			$node->field_{$field_ref}[LANGUAGE_NONE][$cnt]['entity'] = $organisation_node;
+			$node->field_{$field_ref}[LANGUAGE_NONE][$cnt]['access'] = 1;
+			$cnt++;
+		}
+	}	
+}
+
 function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects){
 	if(isset($subjects['subject']['object_id'])){
 		/* make single level array multivalue for consistency (and so loop below works) */
 		$temp_array = array();
 		$temp_array[0] = $subjects['subject'];
 		$subjects = $temp_array;
+	} else {
+		$subjects = $subjects['subject'];
 	}
 	drupal_set_message('::SUBJECTS=' . print_r($subjects, TRUE));
 	foreach($subjects as $item){
+		$tid = _idsimsmod_get_tid_from_object_id($item['object_id'], IDSIMS_COLLECTIONS_VOC_NAME);
+		$parent_tid = _idsimsmod_get_parent_object_id($tid, $item['object_id']);
+		drupal_set_message('return term id='.$tid);
+		drupal_set_message('return parent object='.$parent_tid);
 		/*
 		 * Process Content Partners
 		 */
-		_idsimsmod_get_parent_term($item['object_id'], IDSIMS_COLLECTIONS_VOC_NAME);
-		
+		if($parent_tid == IDSIMS_CONTENT_PARTNER_PARENT_SID){
+			_idsimsmod_apply_organsation_ref($node, 'content_partner_ref', array('A' . $item['object_id']));
+		}
 		/*
 		 * Process Funders
 		 */
+		if($parent_tid == IDSIMS_FUNDER_PARENT_SID){
+			_idsimsmod_apply_organsation_ref($node, 'funder_ref', array('A' . $item['object_id']));
+		}
 		
 		/*
 		 * Process Flags
@@ -267,16 +304,52 @@ function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors){
 	}
 }
 
-function _idsimsmod_get_parent_term($object_id, $voc_name){
+function _idsimsmod_get_tid_from_object_id($object_id, $voc_name){
+	static $term_array;
+	if(!$term_array){
+		$term_array = array();
+	}
+	//drupal_set_message('return term_array='.print_r($term_array, TRUE));
+	if(isset($term_array[$object_id])){
+		//drupal_set_message('return static='.$term_array[$object_id]);
+		return $term_array[$object_id];
+	}
 	/* lookup organisation */
 	$query = new EntityFieldQuery();
 	$query->entityCondition('entity_type', 'taxonomy_term')
 	->entityCondition('bundle', $voc_name)
 	->fieldCondition('field_object_id', 'value', $object_id, '=')
 	->addMetaData('account', user_load(1)); // Run the query as user 1.
-		
-	$result = $query->execute();	
-	drupal_set_message('PARENT=' . print_r($result, TRUE));
+	$result = $query->execute();
+	if (!empty($result['taxonomy_term'])) {
+		foreach($result['taxonomy_term'] as $tid => $term){
+			$term_array[$object_id] = $tid;
+			//drupal_set_message('return parent='.$parent_id);
+			return $tid;
+		}	
+	}
+	return FALSE;
+}
+	
+
+function _idsimsmod_get_parent_object_id($tid, $object_id){
+	static $parent_term_array;
+	if(!$parent_term_array){
+		$parent_term_array = array();
+	}
+	//drupal_set_message('return parent_array='.print_r($parent_term_array, TRUE));
+	if(isset($parent_term_array[$object_id])){
+		//drupal_set_message('return static='.$parent_term_array[$object_id]);
+		return $parent_term_array[$object_id];
+	}
+	$full_term = taxonomy_term_load($tid);
+	if(isset($full_term->field_parent_id[LANGUAGE_NONE][0]['value'])){
+		$parent_id = $full_term->field_parent_id[LANGUAGE_NONE][0]['value'];
+		$parent_term_array[$object_id] = $parent_id;
+		//drupal_set_message('return parent='.$parent_id);
+		return $parent_id;
+	}
+	return FALSE;
 }
 
 /**
@@ -296,31 +369,15 @@ function _idsimsmod_process_import_post_process_update_node(&$node, &$context) {
 	$node_updated = FALSE;
 	
 	if(isset($node->field_publisher_id[LANGUAGE_NONE])){
-		$node->field_publishers[LANGUAGE_NONE] = array();
-		$cnt = 0;
+		
 		$organisation_assetid_arr = array();
 		foreach($node->field_publisher_id[LANGUAGE_NONE] as $publisher_id)
 		{
 			$organisation_assetid_arr[] = $publisher_id['value'];
 		}
-		/* lookup organisation */
-		$query = new EntityFieldQuery();
-		$query->entityCondition('entity_type', 'node')
-		->entityCondition('bundle', 'ids_organisation')
-		->propertyCondition('status', NODE_PUBLISHED)
-		->fieldCondition('field_object_id', 'value', $organisation_assetid_arr, 'IN')
-		->addMetaData('account', user_load(1)); // Run the query as user 1.
-			
-		$result = $query->execute();
+		
+		_idsimsmod_apply_organsation_ref($node, 'publishers', $organisation_assetid_arr);
 
-		if (!empty($result['node'])) {
-			foreach($result['node'] as $organisation_nid => $organisation_node){
-				$node->field_publishers[LANGUAGE_NONE][$cnt]['target_id'] = $organisation_nid;
-				$node->field_publishers[LANGUAGE_NONE][$cnt]['entity'] = $organisation_node;
-				$node->field_publishers[LANGUAGE_NONE][$cnt]['access'] = 1;
-				$cnt++;
-			}
-		}
 		$node_updated = TRUE;
 	}
 	
