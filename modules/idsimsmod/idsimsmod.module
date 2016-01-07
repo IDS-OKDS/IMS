@@ -363,6 +363,7 @@ function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects
 	//drupal_set_message('::SUBJECTS=' . print_r($subjects, TRUE));
 	foreach($subjects as $item){
 		$cat_assetid = $item['object_id'];
+		$cat_assetid_raw = substr($cat_assetid, 1);/*remove 'C' at front of asset ID */
 		/*
 		 * Process Content Partners /Funders
 		 */
@@ -374,7 +375,6 @@ function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects
 		/*
 		 * Process Flags
 		 */
-		$cat_assetid_raw = substr($cat_assetid, 1);/*remove 'C' at front of asset ID */
 		if($cat_assetid_raw == IDSIMS_FLAG_ABSTRACT_SID){
 			$node->field_full_abstract[LANGUAGE_NONE] = array(0 => array('value' => 1));
 		}
@@ -396,6 +396,8 @@ function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors, 
 	}
 	drupal_set_message('::SECTORS=' . print_r($sectors, TRUE));
 	foreach($sectors as $item){
+		$cat_assetid = $item['object_id'];
+		$cat_assetid_raw = substr($cat_assetid, 1);/*remove 'C' at front of asset ID */
 		/*
 		 * Process Updates (as a Collection)
 		 */
