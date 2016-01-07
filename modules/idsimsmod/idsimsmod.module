@@ -86,6 +86,18 @@ function idsimsmod_import_extras_form() {
 	$form['#attributes'] = array(
     'enctype' => 'multipart/form-data'
     );
+    $form['intro_text'] = array(
+    '#markup' => '<p>Extra data pulled from the old system via a bespoke XML feed ('.l('e.g.','http://isudev.ids.ac.uk/devrob/oryx-extras/?xml=true&aid=56240').')</p>'
+    				. '<ul>'
+    				. '<li>Publication uncertain date</li>'
+    				. '<li>SUBJECTS: Content partners from subjects array made node reference to Organisation</li>'
+    				. '<li>SUBJECTS: Funders from subjects array made node reference to Organisation</li>'
+    				. '<li>SUBJECTS: Flags applied to documents (Abstract, Sentinel Output, Recommended Reading)</li>'
+    				. '<li>SECTORS: Process Updates (as a Collection)</li>'
+    				. '<li>SECTORS: Process BRIDGE Bibliography, Briefing or Report</li>'
+    				. '<li>SECTORS: Process remaining Sectors as Document Types</li>'
+    				. '</ul>',
+    );
     $form['import_limit'] = array(
     '#title' => t('Import limit'),
     '#type'  => 'textfield',
@@ -106,6 +118,12 @@ function idsimsmod_import_extras_form() {
 function idsimsmod_import_post_process_form() {
 	$form['#attributes'] = array(
     'enctype' => 'multipart/form-data'
+    );
+    $form['intro_text'] = array(
+    '#markup' => '<p>Manipulating the data that has been pulled into Drupal</p>'
+    				. '<ul>'
+    				. '<li>From the Pubisher ID field populate Publisers field which is a node reference to Organisations</li>'
+    				. '</ul>',
     );
     $form['import_limit'] = array(
     '#title' => t('Import limit'),
