@@ -164,6 +164,111 @@ function idsimsmod_import_post_process_form_submit(&$form, &$form_state) {
 	_idsimsmod_set_batch_jobs('Import data post process', 'import_post_process', $form, $form_state);
 }
 
+function _idsimsmod_category_asset_id_to_organisation_asset_id_from_matrix($cat_asset){
+	/*
+	 * Joe - it's a shame bu no way to do this apart from hardcode - the titles don't match
+	 */
+	$asset_id_matrix = array();
+	$asset_id_matrix['C2018'] = 'A4701'; /* African Centre for Constructive Resolution of Disputes (ACCORD) */
+	$asset_id_matrix['C1968'] = 'A3533'; /* African Centre for Technology */
+	$asset_id_matrix['C1960'] = 'A7332'; /* African Population and Health Research Center */
+	$asset_id_matrix['C2001'] = 'A7114'; /* Afrobarometer */
+	$asset_id_matrix['C2040'] = 'A7099'; /* Aga Khan University */
+	$asset_id_matrix['C2048'] = 'A56214'; /* Association for Womens Rights in Development (AWID) */
+	$asset_id_matrix['C1985'] = 'A65046'; /* BRICS Policy Center */
+	$asset_id_matrix['C2045'] = 'A4384'; /* Cambodian Institute for Cooperation and Peace */
+	$asset_id_matrix['C2005'] = 'A63302'; /* Centre for Chinese Studies (CCS) */
+	$asset_id_matrix['C2044'] = 'A7365'; /* @ Centre for Conflict Resolution (CCR) */
+	$asset_id_matrix['C1967'] = 'A7961'; /* Centre for Excellence on Sustainable Development in the context of Climate Change */
+	$asset_id_matrix['C1973'] = 'A67889'; /* Centre for Gender and Social Transformation */
+	$asset_id_matrix['C2060'] = 'A64270'; /* Centre For Human Rights and Policy Studies (CHRIPS) */
+	$asset_id_matrix['C2024'] = 'A61408'; /* Centre for People and Forests (RECOFTC) */
+	$asset_id_matrix['C2032'] = 'A4305'; /* Centre for Policy Dialogue, Bangladesh (CPD) */
+	$asset_id_matrix['C1966'] = 'A4497'; /* @ Centre for Policy Research */
+	$asset_id_matrix['C2042'] = 'A65946'; /* @ Centre of Excellence for Nutrition */
+	$asset_id_matrix['C2018'] = 'A4385'; /* @ China Institute of International Studies (CIIS) */
+	$asset_id_matrix['C2033'] = 'A63318'; /* Chinese Academy for Environmental Planning (CAEP) */
+	$asset_id_matrix['C2002'] = 'A7183'; /* Collective for Social Science Research */
+	$asset_id_matrix['C2051'] = 'A5770'; /* Curatio International Foundation (CIF) */
+	$asset_id_matrix['C1983'] = 'A68769'; /* CUTS Centre for International Trade, Economics & Environment (CUTS CITEE) */
+	$asset_id_matrix['C1984'] = 'A4669'; /* Economic Research Forum (ERF) */
+	$asset_id_matrix['C2023'] = 'A1686'; /* @ Energy and Resources Institute */
+	$asset_id_matrix['C1969'] = 'A5837'; /* Energy Research Centre, University of Capetown */
+	$asset_id_matrix['C2027'] = 'A3719'; /* EQUINET */
+	$asset_id_matrix['C1999'] = 'A69688'; /* Ethiopian Public health Institute (EPHI) */
+	$asset_id_matrix['C2038'] = 'A7985'; /* Feminist Africa */
+	$asset_id_matrix['C2029'] = 'A7040'; /* Food, Agriculture and Natural Resource Policy Analysis Network (FANRPAN) */
+	//$asset_id_matrix['C2000'] = 'xxx'; /* @ Haramaya University */
+	$asset_id_matrix['C2052'] = 'A5024'; /* Health Economics & HIV/AIDS Research Division (HEARD) */
+	$asset_id_matrix['C2039'] = 'A4857'; /* Health Systems Trust */
+	$asset_id_matrix['C2006'] = 'A69390'; /* HIV/AIDS Knowledge Management Communication Capacity (KMCC) */
+	$asset_id_matrix['C1961'] = 'A66631'; /* Igarape Institute */
+	$asset_id_matrix['C2055'] = 'A4457'; /* Institute for Global Dialogue (IGD) */
+	$asset_id_matrix['C2020'] = 'A6360'; /* Institute for Poverty, Land and Agrarian Studies (PLAAS) */
+	$asset_id_matrix['C1962'] = 'A4871'; /* Institute for Security Studies */
+	$asset_id_matrix['C2012'] = 'A4671'; /* Institute of Economic Growth (IEG) */
+	$asset_id_matrix['C1964'] = 'A6377'; /* Institute of Peace and Conflict Studies */
+	$asset_id_matrix['C2057'] = 'A2980'; /* @ Institute of South Asian Studies (ISAS) */
+	$asset_id_matrix['C2041'] = 'A34465'; /* Integrated Research and Action for Development (IRADe) */
+	$asset_id_matrix['C2022'] = 'A66891'; /* International Centre for Climate Change and Development (ICCCAD) */
+	$asset_id_matrix['C2025'] = 'A33403'; /* International Centre for Diarrhoeal Disease Research (icddr,b) */
+	$asset_id_matrix['C2013'] = 'A4885'; /* @ OR A1316 ?? International Centre for Integrated Mountain Development (ICIMOD) */
+	$asset_id_matrix['C1972'] = 'A1352'; /* @ OR A56699 ?? International Water Management Institute */
+	$asset_id_matrix['C2031'] = 'A7995'; /* @ ISET-Nepal */
+	$asset_id_matrix['C2021'] = 'A4397'; /* Kenya Institute for Public Policy Research and Analysis (KIPPRA) */
+	//$asset_id_matrix['C2034'] = 'xxx'; /* @  Knowledge Partnership Programme (KPP) */
+	$asset_id_matrix['C1965'] = 'A37013'; /* Kofi Annan International Peacekeeping Training Centre */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+}
+
 /**
  * Process an asset for extra fields import
  */
