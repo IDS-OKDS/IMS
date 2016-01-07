@@ -87,7 +87,8 @@ function idsimsmod_import_extras_form() {
     'enctype' => 'multipart/form-data'
     );
     $form['intro_text'] = array(
-    '#markup' => '<p>Extra data pulled from the old system via a bespoke XML feed ('.l('e.g.','http://isudev.ids.ac.uk/devrob/oryx-extras/?xml=true&aid=56240').')</p>'
+    '#markup' => '<h2>Extra data pulled from the old system via a bespoke XML feed ('.l('e.g.','http://isudev.ids.ac.uk/devrob/oryx-extras/?xml=true&aid=56240').')</h2>'
+    				. '<p>Process tasks:</p>'
     				. '<ul>'
     				. '<li>Publication uncertain date</li>'
     				. '<li>SUBJECTS: Content partners from subjects array made node reference to Organisation</li>'
@@ -120,7 +121,8 @@ function idsimsmod_import_post_process_form() {
     'enctype' => 'multipart/form-data'
     );
     $form['intro_text'] = array(
-    '#markup' => '<p>Manipulating the data that has been pulled into Drupal</p>'
+    '#markup' => '<h2>Manipulating the data that has been pulled into Drupal</h2>'
+    				. '<p>Process tasks:</p>'
     				. '<ul>'
     				. '<li>From the Pubisher ID field populate Publisers field which is a node reference to Organisations</li>'
     				. '</ul>',
