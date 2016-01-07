@@ -340,7 +340,7 @@ function _idsimsmod_apply_organsation_ref(&$node, $field_ref, $object_id_arr){
 	->addMetaData('account', user_load(1)); // Run the query as user 1.
 		
 	$result = $query->execute();
-	drupal_set_message('_idsimsmod_apply_organsation_ref'.$cnt.':'.print_r($result,TRUE));
+
 	if (!empty($result['node'])) {
 		foreach($result['node'] as $organisation_nid => $organisation_node){
 			$node->{$field_ref}[LANGUAGE_NONE][$cnt]['target_id'] = $organisation_nid;
