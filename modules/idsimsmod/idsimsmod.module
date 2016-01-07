@@ -168,6 +168,9 @@ function _idsimsmod_category_asset_id_to_organisation_asset_id_from_matrix($cat_
 	/*
 	 * Joe - it's a shame bu no way to do this apart from hardcode - the titles don't match
 	 */
+	/*
+	 * Content Parners
+	 */
 	$asset_id_matrix = array();
 	$asset_id_matrix['C2018'] = 'A4701'; /* African Centre for Constructive Resolution of Disputes (ACCORD) */
 	$asset_id_matrix['C1968'] = 'A3533'; /* African Centre for Technology */
@@ -218,55 +221,33 @@ function _idsimsmod_category_asset_id_to_organisation_asset_id_from_matrix($cat_
 	$asset_id_matrix['C2021'] = 'A4397'; /* Kenya Institute for Public Policy Research and Analysis (KIPPRA) */
 	//$asset_id_matrix['C2034'] = 'xxx'; /* @  Knowledge Partnership Programme (KPP) */
 	$asset_id_matrix['C1965'] = 'A37013'; /* Kofi Annan International Peacekeeping Training Centre */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
-	$asset_id_matrix['xxx'] = 'xxx'; /* xxxxxxxxxx */
+	$asset_id_matrix['C2004'] = 'A6432'; /* @ OR A7119 ?? M S Swaminathan Research Foundation (MSSRF) */
+	//$asset_id_matrix['C2019'] = 'xxx'; /* @ Mekelle University */
+	//$asset_id_matrix['C2053'] = 'xxx'; /* @ MRC/UVRI Uganda Research Unit on AIDS */
+	$asset_id_matrix['C2043'] = 'A69042'; /* Nigeria Stability and Reconciliation Programme (NSRP) */
+	$asset_id_matrix['C2030'] = 'A6985'; /* Observer Research Foundation (ORF) */
+	$asset_id_matrix['C2017'] = 'A34071'; /* Open Society Initiative for Southern Africa (OSISA) */
+	//$asset_id_matrix['C2026'] = 'xxx'; /* @ Public Health Foundation of India (PHFI) */
+	$asset_id_matrix['C1963'] = 'A6983'; /* Refugee Law Project */
+	$asset_id_matrix['C1959'] = 'A5531'; /* Research and Information System for Developing Countries */
+	$asset_id_matrix['C2037'] = 'A6346'; /* @ Social Research Center */
+	$asset_id_matrix['C1958'] = 'A4459'; /* South African Institute of International Affairs */
+	//$asset_id_matrix['C2016'] = 'xxx'; /* @ Southern African Resource Watch (SARW) */
+	//$asset_id_matrix['C2061'] = 'xxx'; /* @ 3 possibles?? SPARC */
+	$asset_id_matrix['C2003'] = 'A4350'; /* Sustainable Development Policy Institute */
+	$asset_id_matrix['C2014'] = 'A4074'; /* Trade and Industrial Policy Strategies, South Africa (TIPS) */
+	$asset_id_matrix['C2028'] = 'A7228'; /* @ UONGOZI Institute */
+	$asset_id_matrix['C1987'] = 'A69190'; /* Urban LandMark */
+	$asset_id_matrix['C1979'] = 'A68239'; /* West Africa Civil Society Institute (WACSI) */
+	$asset_id_matrix['C2036'] = 'A5691'; /* Women for Women’s Human Rights – New Ways */
+	$asset_id_matrix['C1970'] = 'A1348'; /* World Agroforestry Centre */
+	
+	/*
+	 * Funders
+	 */
+	$asset_id_matrix['C1834'] = 'A56922'; /* CDKN */
+	
+	return (isset($asset_id_matrix[$cat_asset])) ? $asset_id_matrix[$cat_asset] : FALSE;
 }
 
 /**
