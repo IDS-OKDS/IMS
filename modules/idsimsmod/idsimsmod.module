@@ -164,7 +164,7 @@ function idsimsmod_import_post_process_form_submit(&$form, &$form_state) {
 	_idsimsmod_set_batch_jobs('Import data post process', 'import_post_process', $form, $form_state);
 }
 
-function _idsimsmod_category_asset_id_to_organisation_asset_id_from_matrix($cat_asset){
+function _idsimsmod_category_asset_id_to_organisation_asset_id_from_matrix($cat_assetid){
 	/*
 	 * Joe - it's a shame bu no way to do this apart from hardcode - the titles don't match
 	 */
@@ -247,7 +247,7 @@ function _idsimsmod_category_asset_id_to_organisation_asset_id_from_matrix($cat_
 	 */
 	$asset_id_matrix['C1834'] = 'A56922'; /* CDKN */
 	
-	return (isset($asset_id_matrix[$cat_asset])) ? $asset_id_matrix[$cat_asset] : FALSE;
+	return (isset($asset_id_matrix[$cat_assetid])) ? $asset_id_matrix[$cat_assetid] : FALSE;
 }
 
 /**
@@ -342,22 +342,13 @@ function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects
 	}
 	//drupal_set_message('::SUBJECTS=' . print_r($subjects, TRUE));
 	foreach($subjects as $item){
-		$tid = _idsimsmod_get_tid_from_object_id($item['object_id'], IDSIMS_COLLECTIONS_VOC_NAME);
-		$parent_object_id = _idsimsmod_get_parent_object_id($tid, $item['object_id']);
-		drupal_set_message($assetid);
-		drupal_set_message('return term id='.$tid);
-		drupal_set_message('return parent object='.$parent_object_id);
+		$cat_assetid = $item['object_id'];
 		/*
-		 * Process Content Partners
+		 * Process Content Partners /Funders
 		 */
-		if($parent_object_id == IDSIMS_CONTENT_PARTNER_PARENT_SID){
-			_idsimsmod_apply_organsation_ref($node, 'content_partner_ref', array($assetid));
-		}
-		/*
-		 * Process Funders
-		 */
-		if($parent_object_id == IDSIMS_FUNDER_PARENT_SID){
-			_idsimsmod_apply_organsation_ref($node, 'funder_ref', array($assetid));
+		$org_asset_id = _idsimsmod_category_asset_id_to_organisation_asset_id_from_matrix($cat_assetid);
+		if($org_asset_id){
+			_idsimsmod_apply_organsation_ref($node, 'content_partner_ref', array($org_asset_id));
 		}
 		
 		/*
@@ -387,54 +378,6 @@ function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors, 
 		 * Process remaining Sectors as Document Types
 		 */
 	}
-}
-
-function _idsimsmod_get_tid_from_object_id($object_id, $voc_name){
-	static $term_array;
-	if(!$term_array){
-		$term_array = array();
-	}
-	//drupal_set_message('return term_array='.print_r($term_array, TRUE));
-	if(isset($term_array[$object_id])){
-		//drupal_set_message('return static='.$term_array[$object_id]);
-		return $term_array[$object_id];
-	}
-	/* lookup organisation */
-	$query = new EntityFieldQuery();
-	$query->entityCondition('entity_type', 'taxonomy_term')
-	->entityCondition('bundle', $voc_name)
-	->fieldCondition('field_object_id', 'value', $object_id, '=')
-	->addMetaData('account', user_load(1)); // Run the query as user 1.
-	$result = $query->execute();
-	if (!empty($result['taxonomy_term'])) {
-		foreach($result['taxonomy_term'] as $tid => $term){
-			$term_array[$object_id] = $tid;
-			//drupal_set_message('return parent='.$parent_id);
-			return $tid;
-		}	
-	}
-	return FALSE;
-}
-	
-
-function _idsimsmod_get_parent_object_id($tid, $object_id){
-	static $parent_term_array;
-	if(!$parent_term_array){
-		$parent_term_array = array();
-	}
-	//drupal_set_message('return parent_array='.print_r($parent_term_array, TRUE));
-	if(isset($parent_term_array[$object_id])){
-		//drupal_set_message('return static='.$parent_term_array[$object_id]);
-		return $parent_term_array[$object_id];
-	}
-	$full_term = taxonomy_term_load($tid);
-	if(isset($full_term->field_parent_id[LANGUAGE_NONE][0]['value'])){
-		$parent_id = $full_term->field_parent_id[LANGUAGE_NONE][0]['value'];
-		$parent_term_array[$object_id] = $parent_id;
-		//drupal_set_message('return parent='.$parent_id);
-		return $parent_id;
-	}
-	return FALSE;
 }
 
 /**
