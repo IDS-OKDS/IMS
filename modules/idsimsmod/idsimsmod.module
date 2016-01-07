@@ -8,7 +8,7 @@ define('IDSIMS_ENTITY_NEXT_ID_START', 100000);
  * Constants for import term IDs etc
  */
 
-define('IDSIMS_COLLECTIONS_VOC_NAME', 'ids_eldis_subjects');
+define('IDSIMS_COLLECTIONS_VOC_NAME', 'ids_collections');
 
 define('IDSIMS_BRIDGE_ORGANISATION_ID', 2921);
 
