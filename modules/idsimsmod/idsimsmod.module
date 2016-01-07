@@ -374,6 +374,16 @@ function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects
 		/*
 		 * Process Flags
 		 */
+		$cat_assetid_raw = substr($cat_assetid, 1);/*remove 'C' at front of asset ID */
+		if($cat_assetid_raw == IDSIMS_FLAG_ABSTRACT_SID){
+			$node->field_full_abstract[LANGUAGE_NONE] = array(0 => array('value' => 1));
+		}
+		if($cat_assetid_raw == IDSIMS_FLAG_SENTINEL_OUTPUT_SID){
+			$node->field_sentinel_output[LANGUAGE_NONE] = array(0 => array('value' => 1));
+		}
+		if($cat_assetid_raw == IDSIMS_FLAG_RECOMMENDED_READING_SID){
+			$node->field_recommended_reading[LANGUAGE_NONE] = array(0 => array('value' => 1));
+		}
 	}
 }
 
