@@ -198,6 +198,14 @@ function _idsimsmod_create_taxonomy_term($name, $vid, $parent_id = 0) {
 	return $term->tid;
 }
 
+function _idsimsmod_get_vid_from_vocab_machine_name($vocab_machine_name){
+	return db_query('SELECT vid FROM {taxonomy_vocabulary} WHERE machine_name = :machine_name', array(':machine_name' => $vocab_machine_name))->fetchField();
+}
+
+function _idsimsmod_sectors_to_doc_type(&$node, $cat_assetid, $cat_name){
+	
+}
+
 function _idsimsmod_updates_collection(&$node, $cat_assetid, $cat_name){
 	$cat_assetid_raw = substr($cat_assetid, 1);/*remove 'C' at front of asset ID */
 	$update_arr = array(IDSIMS_COLLECTION_UPDATES_SID,
@@ -215,7 +223,7 @@ function _idsimsmod_updates_collection(&$node, $cat_assetid, $cat_name){
 		$tid = NULL;
 		if(!count($terms)){
 			/* If root update term doesn't exist. Then create it */
-			$vid = db_query('SELECT vid FROM {taxonomy_vocabulary} WHERE machine_name = :machine_name', array(':machine_name' => IDSIMS_COLLECTIONS_VOC_NAME))->fetchField();
+			$vid = _idsimsmod_get_vid_from_vocab_machine_name(IDSIMS_COLLECTIONS_VOC_NAME);
 			$tid = _idsimsmod_create_taxonomy_term(IDSIMS_COLLECTION_UPDATES_NAME, $vid);
 			variable_set('collections_taxonomy_vid', $vid);
 			variable_set('idsims_updates_root_tid', $tid);
@@ -479,7 +487,7 @@ function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors, 
 		/*
 		 * Process remaining Sectors as Document Types
 		 */
-		
+		_idsimsmod_sectors_to_doc_type($node, $cat_assetid, $item['object_name']);
 		
 	}
 }
