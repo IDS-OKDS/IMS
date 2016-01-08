@@ -469,10 +469,18 @@ function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors, 
 		/*
 		 * Process BRIDGE Bibliography, Briefing or Report (and make them link to BRIDGE organisation)
 		 */
+		if(	$cat_assetid_raw == IDSIMS_BRIDGE_ORG_LINK_BIBLIO_SID ||
+			$cat_assetid_raw == IDSIMS_BRIDGE_ORG_LINK_BRIEF_SID ||
+			$cat_assetid_raw == IDSIMS_BRIDGE_ORG_LINK_REPORT_SID){
+			_idsimsmod_apply_organsation_ref($node, 'publishers', array(IDSIMS_BRIDGE_ORGANISATION_ID));
+		}
+		
 		
 		/*
 		 * Process remaining Sectors as Document Types
 		 */
+		
+		
 	}
 }
 
