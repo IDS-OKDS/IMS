@@ -203,7 +203,49 @@ function _idsimsmod_get_vid_from_vocab_machine_name($vocab_machine_name){
 }
 
 function _idsimsmod_sectors_to_doc_type(&$node, $cat_assetid, $cat_name){
+	$oryx_doc_types_arr = array();
+	$oryx_doc_types_arr[1] = 'Background/overview document';
+	$oryx_doc_types_arr[2] = 'Bibliography';
+	$oryx_doc_types_arr[3] = 'Book';
+	$oryx_doc_types_arr[4] = 'Book chapter';
+	$oryx_doc_types_arr[5] = 'Case studies';
+	$oryx_doc_types_arr[6] = 'Conference paper';
+	$oryx_doc_types_arr[7] = 'Country profile';
+	$oryx_doc_types_arr[8] = 'Good practice guide';
+	$oryx_doc_types_arr[9] = 'Grey literature';
+	$oryx_doc_types_arr[10] = 'Journal article';
+	$oryx_doc_types_arr[11] = 'Journal issue';
+	$oryx_doc_types_arr[12] = 'Literature review';
+	$oryx_doc_types_arr[13] = 'Manual/toolkit';
+	$oryx_doc_types_arr[14] = 'Not known';
+	$oryx_doc_types_arr[15] = 'Other';
+	$oryx_doc_types_arr[16] = 'Policy briefing';
+	$oryx_doc_types_arr[17] = 'Policy document';
+	$oryx_doc_types_arr[18] = 'Presentation';
+	$oryx_doc_types_arr[19] = 'Research report (or study)';
+	$oryx_doc_types_arr[20] = 'Working paper (includes discussion paper)';
 	
+	/*New*/
+	$oryx_doc_types_arr[21] = 'Country profile';
+	$oryx_doc_types_arr[22] = 'Good Practice Guide';
+	
+	$bridge_sector_doc_types_arr = array();
+	$bridge_sector_doc_types_arr['Background Document'] = 1;
+	$bridge_sector_doc_types_arr['Bibliography'] = 2;
+	$bridge_sector_doc_types_arr['BRIDGE Bibliography'] = 2;
+	$bridge_sector_doc_types_arr['Briefing'] = 1;
+	$bridge_sector_doc_types_arr['BRIDGE Briefing'] = 16; 
+	$bridge_sector_doc_types_arr['Case Study'] = 5;
+	$bridge_sector_doc_types_arr['Cutting Edge Pack'] = 'GROUPING';
+	$bridge_sector_doc_types_arr['Fundraising'] = 'GROUPING';
+	$bridge_sector_doc_types_arr['Gender Country Profile'] = 21;
+	$bridge_sector_doc_types_arr['Good Practice Guide'] = 22;
+	$bridge_sector_doc_types_arr['Manual / Toolkit'] = 13;
+	$bridge_sector_doc_types_arr['Policy / Planning'] = 'GROUPING';
+	$bridge_sector_doc_types_arr['Report'] = 0; //Do NOTHING
+	$bridge_sector_doc_types_arr['BRIDGE Report'] = 19;
+	$bridge_sector_doc_types_arr['Research Output'] = 19;
+	$bridge_sector_doc_types_arr['Thematic Overview'] = 1;
 }
 
 function _idsimsmod_updates_collection(&$node, $cat_assetid, $cat_name){
