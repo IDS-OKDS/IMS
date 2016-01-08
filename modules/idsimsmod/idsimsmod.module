@@ -23,6 +23,7 @@ define('IDSIMS_FLAG_ABSTRACT_SID', 1900);
 define('IDSIMS_FLAG_SENTINEL_OUTPUT_SID', 1952);
 define('IDSIMS_FLAG_RECOMMENDED_READING_SID', 12);
 
+define('IDSIMS_COLLECTION_UPDATES_NAME', 'Updates');
 define('IDSIMS_COLLECTION_UPDATES_SID', 1800);
 define('IDSIMS_COLLECTION_UPDATES_2007_SID', 1806);
 define('IDSIMS_COLLECTION_UPDATES_2008_SID', 1805);
@@ -183,6 +184,68 @@ function idsimsmod_import_extras_form_submit(&$form, &$form_state) {
 function idsimsmod_import_post_process_form_submit(&$form, &$form_state) {
 	_idsimsmod_set_batch_jobs('Import data post process', 'import_post_process', $form, $form_state);
 }
+
+/**
+* Create a taxonomy term and return the tid.
+*/
+function _idsimsmod_create_taxonomy_term($name, $vid, $parent_id = 0) {
+	//drupal_set_message("$name, $vid, $parent_id ");
+	$term = new stdClass();
+	$term->name = $name;
+	$term->vid = $vid;
+	$term->parent = array($parent_id);
+	taxonomy_term_save($term);
+	return $term->tid;
+}
+
+function _idsimsmod_updates_collection(&$node, $cat_assetid, $cat_name){
+	$cat_assetid_raw = substr($cat_assetid, 1);/*remove 'C' at front of asset ID */
+	$update_arr = array(IDSIMS_COLLECTION_UPDATES_SID,
+						IDSIMS_COLLECTION_UPDATES_2007_SID,
+						IDSIMS_COLLECTION_UPDATES_2008_SID,
+						IDSIMS_COLLECTION_UPDATES_2009_SID,
+						IDSIMS_COLLECTION_UPDATES_2010_SID,
+						IDSIMS_COLLECTION_UPDATES_2011_SID,
+						IDSIMS_COLLECTION_UPDATES_2012_SID,
+						IDSIMS_COLLECTION_UPDATES_2013_SID,
+						IDSIMS_COLLECTION_UPDATES_2014_SID);
+	if(in_array($cat_assetid_raw, $update_arr)){
+		/* first chek the root update term exists. If not create */
+		$terms = taxonomy_get_term_by_name(IDSIMS_COLLECTION_UPDATES_NAME, $vocabulary = IDSIMS_COLLECTIONS_VOC_NAME);
+		$tid = NULL;
+		if(!count($terms)){
+			/* If root update term doesn't exist. Then create it */
+			$vid = db_query('SELECT vid FROM {taxonomy_vocabulary} WHERE machine_name = :machine_name', array(':machine_name' => IDSIMS_COLLECTIONS_VOC_NAME))->fetchField();
+			$tid = _idsimsmod_create_taxonomy_term(IDSIMS_COLLECTION_UPDATES_NAME, $vid);
+			variable_set('collections_taxonomy_vid', $vid);
+			variable_set('idsims_updates_root_tid', $tid);
+		}	
+		$vid = variable_get('collections_taxonomy_vid', 0);
+		$updates_root_tid = variable_get('idsims_updates_root_tid', 0);
+		/* if this isn't the root item then save it and add to the tree */
+		if($cat_assetid_raw != IDSIMS_COLLECTION_UPDATES_SID){	
+			$tid = _idsimsmod_create_taxonomy_term($cat_name, $vid, $parent_id = $updates_root_tid);
+		}
+
+		/* now we've saved the term we need to link it to our document node (if not already)*/
+		$cnt = 0;
+		$found = FALSE;
+		if(isset($node->field_collections[LANGUAGE_NONE])){
+			foreach($node->field_collections[LANGUAGE_NONE] as $term_ref){
+				if($term_ref['tid'] == $tid){
+					$found = TRUE;
+				}
+				$cnt++;
+			}
+		} else {
+			$node->field_collections[LANGUAGE_NONE] = array();
+		}
+		if(!$found && $tid){
+			$node->field_collections[LANGUAGE_NONE][$cnt]['tid'] = $tid;
+			//$node->field_collections[LANGUAGE_NONE][$cnt]['taxonomy_term'] = taxonomy_term_load($tid);
+		}
+	}
+} 
 
 function _idsimsmod_category_asset_id_to_organisation_asset_id_from_matrix($cat_assetid){
 	/*
@@ -401,9 +464,10 @@ function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors, 
 		/*
 		 * Process Updates (as a Collection)
 		 */
+		_idsimsmod_updates_collection($node, $cat_assetid, $item['object_name']);
 		
 		/*
-		 * Process BRIDGE Bibliography, Briefing or Report 
+		 * Process BRIDGE Bibliography, Briefing or Report (and make them link to BRIDGE organisation)
 		 */
 		
 		/*
