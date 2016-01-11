@@ -142,7 +142,7 @@ function idsimsmod_import_post_process_form() {
     return $form;
 }
 
-function _idsimsmod_set_batch_jobs($batch_name, $batch_id, &$form, &$form_state){
+function _idsimsmod_set_batch_jobs($batch_name, $batch_id, &$form, &$form_state, $asset_type_id = 'ids_document'){
 	$import_limit = $form_state['values']['import_limit'];
 
 	$batch = array(
@@ -157,7 +157,7 @@ function _idsimsmod_set_batch_jobs($batch_name, $batch_id, &$form, &$form_state)
 	$query = new EntityFieldQuery();
 
 	$query->entityCondition('entity_type', 'node')
-	->entityCondition('bundle', 'ids_document')
+	->entityCondition('bundle', $asset_type_id)
 	->propertyCondition('status', NODE_PUBLISHED)
 	->addMetaData('account', user_load(1)); // Run the query as user 1.
 
@@ -179,6 +179,7 @@ function _idsimsmod_set_batch_jobs($batch_name, $batch_id, &$form, &$form_state)
 
 function idsimsmod_import_extras_form_submit(&$form, &$form_state) {
 	_idsimsmod_set_batch_jobs('Importing Extra fields', 'import_extras', $form, $form_state);
+	_idsimsmod_set_batch_jobs('Importing Extra fields for organisations', 'import_extras_orgs', $form, $form_state, 'ids_organisation');
 }
 
 function idsimsmod_import_post_process_form_submit(&$form, &$form_state) {
@@ -439,16 +440,94 @@ function _idsimsmod_process_import_extras($nid, &$context) {
 	$context['message'] = t('Updating node %title : Asset ID = %assetid', array('%title' => $node->title, '%assetid' => $assetid));
 }
 
+
+/**
+ * Process an asset for extra fields import oganisations
+ */
+function _idsimsmod_process_import_extras_org($nid, &$context) {
+	$node = node_load($nid);
+	$xml_feed_path_root = 'http://isudev.ids.ac.uk/devrob/oryx-extras/orgs.cfm?xml=true&aid=';
+	$assetid = $node->field_object_id[LANGUAGE_NONE][0]['value'];
+	$raw_assetid = substr($assetid, 1);/*remove 'A' at front of asset ID */
+	$xml_feed_path_full = $xml_feed_path_root . $raw_assetid;
+	$field_data = idsimsmod_get_endpoint_response($xml_feed_path_full);
+	$field_data = _idsimsmod_simpleXML2array($field_data);
+	_idsimsmod_process_import_extras_update_organisation_node($node, $field_data, $assetid);
+	$context['message'] = t('Updating node %title : Asset ID = %assetid', array('%title' => $node->title, '%assetid' => $assetid));
+}
+
+
+function _idsimsmod_process_import_extras_update_organisation_node(&$node, &$field_data, $assetid) {
+	$node_updated = FALSE;
+
+	/*
+	 * Has Hosting Permission
+	 */
+	if(isset($field_data['has_hosting_permission'])){
+		$node->field_has_hosting_copyright[LANGUAGE_NONE] = array();
+		$cnt = 0;
+		if($field_data['has_hosting_permission']){
+			$node->field_has_hosting_copyright[LANGUAGE_NONE][$cnt]['value'] = 1;
+		}
+		$node_updated = TRUE;
+	}
+	
+	/*
+	 * Has Redistribute Permission
+	 */
+	if(isset($field_data['has_redistribute_permission'])){
+		$node->field_has_redistribute_copyright[LANGUAGE_NONE] = array();
+		$cnt = 0;
+		if($field_data['has_redistribute_permission']){
+			$node->field_has_redistribute_copyright[LANGUAGE_NONE][$cnt]['value'] = 1;
+		}
+		$node_updated = TRUE;
+	}
+	
+	/*
+	 * Has Permission to host information
+	 */
+	if(isset($field_data['permission_to_host_information'])){
+		$node->field_permission_to_host_info[LANGUAGE_NONE] = array();
+		$cnt = 0;
+		if($field_data['permission_to_host_information']){
+			$node->field_permission_to_host_info[LANGUAGE_NONE][$cnt]['value'] = $field_data['permission_to_host_information'];
+		}
+		$node_updated = TRUE;
+	}
+	
+	/*
+	 * Licence Type
+	 */
+	if(isset($field_data['licence_type'])){
+		foreach($field_data['licence_type'] as $key => $value){
+			if($key == 'name'){
+				$terms = taxonomy_get_term_by_name($value, $vocabulary = 'ids_licence_type');
+				foreach($terms as $term){
+					$tid = $term->tid;
+					_idsimsmod_apply_term_to_node($node, 'licence_type_term', $tid);
+				}	
+			}
+		}
+		$node_updated = TRUE;
+	}
+	
+	if($node_updated){
+		node_save($node);
+	}
+}
+
+
 function _idsimsmod_process_import_extras_update_node(&$node, &$field_data, $assetid) {
 	/*
 	 * Publication date uncertain field
 	 */
 	$node_updated = FALSE;
 	
-	if(isset($field_data['field_publication_date_uncertain'])){
+	if(isset($field_data['publication_date_uncertain'])){
 		$node->field_publication_date_uncertain[LANGUAGE_NONE] = array();
 		$cnt = 0;
-		foreach($field_data['field_publication_date_uncertain'] as $type => $value)
+		foreach($field_data['publication_date_uncertain'] as $type => $value)
 		{
 			if($value){
 				$node->field_publication_date_uncertain[LANGUAGE_NONE][$cnt]['value'] = $type;
@@ -622,8 +701,15 @@ function _idsimsmod_simpleXML2array($xml)
 /**
  * Handle batch completion.
  */
+function idsimsmod_import_extras_org_finished($success, $results, $operations) {
+	return t('The organisation import extras has completed.');
+}
+
+/**
+ * Handle batch completion.
+ */
 function idsimsmod_import_extras_finished($success, $results, $operations) {
-	return t('The import has completed.');
+	return t('The import extras has completed.');
 }
 
 /**
