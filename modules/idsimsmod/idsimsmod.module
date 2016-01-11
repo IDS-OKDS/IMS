@@ -247,20 +247,17 @@ function _idsimsmod_sectors_to_doc_type(&$node, $cat_assetid, $cat_assetid_raw, 
 	$oryx_doc_type_id = NULL;
 	if(isset($bridge_sector_doc_types_arr[$cat_name])){
 		$oryx_doc_type_id = $bridge_sector_doc_types_arr[$cat_name];
-		drupal_set_message('FOUND $oryx_doc_type_id:' . $oryx_doc_type_id);
 		$doc_type_term_name = isset($oryx_doc_types_arr[$oryx_doc_type_id]) ? $oryx_doc_types_arr[$oryx_doc_type_id]:NULL;
 	}
 	if($doc_type_term_name){
 		$terms = taxonomy_get_term_by_name($doc_type_term_name, $vocabulary = 'ids_document_type');
 		foreach($terms as $term){
-			drupal_set_message('found doc type term:'. print_r($term, TRUE) );
 			$tid = $term->tid;
 			_idsimsmod_apply_term_to_node($node, 'document_types', $tid);
 		}
 	}
 	
 	if($oryx_doc_type_id == 'GROUPING'){
-		drupal_set_message('FOUND GROUPING:' . $cat_name);
 		/* first chek the grouping term exists. If not create */
 		$terms = taxonomy_get_term_by_name($cat_name, $vocabulary = IDSIMS_COLLECTIONS_VOC_NAME);
 		$tid = NULL;
