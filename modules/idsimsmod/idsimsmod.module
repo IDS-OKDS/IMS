@@ -202,7 +202,7 @@ function _idsimsmod_get_vid_from_vocab_machine_name($vocab_machine_name){
 	return db_query('SELECT vid FROM {taxonomy_vocabulary} WHERE machine_name = :machine_name', array(':machine_name' => $vocab_machine_name))->fetchField();
 }
 
-function _idsimsmod_sectors_to_doc_type(&$node, $cat_assetid, $cat_name){
+function _idsimsmod_sectors_to_doc_type(&$node, $cat_assetid, $cat_assetid_raw, $cat_name){
 	$oryx_doc_types_arr = array();
 	$oryx_doc_types_arr[1] = 'Background/overview document';
 	$oryx_doc_types_arr[2] = 'Bibliography';
@@ -242,6 +242,43 @@ function _idsimsmod_sectors_to_doc_type(&$node, $cat_assetid, $cat_name){
 	$bridge_sector_doc_types_arr['BRIDGE Report'] = 19;
 	$bridge_sector_doc_types_arr['Research Output'] = 19;
 	$bridge_sector_doc_types_arr['Thematic Overview'] = 1;
+	
+	$doc_type_term_name = NULL;
+	$oryx_doc_type_id = NULL;
+	if(isset($bridge_sector_doc_types_arr[$cat_name])){
+		$oryx_doc_type_id = $bridge_sector_doc_types_arr[$cat_name];
+		drupal_set_message('FOUND $oryx_doc_type_id:' . $oryx_doc_type_id);
+		$doc_type_term_name = isset($oryx_doc_types_arr[$oryx_doc_type_id]) ? $oryx_doc_types_arr[$oryx_doc_type_id]:NULL;
+	}
+	if($doc_type_term_name){
+		$terms = taxonomy_get_term_by_name($doc_type_term_name, $vocabulary = 'ids_document_type');
+		foreach($terms as $term){
+			drupal_set_message('found doc type term:'. print_r($term, TRUE) );
+			$tid = $term->tid;
+			_idsimsmod_apply_term_to_node($node, 'document_types', $tid);
+		}
+	}
+	
+	if($oryx_doc_type_id == 'GROUPING'){
+		drupal_set_message('FOUND GROUPING:' . $cat_name);
+		/* first chek the grouping term exists. If not create */
+		$terms = taxonomy_get_term_by_name($cat_name, $vocabulary = IDSIMS_COLLECTIONS_VOC_NAME);
+		$tid = NULL;
+		$vid = get_collections_taxonomy_vid();
+		if(!count($terms)){
+			/* If IDS collection term doesn't exist. Then create it */
+			drupal_set_message('Creating IDS Collection: ' . $cat_name);
+			$tid = _idsimsmod_create_taxonomy_term($cat_name, $vid);
+		} else {
+			foreach($terms as $term){
+				$tid = $term->tid;
+			}
+		}
+		if($tid){
+			_idsimsmod_apply_term_to_node($node, 'collections', $tid);
+		}
+	}
+	
 }
 
 function _idsimsmod_updates_collection(&$node, $cat_assetid, $cat_name){
@@ -259,14 +296,12 @@ function _idsimsmod_updates_collection(&$node, $cat_assetid, $cat_name){
 		/* first chek the root update term exists. If not create */
 		$terms = taxonomy_get_term_by_name(IDSIMS_COLLECTION_UPDATES_NAME, $vocabulary = IDSIMS_COLLECTIONS_VOC_NAME);
 		$tid = NULL;
+		$vid = get_collections_taxonomy_vid();
 		if(!count($terms)){
 			/* If root update term doesn't exist. Then create it */
-			$vid = _idsimsmod_get_vid_from_vocab_machine_name(IDSIMS_COLLECTIONS_VOC_NAME);
 			$tid = _idsimsmod_create_taxonomy_term(IDSIMS_COLLECTION_UPDATES_NAME, $vid);
-			variable_set('collections_taxonomy_vid', $vid);
 			variable_set('idsims_updates_root_tid', $tid);
 		}	
-		$vid = variable_get('collections_taxonomy_vid', 0);
 		$updates_root_tid = variable_get('idsims_updates_root_tid', 0);
 		/* if this isn't the root item then save it and add to the tree */
 		if($cat_assetid_raw != IDSIMS_COLLECTION_UPDATES_SID){	
@@ -274,24 +309,37 @@ function _idsimsmod_updates_collection(&$node, $cat_assetid, $cat_name){
 		}
 
 		/* now we've saved the term we need to link it to our document node (if not already)*/
-		$cnt = 0;
-		$found = FALSE;
-		if(isset($node->field_collections[LANGUAGE_NONE])){
-			foreach($node->field_collections[LANGUAGE_NONE] as $term_ref){
-				if($term_ref['tid'] == $tid){
-					$found = TRUE;
-				}
-				$cnt++;
-			}
-		} else {
-			$node->field_collections[LANGUAGE_NONE] = array();
-		}
-		if(!$found && $tid){
-			$node->field_collections[LANGUAGE_NONE][$cnt]['tid'] = $tid;
-			//$node->field_collections[LANGUAGE_NONE][$cnt]['taxonomy_term'] = taxonomy_term_load($tid);
-		}
+		_idsimsmod_apply_term_to_node($node, 'collections', $tid);
 	}
 } 
+
+function get_collections_taxonomy_vid(){
+	$vid = variable_get('collections_taxonomy_vid', 0);
+	if(!$vid){
+		$vid = _idsimsmod_get_vid_from_vocab_machine_name(IDSIMS_COLLECTIONS_VOC_NAME);
+		variable_set('collections_taxonomy_vid', $vid);
+	}
+	return $vid;
+}
+
+function _idsimsmod_apply_term_to_node(&$node, $field_ref, $tid){
+	$field_ref = 'field_' . $field_ref;
+	$cnt = 0;
+	$found = FALSE;
+	if(isset($node->{$field_ref}[LANGUAGE_NONE])){
+		foreach($node->{$field_ref}[LANGUAGE_NONE] as $term_ref){
+			if($term_ref['tid'] == $tid){
+				$found = TRUE;
+			}
+			$cnt++;
+		}
+	} else {
+		$node->{$field_ref}[LANGUAGE_NONE] = array();
+	}
+	if(!$found && $tid){
+		$node->{$field_ref}[LANGUAGE_NONE][$cnt]['tid'] = $tid;
+	}	
+}
 
 function _idsimsmod_category_asset_id_to_organisation_asset_id_from_matrix($cat_assetid){
 	/*
@@ -525,7 +573,7 @@ function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors, 
 		/*
 		 * Process remaining Sectors as Document Types
 		 */
-		_idsimsmod_sectors_to_doc_type($node, $cat_assetid, $item['object_name']);
+		_idsimsmod_sectors_to_doc_type($node, $cat_assetid, $cat_assetid_raw, $item['object_name']);
 		
 	}
 }
