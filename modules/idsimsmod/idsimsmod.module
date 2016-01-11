@@ -225,10 +225,6 @@ function _idsimsmod_sectors_to_doc_type(&$node, $cat_assetid, $cat_name){
 	$oryx_doc_types_arr[19] = 'Research report (or study)';
 	$oryx_doc_types_arr[20] = 'Working paper (includes discussion paper)';
 	
-	/*New*/
-	$oryx_doc_types_arr[21] = 'Country profile';
-	$oryx_doc_types_arr[22] = 'Good Practice Guide';
-	
 	$bridge_sector_doc_types_arr = array();
 	$bridge_sector_doc_types_arr['Background Document'] = 1;
 	$bridge_sector_doc_types_arr['Bibliography'] = 2;
@@ -238,8 +234,8 @@ function _idsimsmod_sectors_to_doc_type(&$node, $cat_assetid, $cat_name){
 	$bridge_sector_doc_types_arr['Case Study'] = 5;
 	$bridge_sector_doc_types_arr['Cutting Edge Pack'] = 'GROUPING';
 	$bridge_sector_doc_types_arr['Fundraising'] = 'GROUPING';
-	$bridge_sector_doc_types_arr['Gender Country Profile'] = 21;
-	$bridge_sector_doc_types_arr['Good Practice Guide'] = 22;
+	$bridge_sector_doc_types_arr['Gender Country Profile'] = 7;
+	$bridge_sector_doc_types_arr['Good Practice Guide'] = 8;
 	$bridge_sector_doc_types_arr['Manual / Toolkit'] = 13;
 	$bridge_sector_doc_types_arr['Policy / Planning'] = 'GROUPING';
 	$bridge_sector_doc_types_arr['Report'] = 0; //Do NOTHING
