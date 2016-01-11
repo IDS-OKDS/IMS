@@ -158,6 +158,8 @@ abstract class IdsApiObjectAsset extends IdsApiObject {
     }
     if (isset($object['category_theme_array'])) {
       $this->category_theme_array = build_array_categories($object['category_theme_array']);
+    } else {
+    	$this->category_theme_array = array();
     }
     if (isset($object['category_subject_array'])) {
       $this->category_subject_array = build_array_categories($object['category_subject_array']);
