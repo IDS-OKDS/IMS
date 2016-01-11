@@ -159,6 +159,7 @@ abstract class IdsApiObjectAsset extends IdsApiObject {
     if (isset($object['category_theme_array'])) {
       $this->category_theme_array = build_array_categories($object['category_theme_array']);
     } else {
+    	/* Joe McP -- added this as feeds broke in Drupal module when category_theme_array was empty throwing MySQL ERROR 1064 .. near ')) at line 1 */
     	$this->category_theme_array = array();
     }
     if (isset($object['category_subject_array'])) {
