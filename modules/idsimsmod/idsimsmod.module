@@ -536,7 +536,7 @@ function _idsimsmod_process_import_extras_update_organisation_node(&$node, &$fie
 		}
 		$node_updated = TRUE;
 	}
-	
+	//drupal_set_message('$field_data' . print_r($field_data, TRUE));
 	/*
 	 * Licence Type
 	 */
@@ -743,21 +743,27 @@ function _idsimsmod_simpleXML2array($xml)
  * Handle batch completion.
  */
 function idsimsmod_import_extras_orgs_finished($success, $results, $operations) {
-	return t('The organisation import extras has completed.');
+	$message = t('The organisation import extras has completed.');
+	drupal_set_message($message);
+	return $message;
 }
 
 /**
  * Handle batch completion.
  */
 function idsimsmod_import_extras_finished($success, $results, $operations) {
-	return t('The import extras has completed.');
+	$message = t('The import extras has completed.');
+	drupal_set_message($message);
+	return $message;
 }
 
 /**
  * Handle batch completion.
  */
 function idsimsmod_import_post_process_finished($success, $results, $operations) {
-	return t('The import post process has completed.');
+	$message = t('The import post process has completed.');
+	drupal_set_message($message);
+	return $message;
 }
 
 
