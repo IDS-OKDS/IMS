@@ -485,7 +485,7 @@ function _idsimsmod_process_import_extras($nid, &$context) {
 /**
  * Process an asset for extra fields import oganisations
  */
-function _idsimsmod_process_import_extras_org($nid, &$context) {
+function _idsimsmod_process_import_extras_orgs($nid, &$context) {
 	$node = node_load($nid);
 	$xml_feed_path_root = 'http://isudev.ids.ac.uk/devrob/oryx-extras/orgs.cfm?xml=true&aid=';
 	$assetid = $node->field_object_id[LANGUAGE_NONE][0]['value'];
@@ -742,7 +742,7 @@ function _idsimsmod_simpleXML2array($xml)
 /**
  * Handle batch completion.
  */
-function idsimsmod_import_extras_org_finished($success, $results, $operations) {
+function idsimsmod_import_extras_orgs_finished($success, $results, $operations) {
 	return t('The organisation import extras has completed.');
 }
 
