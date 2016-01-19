@@ -786,14 +786,14 @@ function idsimsmod_form_alter(&$form, &$form_state, $form_id) {
 
 function idsimsmod_get_endpoint_response($endpoint_url){
 	if (($response_xml_data = file_get_contents($endpoint_url))===false){
-		echo "Error fetching XML\n";
+		drupal_set_message("Error fetching XML" . $endpoint_url);
 	} else {
 		libxml_use_internal_errors(true);
 		$data = simplexml_load_string($response_xml_data);
 		if (!$data) {
-			echo "Error loading XML\n";
+			drupal_set_message("Error loading XML" . $endpoint_url);
 			foreach(libxml_get_errors() as $error) {
-				echo "\t", $error->message;
+				drupal_set_message("libxml_get_error:: " . $error->message);
 			}
 		} else {
 			return $data;
