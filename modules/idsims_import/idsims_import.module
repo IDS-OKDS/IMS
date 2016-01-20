@@ -3,7 +3,7 @@
  * @file
  * Module for bespoke IDS IMS customisations
  */
-define('IDSIMS_ENTITY_NEXT_ID_START', 100000);
+
 /*
  * Constants for import term IDs etc
  */
@@ -37,35 +37,18 @@ define('IDSIMS_COLLECTION_UPDATES_2014_SID', 1998);
 define('IDSIMS_FUNDER_PARENT_SID', 1842);
 define('IDSIMS_CONTENT_PARTNER_PARENT_SID', 1957);
 
-/*
- * Implimentation of hook_init()
- */
-function idsimsmod_init() {
-	drupal_add_js(drupal_get_path('module', 'idsimsmod').'/js/idsimsmod.js');
-	drupal_add_css(drupal_get_path('module', 'idsimsmod').'/css/idsimsmod.css');
-}
-
 
 /**
  * Implement hook_menu()
  */
-function idsimsmod_menu() {
-	$items['admin/config/ids-ims'] = array(
-    'title' => 'IDS IMS',
-    'description' => 'Settings related to the IDS IMS.',
-    'position' => 'left',
-    'weight' => -15,
-    'page callback' => 'system_admin_menu_block_page',
-    'access arguments' => array('access administration pages'),
-    'file' => 'system.admin.inc',
-	);
+function idsims_import_menu() {
 	$items['admin/config/ids-ims/import-extras'] = array(
     'title' => 'Documents: Import additional fields from old IMS',
     'description' => 'Import any additional fields required for Documents from the old Oyrx DB provided by custom XML feed',
 	// 'access callback' => 'user_access',
     'access arguments' => array('administer site configuration'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('idsimsmod_import_extras_form'),
+    'page arguments' => array('idsims_import_import_extras_form'),
 	//  'file' => 'epdmod.admin.inc',
 	);
 	$items['admin/config/ids-ims/import-extras-orgs'] = array(
@@ -73,7 +56,7 @@ function idsimsmod_menu() {
     'description' => 'Import any additional fields required for Organisations from the old Oyrx DB provided by custom XML feed',
     'access arguments' => array('administer site configuration'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('idsimsmod_import_extras_orgs_form'),
+    'page arguments' => array('idsims_import_import_extras_orgs_form'),
 	);
 	$items['admin/config/ids-ims/post-process'] = array(
     'title' => 'Documents: Post proccessing on imported Oryx data',
@@ -81,7 +64,7 @@ function idsimsmod_menu() {
 	// 'access callback' => 'user_access',
     'access arguments' => array('administer site configuration'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('idsimsmod_import_post_process_form'),
+    'page arguments' => array('idsims_import_import_post_process_form'),
 	//  'file' => 'epdmod.admin.inc',
 	);
 	return $items ;
@@ -90,7 +73,7 @@ function idsimsmod_menu() {
 /**
  * Build a form for Import Extras settings
  */
-function idsimsmod_import_extras_form() {
+function idsims_import_import_extras_form() {
 	$form['#attributes'] = array(
     'enctype' => 'multipart/form-data'
     );
@@ -124,7 +107,7 @@ function idsimsmod_import_extras_form() {
 /**
  * Build a form for Import Extras Organisations settings
  */
-function idsimsmod_import_extras_orgs_form() {
+function idsims_import_import_extras_orgs_form() {
 	$form['#attributes'] = array(
     'enctype' => 'multipart/form-data'
     );
@@ -155,7 +138,7 @@ function idsimsmod_import_extras_orgs_form() {
 /**
  * Build a form for Import post process
  */
-function idsimsmod_import_post_process_form() {
+function idsims_import_import_post_process_form() {
 	$form['#attributes'] = array(
     'enctype' => 'multipart/form-data'
     );
@@ -180,7 +163,7 @@ function idsimsmod_import_post_process_form() {
     return $form;
 }
 
-function _idsimsmod_set_batch_jobs($batch_name, $batch_id, &$form, &$form_state, $asset_type_id = 'ids_document'){
+function _idsims_import_set_batch_jobs($batch_name, $batch_id, &$form, &$form_state, $asset_type_id = 'ids_document'){
 	$import_limit = $form_state['values']['import_limit'];
 
 	$batch = array(
@@ -189,7 +172,7 @@ function _idsimsmod_set_batch_jobs($batch_name, $batch_id, &$form, &$form_state,
     'init_message' => t('Commencing'),
     'progress_message' => t('Processed @current out of @total.'),
     'error_message' => t('An error occurred during processing'),
-    'finished' => 'idsimsmod_' . $batch_id . '_finished',
+    'finished' => 'idsims_import_' . $batch_id . '_finished',
 	);
 
 	$query = new EntityFieldQuery();
@@ -208,29 +191,29 @@ function _idsimsmod_set_batch_jobs($batch_name, $batch_id, &$form, &$form_state,
 	if (!empty($result['node'])) {
 		$nids = array_keys($result['node']);
 		foreach ($nids as $nid) {
-			$batch['operations'][] = array('_idsimsmod_process_' . $batch_id, array($nid));
+			$batch['operations'][] = array('_idsims_import_process_' . $batch_id, array($nid));
 		}
 	}
 
 	batch_set($batch);
 }
 
-function idsimsmod_import_extras_form_submit(&$form, &$form_state) {
-	_idsimsmod_set_batch_jobs('Importing Extra fields', 'import_extras', $form, $form_state);
+function idsims_import_import_extras_form_submit(&$form, &$form_state) {
+	_idsims_import_set_batch_jobs('Importing Extra fields', 'import_extras', $form, $form_state);
 }
 
-function idsimsmod_import_extras_orgs_form_submit(&$form, &$form_state) {
-	_idsimsmod_set_batch_jobs('Importing Extra fields for organisations', 'import_extras_orgs', $form, $form_state, 'ids_organisation');
+function idsims_import_import_extras_orgs_form_submit(&$form, &$form_state) {
+	_idsims_import_set_batch_jobs('Importing Extra fields for organisations', 'import_extras_orgs', $form, $form_state, 'ids_organisation');
 }
 
-function idsimsmod_import_post_process_form_submit(&$form, &$form_state) {
-	_idsimsmod_set_batch_jobs('Import data post process', 'import_post_process', $form, $form_state);
+function idsims_import_import_post_process_form_submit(&$form, &$form_state) {
+	_idsims_import_set_batch_jobs('Import data post process', 'import_post_process', $form, $form_state);
 }
 
 /**
 * Create a taxonomy term and return the tid.
 */
-function _idsimsmod_create_taxonomy_term($name, $vid, $parent_id = 0) {
+function _idsims_import_create_taxonomy_term($name, $vid, $parent_id = 0) {
 	//drupal_set_message("$name, $vid, $parent_id ");
 	$term = new stdClass();
 	$term->name = $name;
@@ -240,11 +223,11 @@ function _idsimsmod_create_taxonomy_term($name, $vid, $parent_id = 0) {
 	return $term->tid;
 }
 
-function _idsimsmod_get_vid_from_vocab_machine_name($vocab_machine_name){
+function _idsims_import_get_vid_from_vocab_machine_name($vocab_machine_name){
 	return db_query('SELECT vid FROM {taxonomy_vocabulary} WHERE machine_name = :machine_name', array(':machine_name' => $vocab_machine_name))->fetchField();
 }
 
-function _idsimsmod_sectors_to_doc_type(&$node, $cat_assetid, $cat_assetid_raw, $cat_name){
+function _idsims_import_sectors_to_doc_type(&$node, $cat_assetid, $cat_assetid_raw, $cat_name){
 	$oryx_doc_types_arr = array();
 	$oryx_doc_types_arr[1] = 'Background/overview document';
 	$oryx_doc_types_arr[2] = 'Bibliography';
@@ -295,7 +278,7 @@ function _idsimsmod_sectors_to_doc_type(&$node, $cat_assetid, $cat_assetid_raw, 
 		$terms = taxonomy_get_term_by_name($doc_type_term_name, $vocabulary = 'ids_document_type');
 		foreach($terms as $term){
 			$tid = $term->tid;
-			_idsimsmod_apply_term_to_node($node, 'document_types', $tid);
+			_idsims_import_apply_term_to_node($node, 'document_types', $tid);
 		}
 	}
 	
@@ -307,20 +290,20 @@ function _idsimsmod_sectors_to_doc_type(&$node, $cat_assetid, $cat_assetid_raw, 
 		if(!count($terms)){
 			/* If IDS collection term doesn't exist. Then create it */
 			drupal_set_message('Creating IDS Collection: ' . $cat_name);
-			$tid = _idsimsmod_create_taxonomy_term($cat_name, $vid);
+			$tid = _idsims_import_create_taxonomy_term($cat_name, $vid);
 		} else {
 			foreach($terms as $term){
 				$tid = $term->tid;
 			}
 		}
 		if($tid){
-			_idsimsmod_apply_term_to_node($node, 'collections', $tid);
+			_idsims_import_apply_term_to_node($node, 'collections', $tid);
 		}
 	}
 	
 }
 
-function _idsimsmod_updates_collection(&$node, $cat_assetid, $cat_name){
+function _idsims_import_updates_collection(&$node, $cat_assetid, $cat_name){
 	$cat_assetid_raw = substr($cat_assetid, 1);/*remove 'C' at front of asset ID */
 	$update_arr = array(IDSIMS_COLLECTION_UPDATES_SID,
 						IDSIMS_COLLECTION_UPDATES_2007_SID,
@@ -338,30 +321,30 @@ function _idsimsmod_updates_collection(&$node, $cat_assetid, $cat_name){
 		$vid = get_collections_taxonomy_vid();
 		if(!count($terms)){
 			/* If root update term doesn't exist. Then create it */
-			$tid = _idsimsmod_create_taxonomy_term(IDSIMS_COLLECTION_UPDATES_NAME, $vid);
+			$tid = _idsims_import_create_taxonomy_term(IDSIMS_COLLECTION_UPDATES_NAME, $vid);
 			variable_set('idsims_updates_root_tid', $tid);
 		}	
 		$updates_root_tid = variable_get('idsims_updates_root_tid', 0);
 		/* if this isn't the root item then save it and add to the tree */
 		if($cat_assetid_raw != IDSIMS_COLLECTION_UPDATES_SID){	
-			$tid = _idsimsmod_create_taxonomy_term($cat_name, $vid, $parent_id = $updates_root_tid);
+			$tid = _idsims_import_create_taxonomy_term($cat_name, $vid, $parent_id = $updates_root_tid);
 		}
 
 		/* now we've saved the term we need to link it to our document node (if not already)*/
-		_idsimsmod_apply_term_to_node($node, 'collections', $tid);
+		_idsims_import_apply_term_to_node($node, 'collections', $tid);
 	}
 } 
 
 function get_collections_taxonomy_vid(){
 	$vid = variable_get('collections_taxonomy_vid', 0);
 	if(!$vid){
-		$vid = _idsimsmod_get_vid_from_vocab_machine_name(IDSIMS_COLLECTIONS_VOC_NAME);
+		$vid = _idsims_import_get_vid_from_vocab_machine_name(IDSIMS_COLLECTIONS_VOC_NAME);
 		variable_set('collections_taxonomy_vid', $vid);
 	}
 	return $vid;
 }
 
-function _idsimsmod_apply_term_to_node(&$node, $field_ref, $tid){
+function _idsims_import_apply_term_to_node(&$node, $field_ref, $tid){
 	$field_ref = 'field_' . $field_ref;
 	$cnt = 0;
 	$found = FALSE;
@@ -380,7 +363,7 @@ function _idsimsmod_apply_term_to_node(&$node, $field_ref, $tid){
 	}	
 }
 
-function _idsimsmod_category_asset_id_to_organisation_asset_id_from_matrix($cat_assetid){
+function _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($cat_assetid){
 	/*
 	 * Joe - it's a shame bu no way to do this apart from hardcode - the titles don't match
 	 */
@@ -469,15 +452,15 @@ function _idsimsmod_category_asset_id_to_organisation_asset_id_from_matrix($cat_
 /**
  * Process an asset for extra fields import
  */
-function _idsimsmod_process_import_extras($nid, &$context) {
+function _idsims_import_process_import_extras($nid, &$context) {
 	$node = node_load($nid);
 	$xml_feed_path_root = 'http://isudev.ids.ac.uk/devrob/oryx-extras/?xml=true&aid=';
 	$assetid = $node->field_object_id[LANGUAGE_NONE][0]['value'];
 	$raw_assetid = substr($assetid, 1);/*remove 'A' at front of asset ID */
 	$xml_feed_path_full = $xml_feed_path_root . $raw_assetid;
-	$field_data = idsimsmod_get_endpoint_response($xml_feed_path_full);
-	$field_data = _idsimsmod_simpleXML2array($field_data);
-	_idsimsmod_process_import_extras_update_node($node, $field_data, $assetid);
+	$field_data = idsims_import_get_endpoint_response($xml_feed_path_full);
+	$field_data = _idsims_import_simpleXML2array($field_data);
+	_idsims_import_process_import_extras_update_node($node, $field_data, $assetid);
 	$context['message'] = t('Updating node %title : Asset ID = %assetid', array('%title' => $node->title, '%assetid' => $assetid));
 }
 
@@ -485,20 +468,20 @@ function _idsimsmod_process_import_extras($nid, &$context) {
 /**
  * Process an asset for extra fields import oganisations
  */
-function _idsimsmod_process_import_extras_orgs($nid, &$context) {
+function _idsims_import_process_import_extras_orgs($nid, &$context) {
 	$node = node_load($nid);
 	$xml_feed_path_root = 'http://isudev.ids.ac.uk/devrob/oryx-extras/orgs.cfm?xml=true&aid=';
 	$assetid = $node->field_object_id[LANGUAGE_NONE][0]['value'];
 	$raw_assetid = substr($assetid, 1);/*remove 'A' at front of asset ID */
 	$xml_feed_path_full = $xml_feed_path_root . $raw_assetid;
-	$field_data = idsimsmod_get_endpoint_response($xml_feed_path_full);
-	$field_data = _idsimsmod_simpleXML2array($field_data);
-	_idsimsmod_process_import_extras_update_organisation_node($node, $field_data, $assetid);
+	$field_data = idsims_import_get_endpoint_response($xml_feed_path_full);
+	$field_data = _idsims_import_simpleXML2array($field_data);
+	_idsims_import_process_import_extras_update_organisation_node($node, $field_data, $assetid);
 	$context['message'] = t('Updating node %title : Asset ID = %assetid', array('%title' => $node->title, '%assetid' => $assetid));
 }
 
 
-function _idsimsmod_process_import_extras_update_organisation_node(&$node, &$field_data, $assetid) {
+function _idsims_import_process_import_extras_update_organisation_node(&$node, &$field_data, $assetid) {
 	$node_updated = FALSE;
 
 	/*
@@ -546,7 +529,7 @@ function _idsimsmod_process_import_extras_update_organisation_node(&$node, &$fie
 				$terms = taxonomy_get_term_by_name($value, $vocabulary = 'ids_licence_type');
 				foreach($terms as $term){
 					$tid = $term->tid;
-					_idsimsmod_apply_term_to_node($node, 'licence_type_term', $tid);
+					_idsims_import_apply_term_to_node($node, 'licence_type_term', $tid);
 				}	
 			}
 		}
@@ -559,7 +542,7 @@ function _idsimsmod_process_import_extras_update_organisation_node(&$node, &$fie
 }
 
 
-function _idsimsmod_process_import_extras_update_node(&$node, &$field_data, $assetid) {
+function _idsims_import_process_import_extras_update_node(&$node, &$field_data, $assetid) {
 	/*
 	 * Publication date uncertain field
 	 */
@@ -583,7 +566,7 @@ function _idsimsmod_process_import_extras_update_node(&$node, &$field_data, $ass
 	 * process subjects (Eldis)
 	 */
 	if(isset($field_data['subjectList']) && $site == 'eldis'){
-		_idsimsmod_process_import_extras_update_node_subjects($node, $field_data['subjectList'], $assetid);
+		_idsims_import_process_import_extras_update_node_subjects($node, $field_data['subjectList'], $assetid);
 		$node_updated = TRUE;
 	}
 	
@@ -591,7 +574,7 @@ function _idsimsmod_process_import_extras_update_node(&$node, &$field_data, $ass
 	 * process sectors (BRIDGE)
 	 */
 	if(isset($field_data['SectorList']) && $site == 'bridge'){
-		_idsimsmod_process_import_extras_update_node_sectors($node, $field_data['SectorList'], $assetid);
+		_idsims_import_process_import_extras_update_node_sectors($node, $field_data['SectorList'], $assetid);
 		$node_updated = TRUE;
 	}
 	
@@ -600,7 +583,7 @@ function _idsimsmod_process_import_extras_update_node(&$node, &$field_data, $ass
 	}
 }
 
-function _idsimsmod_apply_organsation_ref(&$node, $field_ref, $object_id_arr){
+function _idsims_import_apply_organsation_ref(&$node, $field_ref, $object_id_arr){
 	$field_ref = 'field_' . $field_ref;
 	$cnt = 0;
 	$node->{$field_ref}[LANGUAGE_NONE] = array();
@@ -625,7 +608,7 @@ function _idsimsmod_apply_organsation_ref(&$node, $field_ref, $object_id_arr){
 	}	
 }
 
-function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects, $assetid){
+function _idsims_import_process_import_extras_update_node_subjects(&$node, $subjects, $assetid){
 	if(isset($subjects['subject']['object_id'])){
 		/* make single level array multivalue for consistency (and so loop below works) */
 		$temp_array = array();
@@ -641,9 +624,9 @@ function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects
 		/*
 		 * Process Content Partners /Funders
 		 */
-		$org_asset_id = _idsimsmod_category_asset_id_to_organisation_asset_id_from_matrix($cat_assetid);
+		$org_asset_id = _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($cat_assetid);
 		if($org_asset_id){
-			_idsimsmod_apply_organsation_ref($node, 'content_partner_ref', array($org_asset_id));
+			_idsims_import_apply_organsation_ref($node, 'content_partner_ref', array($org_asset_id));
 		}
 		
 		/*
@@ -661,7 +644,7 @@ function _idsimsmod_process_import_extras_update_node_subjects(&$node, $subjects
 	}
 }
 
-function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors, $assetid){
+function _idsims_import_process_import_extras_update_node_sectors(&$node, $sectors, $assetid){
 	if(isset($sectors['Sector']['object_id'])){
 		/* make single level array multivalue for consistency (and so loop below works) */
 		$temp_array = array();
@@ -675,7 +658,7 @@ function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors, 
 		/*
 		 * Process Updates (as a Collection)
 		 */
-		_idsimsmod_updates_collection($node, $cat_assetid, $item['object_name']);
+		_idsims_import_updates_collection($node, $cat_assetid, $item['object_name']);
 		
 		/*
 		 * Process BRIDGE Bibliography, Briefing or Report (and make them link to BRIDGE organisation)
@@ -683,14 +666,14 @@ function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors, 
 		if(	$cat_assetid_raw == IDSIMS_BRIDGE_ORG_LINK_BIBLIO_SID ||
 			$cat_assetid_raw == IDSIMS_BRIDGE_ORG_LINK_BRIEF_SID ||
 			$cat_assetid_raw == IDSIMS_BRIDGE_ORG_LINK_REPORT_SID){
-			_idsimsmod_apply_organsation_ref($node, 'publishers', array(IDSIMS_BRIDGE_ORGANISATION_ID));
+			_idsims_import_apply_organsation_ref($node, 'publishers', array(IDSIMS_BRIDGE_ORGANISATION_ID));
 		}
 		
 		
 		/*
 		 * Process remaining Sectors as Document Types
 		 */
-		_idsimsmod_sectors_to_doc_type($node, $cat_assetid, $cat_assetid_raw, $item['object_name']);
+		_idsims_import_sectors_to_doc_type($node, $cat_assetid, $cat_assetid_raw, $item['object_name']);
 		
 	}
 }
@@ -698,14 +681,14 @@ function _idsimsmod_process_import_extras_update_node_sectors(&$node, $sectors, 
 /**
  * Process an asset for post processing data reorganisation
  */
-function _idsimsmod_process_import_post_process($nid, &$context) {
+function _idsims_import_process_import_post_process($nid, &$context) {
 	$node = node_load($nid);
 	$assetid = $node->field_object_id[LANGUAGE_NONE][0]['value'];
-	_idsimsmod_process_import_post_process_update_node($node, $context);
+	_idsims_import_process_import_post_process_update_node($node, $context);
 	$context['message'] = t('Updating node %title : Asset ID = %assetid', array('%title' => $node->title, '%assetid' => $assetid));
 }
 
-function _idsimsmod_process_import_post_process_update_node(&$node, &$context) {
+function _idsims_import_process_import_post_process_update_node(&$node, &$context) {
 	/*
 	 * Create node references from asset IDs
 	 * 
@@ -721,7 +704,7 @@ function _idsimsmod_process_import_post_process_update_node(&$node, &$context) {
 			$organisation_assetid_arr[] = $publisher_id['value'];
 		}
 		
-		_idsimsmod_apply_organsation_ref($node, 'publishers', $organisation_assetid_arr);
+		_idsims_import_apply_organsation_ref($node, 'publishers', $organisation_assetid_arr);
 
 		$node_updated = TRUE;
 	}
@@ -733,7 +716,7 @@ function _idsimsmod_process_import_post_process_update_node(&$node, &$context) {
 }
 
 
-function _idsimsmod_simpleXML2array($xml)
+function _idsims_import_simpleXML2array($xml)
 {
 	$array = json_decode(json_encode($xml), TRUE);
 	return $array;
@@ -742,7 +725,7 @@ function _idsimsmod_simpleXML2array($xml)
 /**
  * Handle batch completion.
  */
-function idsimsmod_import_extras_orgs_finished($success, $results, $operations) {
+function idsims_import_import_extras_orgs_finished($success, $results, $operations) {
 	$message = t('The organisation import extras has completed.');
 	drupal_set_message($message);
 	return $message;
@@ -751,7 +734,7 @@ function idsimsmod_import_extras_orgs_finished($success, $results, $operations) 
 /**
  * Handle batch completion.
  */
-function idsimsmod_import_extras_finished($success, $results, $operations) {
+function idsims_import_import_extras_finished($success, $results, $operations) {
 	$message = t('The import extras has completed.');
 	drupal_set_message($message);
 	return $message;
@@ -760,31 +743,13 @@ function idsimsmod_import_extras_finished($success, $results, $operations) {
 /**
  * Handle batch completion.
  */
-function idsimsmod_import_post_process_finished($success, $results, $operations) {
+function idsims_import_import_post_process_finished($success, $results, $operations) {
 	$message = t('The import post process has completed.');
 	drupal_set_message($message);
 	return $message;
 }
 
-
-/*
- * Implimentation of hook_form_alter()
- */
-function idsimsmod_form_alter(&$form, &$form_state, $form_id) {
-	if($form_id == 'ids_document_node_form'){
-		if(arg(1) == 'add'){
-			$first_day_of_year = format_date(strtotime('now'), 'custom', 'Y', 'UTC') . '-01-01 00:00:00';
-			$form["field_publication_date"][LANGUAGE_NONE][0]['#default_value'] = array(
-			    'value' => $first_day_of_year,
-			    'timezone' => 'UTC',  
-			    'timezone_db' => 'UTC',
-			);
-		}
-	}
-}
-
-
-function idsimsmod_get_endpoint_response($endpoint_url){
+function idsims_import_get_endpoint_response($endpoint_url){
 	if (($response_xml_data = file_get_contents($endpoint_url))===false){
 		drupal_set_message("Error fetching XML" . $endpoint_url);
 	} else {
@@ -801,43 +766,3 @@ function idsimsmod_get_endpoint_response($endpoint_url){
 	}
 	return false;
 }
-
-/*
- * Implimentaion of hook_entity_presave
- * 
- * Create Object ID for new Nodes/Terms
- */
-function idsimsmod_entity_presave($entity, $type) {
-	/* Add an Object ID if there isn't one */
-  	$field_language = field_language($type, $entity, 'field_object_id');
-  	$objectid_set = TRUE;
-    if(!isset($entity->field_object_id[$field_language])){
-    	$objectid_set = FALSE;
-    } elseif(!isset($entity->field_object_id[$field_language][0]['value'])){
-    	$objectid_set = FALSE;
-    } elseif(!$entity->field_object_id[$field_language][0]['value']){
-    	$objectid_set = FALSE;
-    }
-    if(!$objectid_set){
-    	$new_object_id_num = variable_get('idsims_entity_next_id', IDSIMS_ENTITY_NEXT_ID_START);
-    	$new_object_id_num++;
-    	$new_object_id = FALSE;
-    	if($type == 'node'){
-    		$new_object_id = 'A' . $new_object_id_num;
-    	}
-        if($type == 'taxonomy_term'){
-        	if($entity->vocabulary_machine_name == 'ids_countries'){
-        		$new_object_id = 'A' . $new_object_id_num;
-        	} else {
-        		$new_object_id = 'C' . $new_object_id_num;
-        	}
-    	}
-    	if($new_object_id && isset($entity->field_object_id)){
-	    	drupal_set_message('Object ID created for entity (' . $new_object_id . ')');
-	    	$entity->field_object_id[$field_language][0]['value'] = $new_object_id;
-			variable_set('idsims_entity_next_id', $new_object_id_num);
-    	}
-    }
-
-}
-

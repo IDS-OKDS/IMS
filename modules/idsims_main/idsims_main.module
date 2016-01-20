@@ -1,0 +1,87 @@
+<?php
+/**
+ * @file
+ * Module for bespoke IDS IMS customisations
+ */
+define('IDSIMS_ENTITY_NEXT_ID_START', 100000);
+
+/*
+ * Implimentation of hook_init()
+ */
+function idsims_main_init() {
+	drupal_add_js(drupal_get_path('module', 'idsims_main').'/js/idsims-main.js');
+	drupal_add_css(drupal_get_path('module', 'idsims_main').'/css/idsims-main.css');
+}
+
+
+/**
+ * Implement hook_menu()
+ */
+function idsims_main_menu() {
+	$items['admin/config/ids-ims'] = array(
+    'title' => 'IDS IMS',
+    'description' => 'Settings related to the IDS IMS.',
+    'position' => 'left',
+    'weight' => -15,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'file' => 'system.admin.inc',
+	);
+	return $items ;
+}
+
+/*
+ * Implimentation of hook_form_alter()
+ */
+function idsims_main_form_alter(&$form, &$form_state, $form_id) {
+	if($form_id == 'ids_document_node_form'){
+		if(arg(1) == 'add'){
+			$first_day_of_year = format_date(strtotime('now'), 'custom', 'Y', 'UTC') . '-01-01 00:00:00';
+			$form["field_publication_date"][LANGUAGE_NONE][0]['#default_value'] = array(
+			    'value' => $first_day_of_year,
+			    'timezone' => 'UTC',  
+			    'timezone_db' => 'UTC',
+			);
+		}
+	}
+}
+
+/*
+ * Implimentaion of hook_entity_presave
+ * 
+ * Create Object ID for new Nodes/Terms
+ */
+function idsims_main_entity_presave($entity, $type) {
+	/* Add an Object ID if there isn't one */
+  	$field_language = field_language($type, $entity, 'field_object_id');
+  	$objectid_set = TRUE;
+    if(!isset($entity->field_object_id[$field_language])){
+    	$objectid_set = FALSE;
+    } elseif(!isset($entity->field_object_id[$field_language][0]['value'])){
+    	$objectid_set = FALSE;
+    } elseif(!$entity->field_object_id[$field_language][0]['value']){
+    	$objectid_set = FALSE;
+    }
+    if(!$objectid_set){
+    	$new_object_id_num = variable_get('idsims_entity_next_id', IDSIMS_ENTITY_NEXT_ID_START);
+    	$new_object_id_num++;
+    	$new_object_id = FALSE;
+    	if($type == 'node'){
+    		$new_object_id = 'A' . $new_object_id_num;
+    	}
+        if($type == 'taxonomy_term'){
+        	if($entity->vocabulary_machine_name == 'ids_countries'){
+        		$new_object_id = 'A' . $new_object_id_num;
+        	} else {
+        		$new_object_id = 'C' . $new_object_id_num;
+        	}
+    	}
+    	if($new_object_id && isset($entity->field_object_id)){
+	    	drupal_set_message('Object ID created for entity (' . $new_object_id . ')');
+	    	$entity->field_object_id[$field_language][0]['value'] = $new_object_id;
+			variable_set('idsims_entity_next_id', $new_object_id_num);
+    	}
+    }
+
+}
+
