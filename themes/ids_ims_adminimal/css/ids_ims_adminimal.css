@@ -1,3 +1,20 @@
 body.mq-tablet.admin-menu.adminimal-menu:before {
     height: 0px;
 }
+
+.node-ids_document-form .field-name-field-document-urls .group-more {
+	display:none;
+}
+
+.node-ids_document-form .form-item-field-document-urls-und-form-title {
+	display:none;	
+}
+
+.node-ids_document-form .field-name-field-document-urls .field-name-field-document-url {
+	float:left;	
+	width:75%;
+}
+.node-ids_document-form .field-name-field-document-urls .field-name-field-language-ref {
+	float:right;	
+	width:25%;
+}

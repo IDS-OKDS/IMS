@@ -36,6 +36,7 @@
                             }
                             if (query_item[0] == 'url') {
                                 $('#edit-field-external-urls-und-0-value').val(value_for_form);
+                                $('#edit-field-document-urls-und-form-field-document-url-und-0-value').val(value_for_form);
                             }
                             if (query_item[0] == 'description') {
                                 $('#edit-body-und-0-value').val(value_for_form);
