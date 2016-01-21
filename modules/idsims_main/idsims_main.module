@@ -54,12 +54,18 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
  * 3. Create references to Document Abstracts on Document URL nodes
  */
 function idsims_main_entity_presave($entity, $type) {
-	/* 1. Create Asset ID (object_id) for new Nodes/Terms */
-	$asset_id = _idsims_main_get_asset_id($entity, $type);
-	/* 2. Update shared fields across sites/branches */
-	_idsims_main_update_shared_fields($entity, $type, $asset_id);
-	/* 3. Create references to Document Abstracts on Document URL nodes */
-	_idsims_main_update_references_to_document_abstracts($entity, $type, $asset_id);
+	/* 1. Create Asset ID (object_id) for new Nodes/Terms -- Document URL Entity works differently, it gets it's Asset ID from parent Document node */
+	if($type != 'ids_document_url'){
+		drupal_set_message('presaving ids_document_url');
+		$asset_id = _idsims_main_get_asset_id($entity, $type);
+	}
+	if($type == 'node'){
+		drupal_set_message('presaving NODE');
+		/* 2. Update shared fields across sites/branches */
+		_idsims_main_update_shared_fields($entity, $type, $asset_id);
+		/* 3. Create references to Document Abstracts on Document URL nodes */
+		_idsims_main_update_references_to_document_abstracts($entity, $type, $asset_id);
+	}
 }
 
 

@@ -42,8 +42,6 @@
                             }
                         }
                     }
-                    //var highlighted_text = getOpenerSelectionText();
-                    //$('#edit-field-language-und-0-value').val(highlighted_text); 
                 }
             });
         }
