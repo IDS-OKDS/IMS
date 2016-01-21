@@ -48,7 +48,7 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 
 /*
  * Implimentaion of hook_entity_presave
- * 
+ *
  * 1. Create Asset ID (object_id) for new Nodes/Terms
  * 2. Update shared fields across sites/branches
  * 3. Create references to Document Abstracts on Document URL nodes
@@ -75,39 +75,39 @@ function idsims_main_entity_presave($entity, $type) {
 function _idsims_main_get_asset_id(&$entity, $type){
 	/* Add an Asset ID if there isn't one */
 	$asset_id = FALSE;
-  	$field_language = field_language($type, $entity, 'field_object_id');
-  	$objectid_set = TRUE;
-    if(!isset($entity->field_object_id[$field_language])){
-    	$objectid_set = FALSE;
-    } elseif(!isset($entity->field_object_id[$field_language][0]['value'])){
-    	$objectid_set = FALSE;
-    } elseif(!$entity->field_object_id[$field_language][0]['value']){
-    	$objectid_set = FALSE;
-    }
-    if(!$objectid_set){
-    	$new_object_id_num = variable_get('idsims_entity_next_id', IDSIMS_ENTITY_NEXT_ID_START);
-    	$new_object_id_num++;
-    	$new_object_id = FALSE;
-    	if($type == 'node'){
-    		$new_object_id = 'A' . $new_object_id_num;
-    	}
-        if($type == 'taxonomy_term'){
-        	if($entity->vocabulary_machine_name == 'ids_countries'){
-        		$new_object_id = 'A' . $new_object_id_num;
-        	} else {
-        		$new_object_id = 'C' . $new_object_id_num;
-        	}
-    	}
-    	if($new_object_id && isset($entity->field_object_id)){
-	    	drupal_set_message('Object ID created for entity (' . $new_object_id . ')');
-	    	$entity->field_object_id[$field_language][0]['value'] = $new_object_id;
+	$field_language = field_language($type, $entity, 'field_object_id');
+	$objectid_set = TRUE;
+	if(!isset($entity->field_object_id[$field_language])){
+		$objectid_set = FALSE;
+	} elseif(!isset($entity->field_object_id[$field_language][0]['value'])){
+		$objectid_set = FALSE;
+	} elseif(!$entity->field_object_id[$field_language][0]['value']){
+		$objectid_set = FALSE;
+	}
+	if(!$objectid_set){
+		$new_object_id_num = variable_get('idsims_entity_next_id', IDSIMS_ENTITY_NEXT_ID_START);
+		$new_object_id_num++;
+		$new_object_id = FALSE;
+		if($type == 'node'){
+			$new_object_id = 'A' . $new_object_id_num;
+		}
+		if($type == 'taxonomy_term'){
+			if($entity->vocabulary_machine_name == 'ids_countries'){
+				$new_object_id = 'A' . $new_object_id_num;
+			} else {
+				$new_object_id = 'C' . $new_object_id_num;
+			}
+		}
+		if($new_object_id && isset($entity->field_object_id)){
+			drupal_set_message('Object ID created for entity (' . $new_object_id . ')');
+			$entity->field_object_id[$field_language][0]['value'] = $new_object_id;
 			variable_set('idsims_entity_next_id', $new_object_id_num);
-    	}
-    	$asset_id = $new_object_id;
-    } else {
-    	$asset_id = $entity->field_object_id[$field_language][0]['value'];
-    }	
-    return $asset_id;
+		}
+		$asset_id = $new_object_id;
+	} else {
+		$asset_id = $entity->field_object_id[$field_language][0]['value'];
+	}
+	return $asset_id;
 }
 
 
@@ -128,10 +128,45 @@ function _idsims_main_update_references_to_document_abstracts(&$entity, $type, $
 	/*
 	 * Add parent IDS Document node Asset ID as Asset ID
 	 */
-	
+
 	/*
 	 * Make references in IDS Document URL Entities to IDS Document nodes
 	 */
+}
+
+
+function idsims_main_field_widget_form_alter(&$element, &$form_state, $context) {
+	$field = $context['field'];
+	if (isset($field['field_name']) && ('field_document_urls' == $field['field_name'])) {
+		if (empty($element['form']) && empty($element['entities'][0])) {
+			$element['actions'] = array();
+			$field = $context['field'];
+			$instance = $context['instance'];
+			$settings = inline_entity_form_settings($field, $instance);
+			$controller = inline_entity_form_get_controller($instance);
+
+			$parents = array_merge($element['#field_parents'], array($element['#field_name'], $element['#language']));
+			$parent_langcode = entity_language($element['#entity_type'], $element['#entity']);
+
+			$ief_id = $element['#ief_id'];
+
+			$element['form'] = array (
+		        '#type' => 'container',
+		        '#op' => 'add',
+		        '#parents' => array_merge($parents, array ('form')),
+		        '#entity_type' => $settings['entity_type'],
+		        '#parent_language' => $parent_langcode,
+		        '#ief_id' => $ief_id,
+			);
+			$bundle = reset($settings['bundles']);
+
+			$form_state['inline_entity_form'][$ief_id]['form settings'] = array (
+        		'bundle' => $bundle,
+			);
+
+			$element['form'] = inline_entity_form_entity_form($controller, $element['form'], $form_state);
+		}
+	}
 }
 
 
