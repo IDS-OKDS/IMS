@@ -49,10 +49,26 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 /*
  * Implimentaion of hook_entity_presave
  * 
- * Create Object ID for new Nodes/Terms
+ * 1. Create Asset ID (object_id) for new Nodes/Terms
+ * 2. Update shared fields across sites/branches
+ * 3. Create references to Document Abstracts on Document URL nodes
  */
 function idsims_main_entity_presave($entity, $type) {
-	/* Add an Object ID if there isn't one */
+	/* 1. Create Asset ID (object_id) for new Nodes/Terms */
+	$asset_id = _idsims_main_get_asset_id($entity, $type);
+	/* 2. Update shared fields across sites/branches */
+	_idsims_main_update_shared_fields($entity, $type, $asset_id);
+	/* 3. Create references to Document Abstracts on Document URL nodes */
+	_idsims_main_update_references_to_document_abstracts($entity, $type, $asset_id);
+}
+
+
+/*
+ *  return Asset ID from entity or add if doesn't exist.
+ */
+function _idsims_main_get_asset_id(&$entity, $type){
+	/* Add an Asset ID if there isn't one */
+	$asset_id = FALSE;
   	$field_language = field_language($type, $entity, 'field_object_id');
   	$objectid_set = TRUE;
     if(!isset($entity->field_object_id[$field_language])){
@@ -81,7 +97,35 @@ function idsims_main_entity_presave($entity, $type) {
 	    	$entity->field_object_id[$field_language][0]['value'] = $new_object_id;
 			variable_set('idsims_entity_next_id', $new_object_id_num);
     	}
-    }
-
+    	$asset_id = $new_object_id;
+    } else {
+    	$asset_id = $entity->field_object_id[$field_language][0]['value'];
+    }	
+    return $asset_id;
 }
+
+
+/*
+ * Update shared fields across sites/branches
+ */
+function _idsims_main_update_shared_fields(&$entity, $type, $asset_id){
+	/*
+	 * Array of sheared field IDs -- add to this if you want this field to update across all sites/branches
+	 */
+}
+
+
+/*
+ * Create references to Document Abstracts on Document URL nodes
+ */
+function _idsims_main_update_references_to_document_abstracts(&$entity, $type, $asset_id){
+	/*
+	 * Add parent IDS Document node Asset ID as Asset ID
+	 */
+	
+	/*
+	 * Make references in IDS Document URL Entities to IDS Document nodes
+	 */
+}
+
 
