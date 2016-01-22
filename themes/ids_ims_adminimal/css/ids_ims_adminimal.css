@@ -36,3 +36,8 @@ fieldset fieldset.collapsed {
 .node-ids_document-form .field-name-field-document-url  {
 	margin-bottom:0;
 }
+
+table th, table td {
+	font-size:1em;	
+	padding:5px;	
+}
