@@ -5,6 +5,26 @@
 
             $(window).ready(function () {
                 // Execute code once the window is ready.
+        	$('#edit-field-document-urls-und-form .field-name-field-document-url input').change(function(){
+        	    var docurl = $(this).val();
+        	    var foundtype = false;
+        	    $('#edit-field-document-urls-und-form .field-name-field-file-type select option').each(function( index ) {
+        		var filetypeoption = $(this).text();
+        		if(docurl.indexOf('.' + filetypeoption) > -1){
+        		    foundtype = true;
+        		}
+        	    });
+        	    if(foundtype){
+                	    $('#edit-field-document-urls-und-form .field-name-field-file-type select option').each(function( index ) {
+                		var filetypeoption = $(this).text();
+                		if(docurl.indexOf('.' + filetypeoption) > -1){
+                		    $(this).attr('selected', 'selected');
+                		} else {
+                		    $(this).removeAttr('selected');
+                		}
+                	    });
+        	    }
+        	});
             });
 
             $(window).load(function () {
