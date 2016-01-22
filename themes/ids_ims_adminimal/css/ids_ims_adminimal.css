@@ -6,10 +6,6 @@ body.mq-tablet.admin-menu.adminimal-menu:before {
 	display:none;
 }
 
-.node-ids_document-form .form-item-field-document-urls-und-form-title {
-	display:none;	
-}
-
 .node-ids_document-form .field-name-field-document-urls .field-name-field-document-url {
 	float:left;	
 	width:75%;
