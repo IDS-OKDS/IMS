@@ -66,7 +66,7 @@ function idsims_main_entity_presave($entity, $type) {
 		drupal_set_message('presaving NODE');
 		/* 2. Update shared fields across sites/branches */
 		_idsims_main_update_shared_fields($entity, $type, $asset_id);
-		/* 3. Create references to Document Abstracts on Document URL nodes */
+		/* 3. Create references to Document Abstracts on Document URL entities */
 		_idsims_main_update_references_to_document_abstracts($entity, $type, $asset_id);
 	}
 }
@@ -129,10 +129,24 @@ function _idsims_main_update_shared_fields(&$entity, $type, $asset_id){
  */
 function _idsims_main_update_references_to_document_abstracts(&$entity, $type, $asset_id){
 	/*
-	 * Add parent IDS Document node Asset ID as Asset ID
-	 */
-
-	/*
 	 * Make references in IDS Document URL Entities to IDS Document nodes
+	 * Add IDS Document node Asset ID (object_id) as Asset ID (object_id) in entity
+	 * 
+	 * First find the IDS Document URL Entities attached to this node
 	 */
+	$field_language = field_language($type, $entity, 'field_document_urls');
+	if(isset($entity->field_document_urls[$field_language])){
+		$document_url_entity_ids = array();
+		foreach($entity->field_document_urls[$field_language] as $key => $item){
+			$document_url_entity_ids[] = $item['target_id'];
+		}
+		if(count($document_url_entity_ids)){
+			$document_url_entities = entity_load('ids_document_url', $document_url_entity_ids);
+			foreach($document_url_entities as $key => $document_url_entity){
+				$document_url_entity->field_object_id[$field_language][0]['value'] = $asset_id;
+				field_attach_update('ids_document_url', $document_url_entity);
+			}
+		}
+	}
+
 }
