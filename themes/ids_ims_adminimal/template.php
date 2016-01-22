@@ -5,6 +5,16 @@
  * This file contains the main theme functions hooks and overrides.
  */
 
+/**
+ * Implementation of hook_preprocess_html
+ * 
+ * css load order not working in info file was loading before Adminimal default
+ */
+function ids_ims_adminimal_preprocess_html(&$vars) {
+  	// Add Override css for this sub-theme
+	drupal_add_css(path_to_theme() . '/css/ids_ims_adminimal.css', array('group' => CSS_THEME, 'media' => 'all', 'weight' => 2));	
+}
+
 
 /**
  * Implementation of hook_preprocess_page

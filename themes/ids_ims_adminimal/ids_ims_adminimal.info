@@ -2,7 +2,7 @@ name = IDS IMS Admin
 description = IDS IMS administration theme (inherited from Adminimal theme).
 core = 7.x
 scripts[] = js/ids_ims_adminimal.js
-stylesheets[all][] = css/ids_ims_adminimal.css
+
 regions[hidden] = Hidden
 regions[content_before] = Before Content
 regions[sidebar_left] = Sidebar Left
