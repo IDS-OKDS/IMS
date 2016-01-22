@@ -11,8 +11,11 @@ define('IDSIMS_ENTITY_NEXT_ID_START', 100000);
 function idsims_main_init() {
 	drupal_add_js(drupal_get_path('module', 'idsims_main').'/js/idsims-main.js');
 	drupal_add_css(drupal_get_path('module', 'idsims_main').'/css/idsims-main.css');
+	  // Include inline_entity_form.module integration.
+	  if (module_exists('inline_entity_form')) {
+	    module_load_include('inc', 'idsims_main', 'idsims_main.inline_entity_form');
+	  }
 }
-
 
 /**
  * Implement hook_menu()
@@ -133,40 +136,3 @@ function _idsims_main_update_references_to_document_abstracts(&$entity, $type, $
 	 * Make references in IDS Document URL Entities to IDS Document nodes
 	 */
 }
-
-
-function idsims_main_field_widget_form_alter(&$element, &$form_state, $context) {
-	$field = $context['field'];
-	if (isset($field['field_name']) && ('field_document_urls' == $field['field_name'])) {
-		if (empty($element['form']) && empty($element['entities'][0])) {
-			$element['actions'] = array();
-			$field = $context['field'];
-			$instance = $context['instance'];
-			$settings = inline_entity_form_settings($field, $instance);
-			$controller = inline_entity_form_get_controller($instance);
-
-			$parents = array_merge($element['#field_parents'], array($element['#field_name'], $element['#language']));
-			$parent_langcode = entity_language($element['#entity_type'], $element['#entity']);
-
-			$ief_id = $element['#ief_id'];
-
-			$element['form'] = array (
-		        '#type' => 'container',
-		        '#op' => 'add',
-		        '#parents' => array_merge($parents, array ('form')),
-		        '#entity_type' => $settings['entity_type'],
-		        '#parent_language' => $parent_langcode,
-		        '#ief_id' => $ief_id,
-			);
-			$bundle = reset($settings['bundles']);
-
-			$form_state['inline_entity_form'][$ief_id]['form settings'] = array (
-        		'bundle' => $bundle,
-			);
-
-			$element['form'] = inline_entity_form_entity_form($controller, $element['form'], $form_state);
-		}
-	}
-}
-
-
