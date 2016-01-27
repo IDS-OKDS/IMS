@@ -734,6 +734,7 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 					if(isset($language_array['description'])){
 						$field_array['body'] = array( 0 => $language_array['description']);
 					}
+					//drupal_set_message('saving translation for: '.$assetid . ' for lang:' . $language_array['isocode'] . ' where orginal lang=' . $default_languge);
 					_idsims_main_save_entity_translation('node', $node, $language_array['isocode'], $field_array, $default_languge);
 				}
 			}
