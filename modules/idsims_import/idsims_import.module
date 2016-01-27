@@ -700,14 +700,14 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 						}
 					}
 				}
-				/* these two we know are in the default language just need to copy to lang specific filed array */
-				$node->title_field[$default_languge][0]['value'] = $node->title_field[LANGUAGE_NONE][0]['value'];
-				$node->title_field[$default_languge][0]['safe_value'] = $node->title_field[LANGUAGE_NONE][0]['safe_value'];
-				$node->body[$default_languge][0]['value'] = $node->body[LANGUAGE_NONE][0]['value'];
-				$node->body[$default_languge][0]['safe_value'] = $node->body[LANGUAGE_NONE][0]['safe_value'];
-				/* Save the node in the Default language -- there should be no Language Neutral nodes */
-				node_save($node);
 			}
+			/* these two we know are in the default language just need to copy to lang specific filed array */
+			$node->title_field[$default_languge][0]['value'] = $node->title_field[LANGUAGE_NONE][0]['value'];
+			$node->title_field[$default_languge][0]['safe_value'] = $node->title_field[LANGUAGE_NONE][0]['safe_value'];
+			$node->body[$default_languge][0]['value'] = $node->body[LANGUAGE_NONE][0]['value'];
+			$node->body[$default_languge][0]['safe_value'] = $node->body[LANGUAGE_NONE][0]['safe_value'];
+			/* Save the node in the Default language -- there should be no Language Neutral nodes */
+			node_save($node);
 		} else {
 			drupal_set_message('LOOKUP::'.print_r($field_data, TRUE) . '$lang_code:'.$lang_code);
 		}
