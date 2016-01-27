@@ -51,6 +51,13 @@ function idsims_import_menu() {
     'page arguments' => array('idsims_import_import_extras_form'),
 	//  'file' => 'epdmod.admin.inc',
 	);
+	$items['admin/config/ids-ims/import-extras-api'] = array(
+    'title' => 'Documents: Import additional fields from API',
+    'description' => 'Import any additional fields required for Documents from the IDS API - Translations',
+    'access arguments' => array('administer site configuration'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('idsims_import_import_extras_api_form'),
+	);
 	$items['admin/config/ids-ims/import-extras-orgs'] = array(
     'title' => 'Organisations: Import additional fields from old IMS',
     'description' => 'Import any additional fields required for Organisations from the old Oyrx DB provided by custom XML feed',
@@ -88,6 +95,36 @@ function idsims_import_import_extras_form() {
     				. '<li>SECTORS: Process Updates (as a Collection)</li>'
     				. '<li>SECTORS: Process BRIDGE Bibliography, Briefing or Report</li>'
     				. '<li>SECTORS: Process remaining Sectors as Document Types</li>'
+    				. '</ul>',
+    );
+    $form['import_limit'] = array(
+    '#title' => t('Import limit'),
+    '#type'  => 'textfield',
+    '#size' => 10,
+    '#description' => t('The number of items to import. If left blank then all'), 
+    '#default_value' => 5,   
+    );
+    $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Commence Import'),
+    );
+    return $form;
+}
+
+
+
+/**
+ * Build a form for Import Extras API settings
+ */
+function idsims_import_import_extras_api_form() {
+	$form['#attributes'] = array(
+    'enctype' => 'multipart/form-data'
+    );
+    $form['intro_text'] = array(
+    '#markup' => '<h2>Documents: Extra data pulled from the IDS API ('.l('e.g.','http://api.ids.ac.uk/openapi/bridge/get/documents/A53212/full').')</h2>'
+    				. '<p>Process tasks:</p>'
+    				. '<ul>'
+    				. '<li>Translations from language_array: Title, Description (abstract), headline</li>'
     				. '</ul>',
     );
     $form['import_limit'] = array(
@@ -200,6 +237,10 @@ function _idsims_import_set_batch_jobs($batch_name, $batch_id, &$form, &$form_st
 
 function idsims_import_import_extras_form_submit(&$form, &$form_state) {
 	_idsims_import_set_batch_jobs('Importing Extra fields', 'import_extras', $form, $form_state);
+}
+
+function idsims_import_import_extras_api_form_submit(&$form, &$form_state) {
+	_idsims_import_set_batch_jobs('Importing Extra fields API', 'import_extras_api', $form, $form_state);
 }
 
 function idsims_import_import_extras_orgs_form_submit(&$form, &$form_state) {
@@ -464,6 +505,45 @@ function _idsims_import_process_import_extras($nid, &$context) {
 	$context['message'] = t('Updating node %title : Asset ID = %assetid', array('%title' => $node->title, '%assetid' => $assetid));
 }
 
+/**
+ * Process an asset for extra fields from API import
+ */
+function _idsims_import_process_import_extras_api($nid, &$context) {
+	$node = node_load($nid);
+	$siteid = $node->field_site[LANGUAGE_NONE][0]['value'];
+	$xml_feed_path_root = 'http://api.ids.ac.uk/openapi/'.$siteid.'/get/documents/';
+	$assetid = $node->field_object_id[LANGUAGE_NONE][0]['value'];
+	$idsapi_api_key = variable_get('idsapi_api_key', '');
+	if($idsapi_api_key){
+		$xml_feed_path_full = $xml_feed_path_root . $assetid . '/full?_token_guid=' . $idsapi_api_key;
+		$field_data = _idsims_import_idsapi_get_data($xml_feed_path_full);
+		if($field_data){
+			_idsims_import_process_import_extras_api_update_node($node, $field_data, $assetid);
+			$context['message'] = t('Updating node %title : Asset ID = %assetid', array('%title' => $node->title, '%assetid' => $assetid));
+		}
+	} else {
+		drupal_set_message('IDS API Key not set');
+	}
+}
+
+// Call the IDS API URL.
+function _idsims_import_idsapi_get_data($url) {
+  $response = drupal_http_request($url);
+  if (isset($response->data)) {
+    $data = json_decode($response->data, true);
+  }
+  else {
+    $message = 'The API call failed.';
+    if (isset($response->code)) {
+      $message .= ' Code: ' . $response->code;
+    }
+    drupal_set_message($message);
+    $data = FALSE;
+  }
+  return $data;
+}
+
+
 
 /**
  * Process an asset for extra fields import oganisations
@@ -577,6 +657,39 @@ function _idsims_import_process_import_extras_update_node(&$node, &$field_data, 
 		_idsims_import_process_import_extras_update_node_sectors($node, $field_data['SectorList'], $assetid);
 		$node_updated = TRUE;
 	}
+	
+	if($node_updated){
+		node_save($node);
+	}
+}
+
+function _idsims_import_process_import_extras_api_update_node(&$node, &$field_data, $assetid) {
+	$node_updated = FALSE;
+	
+	/*
+	 * Interigate language array
+	 */
+	if(isset($field_data['results']['language_array']['language'])){
+		foreach($field_data['results']['language_array']['language'] as $language_array){
+			if(function_exists('_idsims_main_save_entity_translation')){
+				$field_array = array();
+				if(isset($language_array['headline'])){
+					$field_array['field_headline'] = array( 0 => $language_array['headline']);
+				}
+				if(isset($language_array['title'])){
+					$field_array['title_field'] = array( 0 => $language_array['title']);
+				}
+				if(isset($language_array['description'])){
+					$field_array['body'] = array( 0 => $language_array['description']);
+				}
+				_idsims_main_save_entity_translation('node', $node, $language_array['isocode'], $field_array);
+			}
+		}
+	} else {
+		drupal_set_message('No language array for Asset ID: '.$assetid);
+	}
+	
+	drupal_set_message(print_r($field_data, TRUE));
 	
 	if($node_updated){
 		node_save($node);
@@ -727,6 +840,15 @@ function _idsims_import_simpleXML2array($xml)
  */
 function idsims_import_import_extras_orgs_finished($success, $results, $operations) {
 	$message = t('The organisation import extras has completed.');
+	drupal_set_message($message);
+	return $message;
+}
+
+/**
+ * Handle batch completion.
+ */
+function idsims_import_import_extras_api_orgs_finished($success, $results, $operations) {
+	$message = t('The organisation import extras from API has completed.');
 	drupal_set_message($message);
 	return $message;
 }

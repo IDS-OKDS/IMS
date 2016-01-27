@@ -55,7 +55,7 @@ function _idsims_main_save_entity_translation($entity_type, $entity, $langcode, 
 			);	
 		}
 	}
-	$handler = entity_translation_get_handler($entity_type, $entity);
+	$handler = entity_translation_get_handler($entity_type, $entity, TRUE);
 	$translation = array(
 	  'translate' => 0,
 	  'status' => 1,
