@@ -721,7 +721,7 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 	 */
 	if(isset($field_data['results']['language_array']['language'])){
 		foreach($field_data['results']['language_array']['language'] as $language_array){
-			drupal_set_message('LANG::'.$language_array['isocode'].'::Asset::'.$assetid);
+			//drupal_set_message('LANG::'.$language_array['isocode'].'::Asset::'.$assetid);
 			if($language_array['isocode'] != $default_languge){
 				if(function_exists('_idsims_main_save_entity_translation')){
 					$field_array = array();
