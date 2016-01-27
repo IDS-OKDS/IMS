@@ -86,16 +86,16 @@ function idsims_import_import_extras_form() {
     );
     $form['intro_text'] = array(
     '#markup' => '<h2>Documents: Extra data pulled from the old system via a bespoke XML feed ('.l('e.g.','http://isudev.ids.ac.uk/devrob/oryx-extras/?xml=true&aid=56240').')</h2>'
-    				. '<p>Process tasks:</p>'
-    				. '<ul>'
-    				. '<li>Publication uncertain date</li>'
-    				. '<li>SUBJECTS: Content partners from subjects array made node reference to Organisation</li>'
-    				. '<li>SUBJECTS: Funders from subjects array made node reference to Organisation</li>'
-    				. '<li>SUBJECTS: Flags applied to documents (Abstract, Sentinel Output, Recommended Reading)</li>'
-    				. '<li>SECTORS: Process Updates (as a Collection)</li>'
-    				. '<li>SECTORS: Process BRIDGE Bibliography, Briefing or Report</li>'
-    				. '<li>SECTORS: Process remaining Sectors as Document Types</li>'
-    				. '</ul>',
+    . '<p>Process tasks:</p>'
+    . '<ul>'
+    . '<li>Publication uncertain date</li>'
+    . '<li>SUBJECTS: Content partners from subjects array made node reference to Organisation</li>'
+    . '<li>SUBJECTS: Funders from subjects array made node reference to Organisation</li>'
+    . '<li>SUBJECTS: Flags applied to documents (Abstract, Sentinel Output, Recommended Reading)</li>'
+    . '<li>SECTORS: Process Updates (as a Collection)</li>'
+    . '<li>SECTORS: Process BRIDGE Bibliography, Briefing or Report</li>'
+    . '<li>SECTORS: Process remaining Sectors as Document Types</li>'
+    . '</ul>',
     );
     $form['import_limit'] = array(
     '#title' => t('Import limit'),
@@ -122,10 +122,10 @@ function idsims_import_import_extras_api_form() {
     );
     $form['intro_text'] = array(
     '#markup' => '<h2>Documents: Extra data pulled from the IDS API ('.l('e.g.','http://api.ids.ac.uk/openapi/bridge/get/documents/A53212/full').')</h2>'
-    				. '<p>Process tasks:</p>'
-    				. '<ul>'
-    				. '<li>Translations from language_array: Title, Description (abstract), headline</li>'
-    				. '</ul>',
+    . '<p>Process tasks:</p>'
+    . '<ul>'
+    . '<li>Translations from language_array: Title, Description (abstract), headline</li>'
+    . '</ul>',
     );
     $form['import_limit'] = array(
     '#title' => t('Import limit'),
@@ -150,13 +150,13 @@ function idsims_import_import_extras_orgs_form() {
     );
     $form['intro_text'] = array(
     '#markup' => '<h2>Organisations: Extra data pulled from the old system via a bespoke XML feed ('.l('e.g.','http://isudev.ids.ac.uk/devrob/oryx-extras/?xml=true&aid=56240').')</h2>'
-    				. '<p>Process tasks:</p>'
-    				. '<ul>'
-    				. '<li>Has Hosting Permission</li>'
-    				. '<li>Has Redistribute Permission</li>'
-    				. '<li>Has Permission to host information</li>'
-    				. '<li>Licence Type</li>'
-    				. '</ul>',
+    . '<p>Process tasks:</p>'
+    . '<ul>'
+    . '<li>Has Hosting Permission</li>'
+    . '<li>Has Redistribute Permission</li>'
+    . '<li>Has Permission to host information</li>'
+    . '<li>Licence Type</li>'
+    . '</ul>',
     );
     $form['import_limit'] = array(
     '#title' => t('Import limit'),
@@ -181,10 +181,10 @@ function idsims_import_import_post_process_form() {
     );
     $form['intro_text'] = array(
     '#markup' => '<h2>Manipulating the data that has been pulled into Drupal</h2>'
-    				. '<p>Process tasks:</p>'
-    				. '<ul>'
-    				. '<li>From the Pubisher ID field populate Publisers field which is a node reference to Organisations</li>'
-    				. '</ul>',
+    . '<p>Process tasks:</p>'
+    . '<ul>'
+    . '<li>From the Pubisher ID field populate Publisers field which is a node reference to Organisations</li>'
+    . '</ul>',
     );
     $form['import_limit'] = array(
     '#title' => t('Import limit'),
@@ -252,8 +252,8 @@ function idsims_import_import_post_process_form_submit(&$form, &$form_state) {
 }
 
 /**
-* Create a taxonomy term and return the tid.
-*/
+ * Create a taxonomy term and return the tid.
+ */
 function _idsims_import_create_taxonomy_term($name, $vid, $parent_id = 0) {
 	//drupal_set_message("$name, $vid, $parent_id ");
 	$term = new stdClass();
@@ -290,13 +290,13 @@ function _idsims_import_sectors_to_doc_type(&$node, $cat_assetid, $cat_assetid_r
 	$oryx_doc_types_arr[18] = 'Presentation';
 	$oryx_doc_types_arr[19] = 'Research report (or study)';
 	$oryx_doc_types_arr[20] = 'Working paper (includes discussion paper)';
-	
+
 	$bridge_sector_doc_types_arr = array();
 	$bridge_sector_doc_types_arr['Background Document'] = 1;
 	$bridge_sector_doc_types_arr['Bibliography'] = 2;
 	$bridge_sector_doc_types_arr['BRIDGE Bibliography'] = 2;
 	$bridge_sector_doc_types_arr['Briefing'] = 1;
-	$bridge_sector_doc_types_arr['BRIDGE Briefing'] = 16; 
+	$bridge_sector_doc_types_arr['BRIDGE Briefing'] = 16;
 	$bridge_sector_doc_types_arr['Case Study'] = 5;
 	$bridge_sector_doc_types_arr['Cutting Edge Pack'] = 'GROUPING';
 	$bridge_sector_doc_types_arr['Fundraising'] = 'GROUPING';
@@ -308,7 +308,7 @@ function _idsims_import_sectors_to_doc_type(&$node, $cat_assetid, $cat_assetid_r
 	$bridge_sector_doc_types_arr['BRIDGE Report'] = 19;
 	$bridge_sector_doc_types_arr['Research Output'] = 19;
 	$bridge_sector_doc_types_arr['Thematic Overview'] = 1;
-	
+
 	$doc_type_term_name = NULL;
 	$oryx_doc_type_id = NULL;
 	if(isset($bridge_sector_doc_types_arr[$cat_name])){
@@ -322,7 +322,7 @@ function _idsims_import_sectors_to_doc_type(&$node, $cat_assetid, $cat_assetid_r
 			_idsims_import_apply_term_to_node($node, 'document_types', $tid);
 		}
 	}
-	
+
 	if($oryx_doc_type_id == 'GROUPING'){
 		/* first chek the grouping term exists. If not create */
 		$terms = taxonomy_get_term_by_name($cat_name, $vocabulary = IDSIMS_COLLECTIONS_VOC_NAME);
@@ -341,20 +341,20 @@ function _idsims_import_sectors_to_doc_type(&$node, $cat_assetid, $cat_assetid_r
 			_idsims_import_apply_term_to_node($node, 'collections', $tid);
 		}
 	}
-	
+
 }
 
 function _idsims_import_updates_collection(&$node, $cat_assetid, $cat_name){
 	$cat_assetid_raw = substr($cat_assetid, 1);/*remove 'C' at front of asset ID */
 	$update_arr = array(IDSIMS_COLLECTION_UPDATES_SID,
-						IDSIMS_COLLECTION_UPDATES_2007_SID,
-						IDSIMS_COLLECTION_UPDATES_2008_SID,
-						IDSIMS_COLLECTION_UPDATES_2009_SID,
-						IDSIMS_COLLECTION_UPDATES_2010_SID,
-						IDSIMS_COLLECTION_UPDATES_2011_SID,
-						IDSIMS_COLLECTION_UPDATES_2012_SID,
-						IDSIMS_COLLECTION_UPDATES_2013_SID,
-						IDSIMS_COLLECTION_UPDATES_2014_SID);
+	IDSIMS_COLLECTION_UPDATES_2007_SID,
+	IDSIMS_COLLECTION_UPDATES_2008_SID,
+	IDSIMS_COLLECTION_UPDATES_2009_SID,
+	IDSIMS_COLLECTION_UPDATES_2010_SID,
+	IDSIMS_COLLECTION_UPDATES_2011_SID,
+	IDSIMS_COLLECTION_UPDATES_2012_SID,
+	IDSIMS_COLLECTION_UPDATES_2013_SID,
+	IDSIMS_COLLECTION_UPDATES_2014_SID);
 	if(in_array($cat_assetid_raw, $update_arr)){
 		/* first chek the root update term exists. If not create */
 		$terms = taxonomy_get_term_by_name(IDSIMS_COLLECTION_UPDATES_NAME, $vocabulary = IDSIMS_COLLECTIONS_VOC_NAME);
@@ -364,17 +364,17 @@ function _idsims_import_updates_collection(&$node, $cat_assetid, $cat_name){
 			/* If root update term doesn't exist. Then create it */
 			$tid = _idsims_import_create_taxonomy_term(IDSIMS_COLLECTION_UPDATES_NAME, $vid);
 			variable_set('idsims_updates_root_tid', $tid);
-		}	
+		}
 		$updates_root_tid = variable_get('idsims_updates_root_tid', 0);
 		/* if this isn't the root item then save it and add to the tree */
-		if($cat_assetid_raw != IDSIMS_COLLECTION_UPDATES_SID){	
+		if($cat_assetid_raw != IDSIMS_COLLECTION_UPDATES_SID){
 			$tid = _idsims_import_create_taxonomy_term($cat_name, $vid, $parent_id = $updates_root_tid);
 		}
 
 		/* now we've saved the term we need to link it to our document node (if not already)*/
 		_idsims_import_apply_term_to_node($node, 'collections', $tid);
 	}
-} 
+}
 
 function get_collections_taxonomy_vid(){
 	$vid = variable_get('collections_taxonomy_vid', 0);
@@ -401,7 +401,7 @@ function _idsims_import_apply_term_to_node(&$node, $field_ref, $tid){
 	}
 	if(!$found && $tid){
 		$node->{$field_ref}[LANGUAGE_NONE][$cnt]['tid'] = $tid;
-	}	
+	}
 }
 
 function _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($cat_assetid){
@@ -427,7 +427,7 @@ function _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($
 	$asset_id_matrix['C2060'] = 'A64270'; /* Centre For Human Rights and Policy Studies (CHRIPS) */
 	$asset_id_matrix['C2024'] = 'A61408'; /* Centre for People and Forests (RECOFTC) */
 	$asset_id_matrix['C2032'] = 'A4305'; /* Centre for Policy Dialogue, Bangladesh (CPD) */
-	//$asset_id_matrix['C1966'] = 'A4497'; /* @ ALAN SAYS REMOVE – HAS NO CONTENT Centre for Policy Research */
+	//$asset_id_matrix['C1966'] = 'A4497'; /* @ ALAN SAYS REMOVE – HAS NO CONTENT Centre for Policy Research *
 	//$asset_id_matrix['C2042'] = 'A65946'; /* @ ALAN SAYS INCORRECT – Doesn’t appear to have org record in database but is here.. http://www.nwu.ac.za/centre-excellence-nutrition-cen-potchefstroom-campus Centre of Excellence for Nutrition */
 	$asset_id_matrix['C2018'] = 'A70318'; /* China Institute of International Studies (CIIS) */
 	$asset_id_matrix['C2033'] = 'A63318'; /* Chinese Academy for Environmental Planning (CAEP) */
@@ -435,13 +435,13 @@ function _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($
 	$asset_id_matrix['C2051'] = 'A5770'; /* Curatio International Foundation (CIF) */
 	$asset_id_matrix['C1983'] = 'A68769'; /* CUTS Centre for International Trade, Economics & Environment (CUTS CITEE) */
 	$asset_id_matrix['C1984'] = 'A4669'; /* Economic Research Forum (ERF) */
-	//$asset_id_matrix['C2023'] = 'A1686'; /* @ ALAN SAYS REMOVE – HAS NO CONTENT Energy and Resources Institute */
+	//$asset_id_matrix['C2023'] = 'A1686'; /* @ ALAN SAYS REMOVE – HAS NO CONTENT Energy and Resources Institute *
 	$asset_id_matrix['C1969'] = 'A5837'; /* Energy Research Centre, University of Capetown */
 	$asset_id_matrix['C2027'] = 'A3719'; /* EQUINET */
 	$asset_id_matrix['C1999'] = 'A69688'; /* Ethiopian Public health Institute (EPHI) */
 	$asset_id_matrix['C2038'] = 'A7985'; /* Feminist Africa */
 	$asset_id_matrix['C2029'] = 'A7040'; /* Food, Agriculture and Natural Resource Policy Analysis Network (FANRPAN) */
-	//$asset_id_matrix['C2000'] = 'xxx'; /* @ ALAN SAYS REMOVE – HAS NO CONTENT Haramaya University */
+	//$asset_id_matrix['C2000'] = 'xxx'; /* @ ALAN SAYS REMOVE – HAS NO CONTENT Haramaya University *
 	$asset_id_matrix['C2052'] = 'A5024'; /* Health Economics & HIV/AIDS Research Division (HEARD) */
 	$asset_id_matrix['C2039'] = 'A4857'; /* Health Systems Trust */
 	$asset_id_matrix['C2006'] = 'A69390'; /* HIV/AIDS Knowledge Management Communication Capacity (KMCC) */
@@ -463,7 +463,7 @@ function _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($
 	$asset_id_matrix['C1965'] = 'A37013'; /* Kofi Annan International Peacekeeping Training Centre */
 	$asset_id_matrix['C2004'] = 'A7119'; /* @ M S Swaminathan Research Foundation (MSSRF) */
 	//$asset_id_matrix['C2019'] = 'xxx'; /* @ ALAN SAYS HAS NO ORG RECORD - Mekelle University */
-	//$asset_id_matrix['C2053'] = 'xxx'; /* @ REMOVE – HAS NO CONTENT MRC/UVRI Uganda Research Unit on AIDS */
+	//$asset_id_matrix['C2053'] = 'xxx'; /* @ REMOVE – HAS NO CONTENT MRC/UVRI Uganda Research Unit on AIDS *
 	$asset_id_matrix['C2043'] = 'A69042'; /* Nigeria Stability and Reconciliation Programme (NSRP) */
 	$asset_id_matrix['C2030'] = 'A6985'; /* Observer Research Foundation (ORF) */
 	$asset_id_matrix['C2017'] = 'A34071'; /* Open Society Initiative for Southern Africa (OSISA) */
@@ -481,12 +481,12 @@ function _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($
 	$asset_id_matrix['C1979'] = 'A68239'; /* West Africa Civil Society Institute (WACSI) */
 	$asset_id_matrix['C2036'] = 'A5691'; /* Women for Women’s Human Rights – New Ways */
 	$asset_id_matrix['C1970'] = 'A1348'; /* World Agroforestry Centre */
-	
+
 	/*
 	 * Funders
 	 */
 	$asset_id_matrix['C1834'] = 'A56922'; /* CDKN */
-	
+
 	return (isset($asset_id_matrix[$cat_assetid])) ? $asset_id_matrix[$cat_assetid] : FALSE;
 }
 
@@ -528,19 +528,19 @@ function _idsims_import_process_import_extras_api($nid, &$context) {
 
 // Call the IDS API URL.
 function _idsims_import_idsapi_get_data($url) {
-  $response = drupal_http_request($url);
-  if (isset($response->data)) {
-    $data = json_decode($response->data, true);
-  }
-  else {
-    $message = 'The API call failed.';
-    if (isset($response->code)) {
-      $message .= ' Code: ' . $response->code;
-    }
-    drupal_set_message($message);
-    $data = FALSE;
-  }
-  return $data;
+	$response = drupal_http_request($url);
+	if (isset($response->data)) {
+		$data = json_decode($response->data, true);
+	}
+	else {
+		$message = 'The API call failed.';
+		if (isset($response->code)) {
+			$message .= ' Code: ' . $response->code;
+		}
+		drupal_set_message($message);
+		$data = FALSE;
+	}
+	return $data;
 }
 
 
@@ -575,7 +575,7 @@ function _idsims_import_process_import_extras_update_organisation_node(&$node, &
 		}
 		$node_updated = TRUE;
 	}
-	
+
 	/*
 	 * Has Redistribute Permission
 	 */
@@ -587,7 +587,7 @@ function _idsims_import_process_import_extras_update_organisation_node(&$node, &
 		}
 		$node_updated = TRUE;
 	}
-	
+
 	/*
 	 * Has Permission to host information
 	 */
@@ -601,8 +601,8 @@ function _idsims_import_process_import_extras_update_organisation_node(&$node, &
 	}
 	//drupal_set_message('$field_data' . print_r($field_data, TRUE));
 	/*
-	 * Licence Type
-	 */
+	* Licence Type
+	*/
 	if(isset($field_data['licence_type'])){
 		foreach($field_data['licence_type'] as $key => $value){
 			if($key == 'name'){
@@ -610,12 +610,12 @@ function _idsims_import_process_import_extras_update_organisation_node(&$node, &
 				foreach($terms as $term){
 					$tid = $term->tid;
 					_idsims_import_apply_term_to_node($node, 'licence_type_term', $tid);
-				}	
+				}
 			}
 		}
 		$node_updated = TRUE;
 	}
-	
+
 	if($node_updated){
 		node_save($node);
 	}
@@ -627,7 +627,7 @@ function _idsims_import_process_import_extras_update_node(&$node, &$field_data, 
 	 * Publication date uncertain field
 	 */
 	$node_updated = FALSE;
-	
+
 	if(isset($field_data['publication_date_uncertain'])){
 		$node->field_publication_date_uncertain[LANGUAGE_NONE] = array();
 		$cnt = 0;
@@ -649,7 +649,7 @@ function _idsims_import_process_import_extras_update_node(&$node, &$field_data, 
 		_idsims_import_process_import_extras_update_node_subjects($node, $field_data['subjectList'], $assetid);
 		$node_updated = TRUE;
 	}
-	
+
 	/*
 	 * process sectors (BRIDGE)
 	 */
@@ -657,40 +657,93 @@ function _idsims_import_process_import_extras_update_node(&$node, &$field_data, 
 		_idsims_import_process_import_extras_update_node_sectors($node, $field_data['SectorList'], $assetid);
 		$node_updated = TRUE;
 	}
-	
+
 	if($node_updated){
 		node_save($node);
 	}
 }
 
+function _idsims_import_ids_api_lang_id_to_iso_code_for_drupal($api_lang_id){
+	$lang_code_arr = array();
+	$lang_code_arr[1] = 'en'; //English
+	$lang_code_arr[146] = 'fr'; //French
+	$lang_code_arr[429] = 'es'; //Spanish
+	$lang_code_arr[23] = 'ar'; //Arabic
+	$lang_code_arr[92] = 'zh-hans'; //Simlified Chinese (Traditional 'zh-hant')
+	$lang_code_arr[368] = 'pt'; // Portuguese
+	$lang_code_arr[382] = 'ru'; //Russian
+	if(isset($lang_code_arr[$api_lang_id])){
+		return $lang_code_arr[$api_lang_id];
+	}
+	return FALSE;
+}
+
 function _idsims_import_process_import_extras_api_update_node(&$node, &$field_data, $assetid) {
 	$node_updated = FALSE;
-	
+
 	/*
-	 * Interigate language array
+	 * Firstly we need to set the default language for this node and set the translatable field values
+	 */
+	$default_languge = LANGUAGE_NONE;
+	if(isset($field_data['results']['language_id'][0])){
+		$lang_code = _idsims_import_ids_api_lang_id_to_iso_code_for_drupal($field_data['results']['language_id'][0]);
+		if($lang_code){
+			$default_languge = $lang_code;
+			$node->language = $default_languge;
+			/* Update Headline in the default language if set -- we didn't get headline on import */
+			if(isset($field_data['results']['language_array']['language'])){
+				foreach($field_data['results']['language_array']['language'] as $language_array){
+					if($language_array['isocode']==$default_languge){
+						if(isset($language_array['headline'])){
+							$node->field_headline[LANGUAGE_NONE][0]['value'] = $language_array['headline'];
+							$node->field_headline[$default_languge][0]['value'] = $language_array['headline'];
+						}
+					}
+				}
+				/* these two we know are in the default language just need to copy to lang specific filed array */
+				$node->title_field[$default_languge][0]['value'] = $node->title_field[LANGUAGE_NONE][0]['value'];
+				$node->title_field[$default_languge][0]['safe_value'] = $node->title_field[LANGUAGE_NONE][0]['safe_value'];
+				$node->body[$default_languge][0]['value'] = $node->body[LANGUAGE_NONE][0]['value'];
+				$node->body[$default_languge][0]['safe_value'] = $node->body[LANGUAGE_NONE][0]['safe_value'];
+				/* Save the node in the Default language -- there should be no Language Neutral nodes */
+				node_save($node);
+			}
+		} else {
+			drupal_set_message('LOOKUP::'.print_r($field_data, TRUE) . '$lang_code:'.$lang_code);
+		}
+	}
+	if($default_languge == LANGUAGE_NONE){
+		drupal_set_message('Warning: No default language set for Node ID('.$node->nid.') Asset ID('.$assetid.')');
+	}
+
+	/*
+	 * Interigate language array to build translations
 	 */
 	if(isset($field_data['results']['language_array']['language'])){
 		foreach($field_data['results']['language_array']['language'] as $language_array){
-			if(function_exists('_idsims_main_save_entity_translation')){
-				$field_array = array();
-				if(isset($language_array['headline'])){
-					$field_array['field_headline'] = array( 0 => $language_array['headline']);
+			drupal_set_message('LANG::'.$language_array['isocode'].'::Asset::'.$assetid);
+			if($language_array['isocode'] != $default_languge){
+				if(function_exists('_idsims_main_save_entity_translation')){
+					$field_array = array();
+					if(isset($language_array['headline'])){
+						$field_array['field_headline'] = array( 0 => $language_array['headline']);
+					}
+					if(isset($language_array['title'])){
+						$field_array['title_field'] = array( 0 => $language_array['title']);
+					}
+					if(isset($language_array['description'])){
+						$field_array['body'] = array( 0 => $language_array['description']);
+					}
+					_idsims_main_save_entity_translation('node', $node, $language_array['isocode'], $field_array, $default_languge);
 				}
-				if(isset($language_array['title'])){
-					$field_array['title_field'] = array( 0 => $language_array['title']);
-				}
-				if(isset($language_array['description'])){
-					$field_array['body'] = array( 0 => $language_array['description']);
-				}
-				_idsims_main_save_entity_translation('node', $node, $language_array['isocode'], $field_array);
 			}
 		}
 	} else {
 		drupal_set_message('No language array for Asset ID: '.$assetid);
 	}
-	
-	drupal_set_message(print_r($field_data, TRUE));
-	
+
+	//drupal_set_message(print_r($field_data, TRUE));
+
 	if($node_updated){
 		node_save($node);
 	}
@@ -700,7 +753,7 @@ function _idsims_import_apply_organsation_ref(&$node, $field_ref, $object_id_arr
 	$field_ref = 'field_' . $field_ref;
 	$cnt = 0;
 	$node->{$field_ref}[LANGUAGE_NONE] = array();
-	
+
 	/* lookup organisation */
 	$query = new EntityFieldQuery();
 	$query->entityCondition('entity_type', 'node')
@@ -708,7 +761,7 @@ function _idsims_import_apply_organsation_ref(&$node, $field_ref, $object_id_arr
 	->propertyCondition('status', NODE_PUBLISHED)
 	->fieldCondition('field_object_id', 'value', $object_id_arr, 'IN')
 	->addMetaData('account', user_load(1)); // Run the query as user 1.
-		
+
 	$result = $query->execute();
 
 	if (!empty($result['node'])) {
@@ -718,7 +771,7 @@ function _idsims_import_apply_organsation_ref(&$node, $field_ref, $object_id_arr
 			$node->{$field_ref}[LANGUAGE_NONE][$cnt]['access'] = 1;
 			$cnt++;
 		}
-	}	
+	}
 }
 
 function _idsims_import_process_import_extras_update_node_subjects(&$node, $subjects, $assetid){
@@ -741,7 +794,7 @@ function _idsims_import_process_import_extras_update_node_subjects(&$node, $subj
 		if($org_asset_id){
 			_idsims_import_apply_organsation_ref($node, 'content_partner_ref', array($org_asset_id));
 		}
-		
+
 		/*
 		 * Process Flags
 		 */
@@ -772,22 +825,22 @@ function _idsims_import_process_import_extras_update_node_sectors(&$node, $secto
 		 * Process Updates (as a Collection)
 		 */
 		_idsims_import_updates_collection($node, $cat_assetid, $item['object_name']);
-		
+
 		/*
 		 * Process BRIDGE Bibliography, Briefing or Report (and make them link to BRIDGE organisation)
 		 */
 		if(	$cat_assetid_raw == IDSIMS_BRIDGE_ORG_LINK_BIBLIO_SID ||
-			$cat_assetid_raw == IDSIMS_BRIDGE_ORG_LINK_BRIEF_SID ||
-			$cat_assetid_raw == IDSIMS_BRIDGE_ORG_LINK_REPORT_SID){
+		$cat_assetid_raw == IDSIMS_BRIDGE_ORG_LINK_BRIEF_SID ||
+		$cat_assetid_raw == IDSIMS_BRIDGE_ORG_LINK_REPORT_SID){
 			_idsims_import_apply_organsation_ref($node, 'publishers', array(IDSIMS_BRIDGE_ORGANISATION_ID));
 		}
-		
-		
+
+
 		/*
 		 * Process remaining Sectors as Document Types
 		 */
 		_idsims_import_sectors_to_doc_type($node, $cat_assetid, $cat_assetid_raw, $item['object_name']);
-		
+
 	}
 }
 
@@ -804,19 +857,19 @@ function _idsims_import_process_import_post_process($nid, &$context) {
 function _idsims_import_process_import_post_process_update_node(&$node, &$context) {
 	/*
 	 * Create node references from asset IDs
-	 * 
+	 *
 	 * Publisher IDs from IDS API Module import to Publisher Node reference
 	 */
 	$node_updated = FALSE;
-	
+
 	if(isset($node->field_publisher_id[LANGUAGE_NONE])){
-		
+
 		$organisation_assetid_arr = array();
 		foreach($node->field_publisher_id[LANGUAGE_NONE] as $publisher_id)
 		{
 			$organisation_assetid_arr[] = $publisher_id['value'];
 		}
-		
+
 		_idsims_import_apply_organsation_ref($node, 'publishers', $organisation_assetid_arr);
 
 		$node_updated = TRUE;

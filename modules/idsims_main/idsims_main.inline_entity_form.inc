@@ -47,7 +47,7 @@ function idsims_main_field_widget_form_alter(&$element, &$form_state, $context) 
 /*
  * Saving an entity translation passing in the language code the entity and array of translatable fieldname => value pairs
  */
-function _idsims_main_save_entity_translation($entity_type, $entity, $langcode, $field_array){
+function _idsims_main_save_entity_translation($entity_type, $entity, $langcode, $field_array, $default_languge){
 	foreach($field_array as $field_name => $field_value_array){
 		foreach($field_value_array as $delta => $field_value){
 			$entity->{$field_name}[$langcode][$delta] = array(
@@ -60,7 +60,7 @@ function _idsims_main_save_entity_translation($entity_type, $entity, $langcode, 
 	  'translate' => 0,
 	  'status' => 1,
 	  'language' => $langcode,
-	  'source' => $entity->language,
+	  'source' => $default_languge,
 	);
 	$handler->setTranslation($translation, $entity);
 	entity_save($entity_type, $entity);	
