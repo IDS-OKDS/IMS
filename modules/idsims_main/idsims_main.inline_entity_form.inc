@@ -67,3 +67,18 @@ function _idsims_main_save_entity_translation($entity_type, $entity, $langcode, 
 }
 
 
+/*
+ * Deal with changes to the language switcher on the IDS Document node form
+ */
+function _idsims_main_entity_translate_ids_document_node_form_alter(&$form, &$form_state, $form_id){
+  if(isset($form["#node_edit_form"])){
+    if(count($form["#node"]->translations->data)>1) { //if translation(s) exist
+      //unset($form["language"]);  //if used error on submit of form
+      $form["language"]["#type"] = "hidden";
+      $form["language"]["#multiple"] = FALSE;
+    } 
+    else {
+    	$form["language"]["#title"] = t('Title & Abstract language');
+    }   
+  }
+}

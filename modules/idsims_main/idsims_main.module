@@ -44,8 +44,9 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 			    'value' => $first_day_of_year,
 			    'timezone' => 'UTC',  
 			    'timezone_db' => 'UTC',
-			);
+			);		
 		}
+		_idsims_main_entity_translate_ids_document_node_form_alter($form, $form_state, $form_id);
 	}
 }
 
