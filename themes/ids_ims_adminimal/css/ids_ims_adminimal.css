@@ -41,7 +41,9 @@ fieldset fieldset.collapsed {
 	padding:0px 12px;
 }
 
-.node-ids_document-form .field-name-field-document-url  {
+.node-ids_document-form .field-name-field-document-url, 
+.node-ids_document-form .field-name-field-language-ref,
+.node-ids_document-form .field-name-field-format  {
 	margin-bottom:0;
 }
 
