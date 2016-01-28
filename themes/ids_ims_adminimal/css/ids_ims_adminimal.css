@@ -8,11 +8,19 @@ body.mq-tablet.admin-menu.adminimal-menu:before {
 
 .node-ids_document-form .field-name-field-document-urls .field-name-field-document-url {
 	float:left;	
-	width:75%;
+	width:50%;
 }
 .node-ids_document-form .field-name-field-document-urls .field-name-field-language-ref {
-	float:right;	
+	float:left;	
 	width:25%;
+}
+.node-ids_document-form .field-name-field-document-urls .field-name-field-format {
+	float:left;	
+	width:25%;
+}
+
+.group-more {
+	clear:left;
 }
 
 /* reduce font sizes for adminimal in forms */
