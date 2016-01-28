@@ -52,6 +52,19 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /*
+ * Implimentation of hook_inline_entity_form_entity_form_alter()
+ */
+function idsims_main_inline_entity_form_entity_form_alter(&$entity_form, &$form_state) {
+	if ($entity_form['#entity_type'] == 'ids_document_url') {
+		/* more title in to Fieldset Group "more" -- can't do this in the Admin GUI as Title is special field */
+		if(!in_array('title', $entity_form['#groups']['group_more']->children)){
+			$entity_form['#groups']['group_more']->children[] = 'title';
+			$entity_form['#group_children']['title'] = 'group_more';
+		}
+	}
+}
+
+/*
  * Implimentaion of hook_entity_presave
  *
  * 1. Create Asset ID (object_id) for new Nodes/Terms
