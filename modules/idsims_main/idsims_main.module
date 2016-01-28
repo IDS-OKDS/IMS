@@ -11,10 +11,11 @@ define('IDSIMS_ENTITY_NEXT_ID_START', 100000);
 function idsims_main_init() {
 	drupal_add_js(drupal_get_path('module', 'idsims_main').'/js/idsims-main.js');
 	drupal_add_css(drupal_get_path('module', 'idsims_main').'/css/idsims-main.css');
-	  // Include inline_entity_form.module integration.
-	  if (module_exists('inline_entity_form')) {
-	    module_load_include('inc', 'idsims_main', 'idsims_main.inline_entity_form');
-	  }
+	// Include inline_entity_form.module integration.
+	if (module_exists('inline_entity_form')) {
+		module_load_include('inc', 'idsims_main', 'idsims_main.inline_entity_form');
+	}
+	module_load_include('inc', 'idsims_main', 'idsims_main.process_url_data');
 }
 
 /**
@@ -44,7 +45,7 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 			    'value' => $first_day_of_year,
 			    'timezone' => 'UTC',  
 			    'timezone_db' => 'UTC',
-			);		
+			);
 		}
 		_idsims_main_entity_translate_ids_document_node_form_alter($form, $form_state, $form_id);
 	}
@@ -130,7 +131,7 @@ function _idsims_main_update_references_to_document_abstracts(&$entity, $type, $
 	/*
 	 * Make references in IDS Document URL Entities to IDS Document nodes
 	 * Add IDS Document node Asset ID (object_id) as Asset ID (object_id) in entity
-	 * 
+	 *
 	 * First find the IDS Document URL Entities attached to this node
 	 */
 	$field_language = field_language($type, $entity, 'field_document_urls');
