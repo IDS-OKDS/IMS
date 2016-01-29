@@ -1,5 +1,5 @@
-name = User Import
-description = "Import users into Drupal from a CSV file."
+name = User Import (MODIFIED)
+description = "Import users into Drupal from a CSV file. MODIFIED with patch: https://www.drupal.org/node/1887400#comment-8835493 and (less importantly as only a warning) https://www.drupal.org/node/2199415#comment-9996997"
 core = 7.x
 package = Deployment
 files[] = user_import.module
