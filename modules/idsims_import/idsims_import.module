@@ -252,23 +252,6 @@ function idsims_import_import_post_process_form_submit(&$form, &$form_state) {
 	_idsims_import_set_batch_jobs('Import data post process', 'import_post_process', $form, $form_state);
 }
 
-/**
- * Create a taxonomy term and return the tid.
- */
-function _idsims_import_create_taxonomy_term($name, $vid, $parent_id = 0) {
-	//drupal_set_message("$name, $vid, $parent_id ");
-	$term = new stdClass();
-	$term->name = $name;
-	$term->vid = $vid;
-	$term->parent = array($parent_id);
-	taxonomy_term_save($term);
-	return $term->tid;
-}
-
-function _idsims_import_get_vid_from_vocab_machine_name($vocab_machine_name){
-	return db_query('SELECT vid FROM {taxonomy_vocabulary} WHERE machine_name = :machine_name', array(':machine_name' => $vocab_machine_name))->fetchField();
-}
-
 function _idsims_import_sectors_to_doc_type(&$node, $cat_assetid, $cat_assetid_raw, $cat_name){
 	$oryx_doc_types_arr = array();
 	$oryx_doc_types_arr[1] = 'Background/overview document';
@@ -320,7 +303,7 @@ function _idsims_import_sectors_to_doc_type(&$node, $cat_assetid, $cat_assetid_r
 		$terms = taxonomy_get_term_by_name($doc_type_term_name, $vocabulary = 'ids_document_type');
 		foreach($terms as $term){
 			$tid = $term->tid;
-			_idsims_import_apply_term_to_node($node, 'document_types', $tid);
+			_idsims_main_apply_term_to_entity_field($node, 'document_types', $tid);
 		}
 	}
 
@@ -332,14 +315,14 @@ function _idsims_import_sectors_to_doc_type(&$node, $cat_assetid, $cat_assetid_r
 		if(!count($terms)){
 			/* If IDS collection term doesn't exist. Then create it */
 			drupal_set_message('Creating IDS Collection: ' . $cat_name);
-			$tid = _idsims_import_create_taxonomy_term($cat_name, $vid);
+			$tid = _idsims_main_create_taxonomy_term($cat_name, $vid);
 		} else {
 			foreach($terms as $term){
 				$tid = $term->tid;
 			}
 		}
 		if($tid){
-			_idsims_import_apply_term_to_node($node, 'collections', $tid);
+			_idsims_main_apply_term_to_entity_field($node, 'collections', $tid);
 		}
 	}
 
@@ -363,46 +346,27 @@ function _idsims_import_updates_collection(&$node, $cat_assetid, $cat_name){
 		$vid = get_collections_taxonomy_vid();
 		if(!count($terms)){
 			/* If root update term doesn't exist. Then create it */
-			$tid = _idsims_import_create_taxonomy_term(IDSIMS_COLLECTION_UPDATES_NAME, $vid);
+			$tid = _idsims_main_create_taxonomy_term(IDSIMS_COLLECTION_UPDATES_NAME, $vid);
 			variable_set('idsims_updates_root_tid', $tid);
 		}
 		$updates_root_tid = variable_get('idsims_updates_root_tid', 0);
 		/* if this isn't the root item then save it and add to the tree */
 		if($cat_assetid_raw != IDSIMS_COLLECTION_UPDATES_SID){
-			$tid = _idsims_import_create_taxonomy_term($cat_name, $vid, $parent_id = $updates_root_tid);
+			$tid = _idsims_main_create_taxonomy_term($cat_name, $vid, $parent_id = $updates_root_tid);
 		}
 
 		/* now we've saved the term we need to link it to our document node (if not already)*/
-		_idsims_import_apply_term_to_node($node, 'collections', $tid);
+		_idsims_main_apply_term_to_entity_field($node, 'collections', $tid);
 	}
 }
 
 function get_collections_taxonomy_vid(){
 	$vid = variable_get('collections_taxonomy_vid', 0);
 	if(!$vid){
-		$vid = _idsims_import_get_vid_from_vocab_machine_name(IDSIMS_COLLECTIONS_VOC_NAME);
+		$vid = _idsims_main_get_vid_from_vocab_machine_name(IDSIMS_COLLECTIONS_VOC_NAME);
 		variable_set('collections_taxonomy_vid', $vid);
 	}
 	return $vid;
-}
-
-function _idsims_import_apply_term_to_node(&$node, $field_ref, $tid){
-	$field_ref = 'field_' . $field_ref;
-	$cnt = 0;
-	$found = FALSE;
-	if(isset($node->{$field_ref}[LANGUAGE_NONE])){
-		foreach($node->{$field_ref}[LANGUAGE_NONE] as $term_ref){
-			if($term_ref['tid'] == $tid){
-				$found = TRUE;
-			}
-			$cnt++;
-		}
-	} else {
-		$node->{$field_ref}[LANGUAGE_NONE] = array();
-	}
-	if(!$found && $tid){
-		$node->{$field_ref}[LANGUAGE_NONE][$cnt]['tid'] = $tid;
-	}
 }
 
 function _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($cat_assetid){
@@ -610,7 +574,7 @@ function _idsims_import_process_import_extras_update_organisation_node(&$node, &
 				$terms = taxonomy_get_term_by_name($value, $vocabulary = 'ids_licence_type');
 				foreach($terms as $term){
 					$tid = $term->tid;
-					_idsims_import_apply_term_to_node($node, 'licence_type_term', $tid);
+					_idsims_main_apply_term_to_entity_field($node, 'licence_type_term', $tid);
 				}
 			}
 		}

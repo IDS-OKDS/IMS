@@ -82,6 +82,90 @@ function idsims_main_entity_presave($entity, $type) {
 		/* 3. Create references to Document Abstracts on Document URL entities */
 		_idsims_main_update_references_to_document_abstracts($entity, $type, $asset_id);
 	}
+	if($type == 'ids_document_url'){
+		/* get/save info for Full Document URLs */
+		_idsims_main_save_full_document_url_info($entity);
+	}
+}
+
+/*
+ * Return the Vocab ID from the machine name
+ */
+function _idsims_main_get_vid_from_vocab_machine_name($vocab_machine_name){
+	return db_query('SELECT vid FROM {taxonomy_vocabulary} WHERE machine_name = :machine_name', array(':machine_name' => $vocab_machine_name))->fetchField();
+}
+
+/*
+ * Add a term tid to a term reference field on a given entity
+ */
+function _idsims_main_apply_term_to_entity_field(&$entity, $field_ref, $tid, $type = 'node'){
+	$field_ref = 'field_' . $field_ref;
+	$cnt = 0;
+	$found = FALSE;
+	$field_language = _idsims_main_field_language($type, $entity, $field_ref);
+	if(isset($entity->{$field_ref}[$field_language])){
+		foreach($entity->{$field_ref}[$field_language] as $term_ref){
+			if($term_ref['tid'] == $tid){
+				$found = TRUE;
+			}
+			$cnt++;
+		}
+	} else {
+		$entity->{$field_ref}[$field_language] = array();
+	}
+	if(!$found && $tid){
+		$entity->{$field_ref}[$field_language][$cnt]['tid'] = $tid;
+	}
+}
+
+/**
+ * Create a taxonomy term and return the tid.
+ */
+function _idsims_main_create_taxonomy_term($name, $vid, $parent_id = 0) {
+	//drupal_set_message("$name, $vid, $parent_id ");
+	$term = new stdClass();
+	$term->name = $name;
+	$term->vid = $vid;
+	$term->parent = array($parent_id);
+	taxonomy_term_save($term);
+	return $term->tid;
+}
+
+function _idsims_main_get_url_mime_type($url) {
+    $buffer = file_get_contents($url);
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    return $finfo->buffer($buffer);
+}
+
+/*
+ * Lookup the Full Document URL and save additional information to the entity:
+ * Mime Type
+ * Cover Image
+ */
+function _idsims_main_save_full_document_url_info(&$entity){
+	$field_language = _idsims_main_field_language('ids_document_url', $entity, 'field_document_url');
+	if(isset($entity->field_document_url[$field_language])){
+		$full_url = $entity->field_document_url[$field_language][0]['value'];
+		if($full_url){
+			$mime_type = _idsims_main_get_url_mime_type($full_url);
+			if($mime_type){
+				$terms = taxonomy_get_term_by_name($mime_type, $vocabulary = 'ids_mime_type');
+				if(!count($terms)){
+					$vid = _idsims_main_get_vid_from_vocab_machine_name('ids_mime_type');
+					$tid = _idsims_main_create_taxonomy_term($mime_type, $vid);
+					$term = new stdClass();
+					$term->tid = $tid;
+					$terms = array();
+					$terms[$tid] = $term;
+				}
+				foreach($terms as $term){
+					$tid = $term->tid;
+					_idsims_main_apply_term_to_entity_field($entity, 'mime_type', $tid);
+				}
+			}
+		}
+	}
+
 }
 
 function _idsims_main_field_language($type, $entity, $field_id){
