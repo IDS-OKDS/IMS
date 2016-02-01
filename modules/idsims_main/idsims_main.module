@@ -147,6 +147,7 @@ function _idsims_main_save_full_document_url_info(&$entity){
 	if(isset($entity->field_document_url[$field_language])){
 		$full_url = $entity->field_document_url[$field_language][0]['value'];
 		if($full_url){
+			/* set mime type field */
 			$mime_type = _idsims_main_get_url_mime_type($full_url);
 			if($mime_type){
 				$terms = taxonomy_get_term_by_name($mime_type, $vocabulary = 'ids_mime_type');
@@ -162,11 +163,67 @@ function _idsims_main_save_full_document_url_info(&$entity){
 					$tid = $term->tid;
 					_idsims_main_apply_term_to_entity_field($entity, 'mime_type', $tid);
 				}
+				if($mime_type == 'application/pdf'){
+					/* create and set cover image field */
+					//drupal_set_message('converting PDF');
+					_idsims_main_thumb_pdf($full_url);
+				}
 			}
 		}
 	}
 
 }
+
+/*
+ * sanitise the filename (from a URL)
+ */
+function _idsims_main_sanitize_file_name($filename) {
+    $filename_raw = $filename;
+    $special_chars = array("?", "[", "]", "/", "\\", "=", "<", ">", ":", ";", ",", "'", "\"", "&", "$", "#", "*", "(", ")", "|", "~", "`", "!", "{", "}");
+    $filename = str_replace($special_chars, '', $filename);
+    $filename = preg_replace('/[\s-]+/', '-', $filename);
+    $filename = trim($filename, '.-_');
+    return $filename;
+}
+
+/*
+ * Create image file from remote PDF
+ */
+function _idsims_main_thumb_pdf($pdf, $width = 300) {
+    try {
+        $tmp = '/var/www/private/backup/thumbs';
+        $format = "png";
+        $source = $pdf;
+        $sanitized_filename = _idsims_main_sanitize_file_name($pdf);
+        $img_dest = "$tmp/" . $sanitized_filename . ".$format";
+        drupal_set_message('$dest:' .$img_dest);
+        if (!file_exists($img_dest))
+        {
+            drupal_set_message('creating cover PDF');
+        	//$exec = "convert -scale $width $source $dest";
+            //exec($exec);
+            
+			$pdf_dest = "$tmp/" . $sanitized_filename;
+			/* Here we download the pdf and save it locally */
+			$pdf_file = file_get_contents($source);
+			 
+			$fp  = fopen($pdf_dest, 'w+') or die('Could not create the file');
+			fputs($fp, $pdf_file) or die('Could not write to the file');
+			fclose($fp);
+			unset($pdf_file);            
+            
+			$imagick = new Imagick($pdf_dest . '[0]');
+			//$imagick->readImage($source);
+			$imagick->setImageFormat("png");
+			$imagick->scaleImage($width, 0);
+			$imagick->writeImage($img_dest);
+        }
+    }
+    catch(Exception $e) {
+        echo $e->getMessage();
+    }
+}
+
 
 function _idsims_main_field_language($type, $entity, $field_id){
 	$field_language = field_language($type, $entity, $field_id);
