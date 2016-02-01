@@ -94,7 +94,8 @@ function idsims_import_import_extras_form() {
     . '<li>SUBJECTS: Flags applied to documents (Abstract, Sentinel Output, Recommended Reading)</li>'
     . '<li>SECTORS: Process Updates (as a Collection)</li>'
     . '<li>SECTORS: Process BRIDGE Bibliography, Briefing or Report</li>'
-    . '<li>SECTORS: Process remaining Sectors as Document Types</li>'
+    . '<li>SECTORS: Process remaining Sectors as Document Types</li>' 
+    . '<li>USERS: Apply User ID for document creator</li>'
     . '</ul>',
     );
     $form['import_limit'] = array(
@@ -657,10 +658,47 @@ function _idsims_import_process_import_extras_update_node(&$node, &$field_data, 
 		_idsims_import_process_import_extras_update_node_sectors($node, $field_data['SectorList'], $assetid);
 		$node_updated = TRUE;
 	}
+	
+	/*
+	 * Apply User ID for document creator
+	 */
+	if(isset($field_data['creator_id'])){
+		$uid = _idsims_import_get_uid_from_creator_id($field_data['creator_id']);
+		if($uid){
+			$node->uid = $uid;
+			$node_updated = TRUE;
+		}
+	}
 
 	if($node_updated){
 		node_save($node);
 	}
+}
+
+function _idsims_import_get_uid_from_creator_id($oryx_creator_id){
+	static $uid_to_creator_map;
+	if(!is_array($uid_to_creator_map)){
+		$uid_to_creator_map =  unserialize(variable_get('idsims_updates_uid_to_creator_map', 0));
+		if(!is_array($uid_to_creator_map)){
+			$uid_to_creator_map = array();
+			$users = entity_load('user');
+			foreach($users as $uid => $user_obj){
+				if(isset($user_obj->field_oryx_user_id[LANGUAGE_NONE][0]['value'])){
+					$cretor_id_arr = explode(',',trim($user_obj->field_oryx_user_id[LANGUAGE_NONE][0]['value']));
+					foreach($cretor_id_arr as $creator_id){
+						$uid_to_creator_map[$creator_id] = $uid;
+					}
+				}
+			}
+			variable_set('idsims_updates_uid_to_creator_map', serialize($uid_to_creator_map));
+		}
+	}
+	if(isset($uid_to_creator_map[$oryx_creator_id])){
+		return $uid_to_creator_map[$oryx_creator_id];
+	} else {
+		drupal_set_message('Warning:No User match for Oryx ID:'. $oryx_creator_id);
+	}
+	return FALSE;
 }
 
 function _idsims_import_ids_api_lang_id_to_iso_code_for_drupal($api_lang_id){

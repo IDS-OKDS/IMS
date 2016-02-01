@@ -84,6 +84,14 @@ function idsims_main_entity_presave($entity, $type) {
 	}
 }
 
+function _idsims_main_field_language($type, $entity, $field_id){
+	$field_language = field_language($type, $entity, $field_id);
+	if(!$field_language){
+		$field_language = LANGUAGE_NONE;
+	}
+	return $field_language;
+}
+
 
 /*
  *  return Asset ID from entity or add if doesn't exist.
@@ -91,7 +99,8 @@ function idsims_main_entity_presave($entity, $type) {
 function _idsims_main_get_asset_id(&$entity, $type){
 	/* Add an Asset ID if there isn't one */
 	$asset_id = FALSE;
-	$field_language = field_language($type, $entity, 'field_object_id');
+	$field_language = _idsims_main_field_language($type, $entity, 'field_object_id');
+
 	$objectid_set = TRUE;
 	if(!isset($entity->field_object_id[$field_language])){
 		$objectid_set = FALSE;
@@ -115,8 +124,8 @@ function _idsims_main_get_asset_id(&$entity, $type){
 			}
 		}
 		if($new_object_id && isset($entity->field_object_id)){
-			drupal_set_message('Object ID created for entity (' . $new_object_id . ')');
-			$entity->field_object_id[$field_language][0]['value'] = $new_object_id;
+			drupal_set_message('Object ID (' . $new_object_id . ') created for entity (' . $type . ')');
+			_idsims_main_update_entity_field($entity, 'field_object_id', $new_object_id);
 			variable_set('idsims_entity_next_id', $new_object_id_num);
 		}
 		$asset_id = $new_object_id;
@@ -147,7 +156,7 @@ function _idsims_main_update_references_to_document_abstracts(&$entity, $type, $
 	 *
 	 * First find the IDS Document URL Entities attached to this node
 	 */
-	$field_language = field_language($type, $entity, 'field_document_urls');
+	$field_language = _idsims_main_field_language($type, $entity, 'field_document_urls');
 	if(isset($entity->field_document_urls[$field_language])){
 		$document_url_entity_ids = array();
 		foreach($entity->field_document_urls[$field_language] as $key => $item){
@@ -156,10 +165,22 @@ function _idsims_main_update_references_to_document_abstracts(&$entity, $type, $
 		if(count($document_url_entity_ids)){
 			$document_url_entities = entity_load('ids_document_url', $document_url_entity_ids);
 			foreach($document_url_entities as $key => $document_url_entity){
-				$document_url_entity->field_object_id[$field_language][0]['value'] = $asset_id;
+				_idsims_main_update_entity_field($document_url_entity, 'field_object_id', $asset_id);
 				field_attach_update('ids_document_url', $document_url_entity);
 			}
 		}
 	}
-
 }
+
+/*
+ * updates an entity field item for all language versions
+ */
+
+function _idsims_main_update_entity_field(&$entity, $field_id, $value, $delta = 0, $store_id = 'value'){
+	foreach($entity->{$field_id} as $lang => $field_obj){
+		$entity->{$field_id}[$lang][$delta][$store_id] = $value;
+	}
+}
+
+
+
