@@ -42,14 +42,19 @@ define('IDSIMS_CONTENT_PARTNER_PARENT_SID', 1957);
  * Implement hook_menu()
  */
 function idsims_import_menu() {
+	$items['admin/config/ids-ims/import-settings'] = array(
+    'title' => 'Import settings',
+    'description' => 'General Import settings',
+    'access arguments' => array('administer site configuration'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('idsims_import_settings_form'),
+	);
 	$items['admin/config/ids-ims/import-extras'] = array(
     'title' => 'Documents: Import additional fields from old IMS',
     'description' => 'Import any additional fields required for Documents from the old Oyrx DB provided by custom XML feed',
-	// 'access callback' => 'user_access',
     'access arguments' => array('administer site configuration'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('idsims_import_import_extras_form'),
-	//  'file' => 'epdmod.admin.inc',
 	);
 	$items['admin/config/ids-ims/import-extras-api'] = array(
     'title' => 'Documents: Import additional fields from API',
@@ -77,6 +82,45 @@ function idsims_import_menu() {
 	return $items ;
 }
 
+
+/**
+ * Build a form for general Import settings
+ */
+function idsims_import_settings_form() {
+	$form['#attributes'] = array(
+    'enctype' => 'multipart/form-data'
+    );
+    $form['intro_text'] = array(
+    '#markup' => '<h2>Set what is done/ignored on import</h2>');
+    $form['idsims_import_do_set_mime_types'] = array(
+    '#title' => t('Set mime types for full text documents on import'),
+    '#type' => 'select',
+    '#options' => array(
+	    0 => 'No',
+	    1 => 'Yes',
+    ),
+    '#required' => TRUE,
+    '#default_value' => variable_get('idsims_import_do_set_mime_types', 0),
+    '#description' => t('Only if this is set to Yes will full text document mimetype information be set in the IDS Document URL Entity'),
+    );
+    $form['idsims_import_do_set_cover_thumb_image'] = array(
+    '#title' => t('Set cover thumbnail image for full text documents on import'),
+    '#type' => 'select',
+    '#options' => array(
+	    0 => 'No',
+	    1 => 'Yes',
+    ),
+    '#required' => TRUE,
+    '#default_value' => variable_get('idsims_import_do_set_cover_thumb_image', 0),
+    '#description' => t('Only if this is set to Yes will the cover thumbnail image be set in the IDS Document URL Entity (NOTE only works if mime type is set too!)'),
+    );
+    $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Commence Import'),
+    );
+    return $form;
+}
+
 /**
  * Build a form for Import Extras settings
  */
@@ -94,7 +138,7 @@ function idsims_import_import_extras_form() {
     . '<li>SUBJECTS: Flags applied to documents (Abstract, Sentinel Output, Recommended Reading)</li>'
     . '<li>SECTORS: Process Updates (as a Collection)</li>'
     . '<li>SECTORS: Process BRIDGE Bibliography, Briefing or Report</li>'
-    . '<li>SECTORS: Process remaining Sectors as Document Types</li>' 
+    . '<li>SECTORS: Process remaining Sectors as Document Types</li>'
     . '<li>USERS: Apply User ID for document creator</li>'
     . '</ul>',
     );
@@ -202,6 +246,7 @@ function idsims_import_import_post_process_form() {
 }
 
 function _idsims_import_set_batch_jobs($batch_name, $batch_id, &$form, &$form_state, $asset_type_id = 'ids_document'){
+	variable_set('idsims_import_batch_process_running', 1);
 	$import_limit = $form_state['values']['import_limit'];
 
 	$batch = array(
@@ -622,7 +667,7 @@ function _idsims_import_process_import_extras_update_node(&$node, &$field_data, 
 		_idsims_import_process_import_extras_update_node_sectors($node, $field_data['SectorList'], $assetid);
 		$node_updated = TRUE;
 	}
-	
+
 	/*
 	 * Apply User ID for document creator
 	 */
@@ -895,6 +940,7 @@ function _idsims_import_simpleXML2array($xml)
  * Handle batch completion.
  */
 function idsims_import_import_extras_orgs_finished($success, $results, $operations) {
+	variable_set('idsims_import_batch_process_running', 0);
 	$message = t('The organisation import extras has completed.');
 	drupal_set_message($message);
 	return $message;
@@ -904,6 +950,7 @@ function idsims_import_import_extras_orgs_finished($success, $results, $operatio
  * Handle batch completion.
  */
 function idsims_import_import_extras_api_orgs_finished($success, $results, $operations) {
+	variable_set('idsims_import_batch_process_running', 0);
 	$message = t('The organisation import extras from API has completed.');
 	drupal_set_message($message);
 	return $message;
@@ -913,6 +960,7 @@ function idsims_import_import_extras_api_orgs_finished($success, $results, $oper
  * Handle batch completion.
  */
 function idsims_import_import_extras_finished($success, $results, $operations) {
+	variable_set('idsims_import_batch_process_running', 0);
 	$message = t('The import extras has completed.');
 	drupal_set_message($message);
 	return $message;
@@ -922,6 +970,7 @@ function idsims_import_import_extras_finished($success, $results, $operations) {
  * Handle batch completion.
  */
 function idsims_import_import_post_process_finished($success, $results, $operations) {
+	variable_set('idsims_import_batch_process_running', 0);
 	$message = t('The import post process has completed.');
 	drupal_set_message($message);
 	return $message;
