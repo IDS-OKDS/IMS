@@ -79,7 +79,7 @@ function idsims_import_menu() {
     'page arguments' => array('idsims_import_import_post_process_form'),
 	//  'file' => 'epdmod.admin.inc',
 	);
-	return $items ;
+	return $items;
 }
 
 
@@ -114,11 +114,7 @@ function idsims_import_settings_form() {
     '#default_value' => variable_get('idsims_import_do_set_cover_thumb_image', 0),
     '#description' => t('Only if this is set to Yes will the cover thumbnail image be set in the IDS Document URL Entity (NOTE only works if mime type is set too!)'),
     );
-    $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Commence Import'),
-    );
-    return $form;
+    return system_settings_form($form);
 }
 
 /**
