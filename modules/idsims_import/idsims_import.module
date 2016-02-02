@@ -918,6 +918,46 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 
 		$node_updated = TRUE;
 	}
+	
+	/*
+	 * Move external url field into new Document URL entity
+	 */
+	if(isset($node->field_external_urls[LANGUAGE_NONE])){
+		/* there are some repeats in the URLs so let's ignore those by writting to and checking an array */
+		$external_url_arr = array();
+		/* get best guess language from the abstract language */
+		$lang = LANGUAGE_NONE;
+		if(isset($node->field_language[LANGUAGE_NONE][0]['tid'])){
+			$lang_term = taxonomy_term_load($node->field_language[LANGUAGE_NONE][0]['tid']);
+			if(isset($lang_term->field_iso_two_code[0]['value'])){
+				$lang = $lang_term->field_iso_two_code[0]['value'];
+			}
+		}
+		$document_url_entity_id_arr = array();
+		foreach($node->field_external_urls[LANGUAGE_NONE] as $external_url_obj){
+			$external_url = $external_url_obj['value'];
+			/* make sure not a duplicate */
+			if(!in_array($external_url)){
+				$entity_type = 'ids_document_url';
+				$entity = entity_create($entity_type, array('type' => 'ids_document_url'));
+  				$entity_wrapper = entity_metadata_wrapper($entity_type, $entity);
+  				$entity_wrapper->field_document_url->set($external_url);
+  				$entity_id_arr = entity_extract_ids($entity_type, $entity);
+  				$entity_id = $entity_ids[0];
+  				$document_url_entity_id_arr[$entity_id] = $entity; 
+			}
+			$external_url_arr[] = $external_url;
+		}
+		$node->field_document_urls[LANGUAGE_NONE] = array();
+		$cnt = 0;
+		foreach($document_url_entity_id_arr as $eid => $entity){
+			$node->field_document_urls[LANGUAGE_NONE][$cnt] = array();
+			$node->field_document_urls[LANGUAGE_NONE][$cnt]['target_id'] = $eid;
+			$node->field_document_urls[LANGUAGE_NONE][$cnt]['entity'] = $entity;
+			$cnt++;
+		}
+	}
+	
 	if($node_updated){
 		drupal_set_message(print_r($node->field_publishers[LANGUAGE_NONE], TRUE));
 		node_save($node);
