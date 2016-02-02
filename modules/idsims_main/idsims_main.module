@@ -167,8 +167,16 @@ function _idsims_main_save_full_document_url_info(&$entity){
 					_idsims_main_apply_term_to_entity_field($entity, 'mime_type', $tid);
 				}
 				if($mime_type == 'application/pdf'){
-					/* create and set cover image field */
-					_idsims_main_thumb_pdf($full_url);
+					/*if cover image not already present (or overwritten) */
+					if(!isset($entity->field_cover_image[$field_language][0]['fid'])){
+						/* create and set cover image field */
+						$thumbnail_file_obj = _idsims_main_thumb_pdf($full_url);
+						if($thumbnail_file_obj){
+							if(isset($thumbnail_file_obj->fid)){
+								_idsims_main_update_entity_field($entity, 'field_cover_image', $thumbnail_file_obj->fid, $delta = 0, $store_id = 'fid');
+							}
+						}
+					}
 				}
 			}
 		}
@@ -196,20 +204,23 @@ function _idsims_main_thumb_pdf($pdf, $width = 300) {
 	(variable_get('idsims_import_do_set_cover_thumb_image', 0) && variable_get('idsims_import_batch_process_running', 0)) ){
 		try {
 			$files_directory_path = variable_get('file_public_path', conf_path() . '/files');
-			$coverthumbs_dir = $files_directory_path . '/coverthumbs';
-			if( is_dir($coverthumbs_dir) === false ){
-				mkdir($coverthumbs_dir);
+			$storageprefix = "public://";
+			$coverthumbs_dir = 'coverthumbs';
+			$coverthumbs_dir_full_path = $files_directory_path . '/' . $coverthumbs_dir;
+			if( is_dir($coverthumbs_dir_full_path) === false ){
+				mkdir($coverthumbs_dir_full_path);
 			}
 			$format = "png";
 			$source = $pdf;
 			$sanitized_filename = _idsims_main_sanitize_file_name($pdf);
-			$img_dest = "$coverthumbs_dir/" . $sanitized_filename . ".$format";
-			if (!file_exists($img_dest))
+			$temp_img_dest = "$coverthumbs_dir_full_path/" . $sanitized_filename . '-temp' . ".$format";
+			$final_img_dest = $storageprefix . $coverthumbs_dir . '/' . $sanitized_filename . ".$format";
+			if (!file_exists($final_img_dest))
 			{
 				/* We have to download the PDF else we couldn't get the cover page
 				 * (it always got the last page from remote URL even though specified [0]?)
 				 */
-				$pdf_dest = "$coverthumbs_dir/" . $sanitized_filename;
+				$pdf_dest = "$coverthumbs_dir_full_path/" . $sanitized_filename;
 				/* Here we download the pdf and save it locally */
 				$pdf_file = file_get_contents($source);
 				$fp  = fopen($pdf_dest, 'w+') or die('Could not create the file');
@@ -226,16 +237,24 @@ function _idsims_main_thumb_pdf($pdf, $width = 300) {
 					$imagick->setImageAlphaChannel(11);
 					$imagick->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
 				}
-				$imagick->writeImage($img_dest);
+				$imagick->writeImage($temp_img_dest);
 				drupal_set_message('Cover thumbnail image created');
 				/* Now delete PDF file as we might not have hosting rights */
 				unlink($pdf_dest);
+				/* Now save the file in the way drupal likes it! i.e. save to DB */
+				$image = file_get_contents($temp_img_dest, FILE_USE_INCLUDE_PATH); // string
+				
+				$file = file_save_data($image, $final_img_dest, FILE_EXISTS_REPLACE);
+				/* Now delete temp image */
+				unlink($temp_img_dest);
+				return $file;
 			}
 		}
 		catch(Exception $e) {
 			echo $e->getMessage();
 		}
 	}
+	return FALSE;
 }
 
 
