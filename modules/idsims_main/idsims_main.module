@@ -165,7 +165,6 @@ function _idsims_main_save_full_document_url_info(&$entity){
 				}
 				if($mime_type == 'application/pdf'){
 					/* create and set cover image field */
-					//drupal_set_message('converting PDF');
 					_idsims_main_thumb_pdf($full_url);
 				}
 			}
@@ -191,32 +190,39 @@ function _idsims_main_sanitize_file_name($filename) {
  */
 function _idsims_main_thumb_pdf($pdf, $width = 300) {
     try {
-        $tmp = '/var/www/private/backup/thumbs';
+        $files_directory_path = variable_get('file_public_path', conf_path() . '/files');
+        $coverthumbs_dir = $files_directory_path . '/coverthumbs';
+    	if( is_dir($coverthumbs_dir) === false ){
+		    mkdir($coverthumbs_dir);
+		}
         $format = "png";
         $source = $pdf;
         $sanitized_filename = _idsims_main_sanitize_file_name($pdf);
-        $img_dest = "$tmp/" . $sanitized_filename . ".$format";
-        drupal_set_message('$dest:' .$img_dest);
+        $img_dest = "$coverthumbs_dir/" . $sanitized_filename . ".$format";
         if (!file_exists($img_dest))
         {
-            drupal_set_message('creating cover PDF');
-        	//$exec = "convert -scale $width $source $dest";
-            //exec($exec);
-            
-			$pdf_dest = "$tmp/" . $sanitized_filename;
+            /* We have to download the PDF else we couldn't get the cover page 
+             * (it always got the last page from remote URL even though specified [0]?)
+             */
+			$pdf_dest = "$coverthumbs_dir/" . $sanitized_filename;
 			/* Here we download the pdf and save it locally */
 			$pdf_file = file_get_contents($source);
-			 
 			$fp  = fopen($pdf_dest, 'w+') or die('Could not create the file');
 			fputs($fp, $pdf_file) or die('Could not write to the file');
 			fclose($fp);
 			unset($pdf_file);            
-            
+            /* Now create the cover image file */
 			$imagick = new Imagick($pdf_dest . '[0]');
-			//$imagick->readImage($source);
-			$imagick->setImageFormat("png");
+			$imagick->setImageFormat($format);
 			$imagick->scaleImage($width, 0);
+			/* Set white background if transparent */
+			$imagick->setImageBackgroundColor('white');
+			$imagick->setImageAlphaChannel(11);
+			$imagick->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
 			$imagick->writeImage($img_dest);
+			drupal_set_message('Cover thumbnail image created');
+			/* Now delete PDF file as we might not have hosting rights */
+			unlink($pdf_dest);
         }
     }
     catch(Exception $e) {
