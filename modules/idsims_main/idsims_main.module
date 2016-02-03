@@ -38,6 +38,8 @@ function idsims_main_menu() {
  * Implimentation of hook_form_alter()
  */
 function idsims_main_form_alter(&$form, &$form_state, $form_id) {
+	/* Hide all revision information/functionality on edit forms */
+	unset($form['revision_information']);
 	if($form_id == 'ids_document_node_form'){
 		if(arg(1) == 'add'){
 			$first_day_of_year = format_date(strtotime('now'), 'custom', 'Y', 'UTC') . '-01-01 00:00:00';
