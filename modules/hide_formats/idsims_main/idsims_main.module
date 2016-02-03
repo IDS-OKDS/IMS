@@ -1,0 +1,362 @@
+<?php
+/**
+ * @file
+ * Module for bespoke IDS IMS customisations
+ */
+define('IDSIMS_ENTITY_NEXT_ID_START', 100000);
+
+/*
+ * Implimentation of hook_init()
+ */
+function idsims_main_init() {
+	drupal_add_js(drupal_get_path('module', 'idsims_main').'/js/idsims-main.js');
+	drupal_add_css(drupal_get_path('module', 'idsims_main').'/css/idsims-main.css');
+	// Include inline_entity_form.module integration.
+	if (module_exists('inline_entity_form')) {
+		module_load_include('inc', 'idsims_main', 'idsims_main.inline_entity_form');
+	}
+	module_load_include('inc', 'idsims_main', 'idsims_main.process_url_data');
+}
+
+/**
+ * Implement hook_menu()
+ */
+function idsims_main_menu() {
+	$items['admin/config/ids-ims'] = array(
+    'title' => 'IDS IMS',
+    'description' => 'Settings related to the IDS IMS.',
+    'position' => 'left',
+    'weight' => -15,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'file' => 'system.admin.inc',
+	);
+	return $items ;
+}
+
+/*
+ * Implimentation of hook_form_alter()
+ */
+function idsims_main_form_alter(&$form, &$form_state, $form_id) {
+	if($form_id == 'ids_document_node_form'){
+		if(arg(1) == 'add'){
+			$first_day_of_year = format_date(strtotime('now'), 'custom', 'Y', 'UTC') . '-01-01 00:00:00';
+			$form["field_publication_date"][LANGUAGE_NONE][0]['#default_value'] = array(
+			    'value' => $first_day_of_year,
+			    'timezone' => 'UTC',  
+			    'timezone_db' => 'UTC',
+			);
+		}
+		_idsims_main_entity_translate_ids_document_node_form_alter($form, $form_state, $form_id);
+	}
+}
+
+/*
+ * Implimentation of hook_inline_entity_form_entity_form_alter()
+ */
+function idsims_main_inline_entity_form_entity_form_alter(&$entity_form, &$form_state) {
+	if ($entity_form['#entity_type'] == 'ids_document_url') {
+		/* more title in to Fieldset Group "more" -- can't do this in the Admin GUI as Title is special field */
+		if(!in_array('title', $entity_form['#groups']['group_more']->children)){
+			$entity_form['#groups']['group_more']->children[] = 'title';
+			$entity_form['#group_children']['title'] = 'group_more';
+		}
+	}
+}
+
+/*
+ * Implimentaion of hook_entity_presave
+ *
+ * 1. Create Asset ID (object_id) for new Nodes/Terms
+ * 2. Update shared fields across sites/branches
+ * 3. Create references to Document Abstracts on Document URL nodes
+ */
+function idsims_main_entity_presave($entity, $type) {
+	/* 1. Create Asset ID (object_id) for new Nodes/Terms -- Document URL Entity works differently, it gets it's Asset ID from parent Document node */
+	if($type != 'ids_document_url'){
+		$asset_id = _idsims_main_get_asset_id($entity, $type);
+	}
+	if($type == 'node'){
+		/* 2. Update shared fields across sites/branches */
+		_idsims_main_update_shared_fields($entity, $type, $asset_id);
+		/* 3. Create references to Document Abstracts on Document URL entities */
+		_idsims_main_update_references_to_document_abstracts($entity, $type, $asset_id);
+	}
+	if($type == 'ids_document_url'){
+		/* get/save info for Full Document URLs -- If batch import NOT running OR if batch is runnning and import mime type on import global setting set */
+		if(!variable_get('idsims_import_batch_process_running', 0) ||
+		(variable_get('idsims_import_do_set_mime_types', 0) && variable_get('idsims_import_batch_process_running', 0)) ){
+			_idsims_main_save_full_document_url_info($entity);
+		}
+	}
+}
+
+/*
+ * Return the Vocab ID from the machine name
+ */
+function _idsims_main_get_vid_from_vocab_machine_name($vocab_machine_name){
+	return db_query('SELECT vid FROM {taxonomy_vocabulary} WHERE machine_name = :machine_name', array(':machine_name' => $vocab_machine_name))->fetchField();
+}
+
+/*
+ * Add a term tid to a term reference field on a given entity
+ */
+function _idsims_main_apply_term_to_entity_field(&$entity, $field_ref, $tid, $type = 'node'){
+	$field_ref = 'field_' . $field_ref;
+	$cnt = 0;
+	$found = FALSE;
+	$field_language = _idsims_main_field_language($type, $entity, $field_ref);
+	if(isset($entity->{$field_ref}[$field_language])){
+		foreach($entity->{$field_ref}[$field_language] as $term_ref){
+			if($term_ref['tid'] == $tid){
+				$found = TRUE;
+			}
+			$cnt++;
+		}
+	} else {
+		$entity->{$field_ref}[$field_language] = array();
+	}
+	if(!$found && $tid){
+		$entity->{$field_ref}[$field_language][$cnt]['tid'] = $tid;
+	}
+}
+
+/**
+ * Create a taxonomy term and return the tid.
+ */
+function _idsims_main_create_taxonomy_term($name, $vid, $parent_id = 0) {
+	//drupal_set_message("$name, $vid, $parent_id ");
+	$term = new stdClass();
+	$term->name = $name;
+	$term->vid = $vid;
+	$term->parent = array($parent_id);
+	taxonomy_term_save($term);
+	return $term->tid;
+}
+
+function _idsims_main_get_url_mime_type($url) {
+	$buffer = file_get_contents($url);
+	$finfo = new finfo(FILEINFO_MIME_TYPE);
+	return $finfo->buffer($buffer);
+}
+
+/*
+ * Lookup the Full Document URL and save additional information to the entity:
+ * Mime Type
+ * Cover Image
+ */
+function _idsims_main_save_full_document_url_info(&$entity){
+	$field_language = _idsims_main_field_language('ids_document_url', $entity, 'field_document_url');
+	if(isset($entity->field_document_url[$field_language])){
+		$full_url = $entity->field_document_url[$field_language][0]['value'];
+		if($full_url){
+			/* set mime type field */
+			$mime_type = _idsims_main_get_url_mime_type($full_url);
+			if($mime_type){
+				$terms = taxonomy_get_term_by_name($mime_type, $vocabulary = 'ids_mime_type');
+				if(!count($terms)){
+					$vid = _idsims_main_get_vid_from_vocab_machine_name('ids_mime_type');
+					$tid = _idsims_main_create_taxonomy_term($mime_type, $vid);
+					$term = new stdClass();
+					$term->tid = $tid;
+					$terms = array();
+					$terms[$tid] = $term;
+				}
+				foreach($terms as $term){
+					$tid = $term->tid;
+					_idsims_main_apply_term_to_entity_field($entity, 'mime_type', $tid);
+				}
+				if($mime_type == 'application/pdf'){
+					/*if cover image not already present (or overwritten) */
+					if(!isset($entity->field_cover_image[$field_language][0]['fid'])){
+						/* create and set cover image field */
+						$thumbnail_file_obj = _idsims_main_thumb_pdf($full_url);
+						drupal_set_message('FILE OBJ:'.print_r($thumbnail_file_obj,TRUE));
+						if($thumbnail_file_obj){
+							if(isset($thumbnail_file_obj->fid)){
+								drupal_set_message('field_cover_image:UPDATE FIELD');
+								_idsims_main_update_entity_field($entity, 'field_cover_image', $thumbnail_file_obj->fid, $delta = 0, $store_id = 'fid');
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+}
+
+/*
+ * sanitise the filename (from a URL)
+ */
+function _idsims_main_sanitize_file_name($filename) {
+	$filename_raw = $filename;
+	$special_chars = array("?", "[", "]", "/", "\\", "=", "<", ">", ":", ";", ",", "'", "\"", "&", "$", "#", "*", "(", ")", "|", "~", "`", "!", "{", "}");
+	$filename = str_replace($special_chars, '', $filename);
+	$filename = preg_replace('/[\s-]+/', '-', $filename);
+	$filename = trim($filename, '.-_');
+	return $filename;
+}
+
+/*
+ * Create image file from remote PDF
+ */
+function _idsims_main_thumb_pdf($pdf, $width = 300) {
+	if(!variable_get('idsims_import_batch_process_running', 0) ||
+	(variable_get('idsims_import_do_set_cover_thumb_image', 0) && variable_get('idsims_import_batch_process_running', 0)) ){
+		try {
+			$files_directory_path = variable_get('file_public_path', conf_path() . '/files');
+			$storageprefix = "public://";
+			$coverthumbs_dir = 'coverthumbs';
+			$coverthumbs_dir_full_path = $files_directory_path . '/' . $coverthumbs_dir;
+			if( is_dir($coverthumbs_dir_full_path) === false ){
+				mkdir($coverthumbs_dir_full_path);
+			}
+			$format = "png";
+			$source = $pdf;
+			$sanitized_filename = _idsims_main_sanitize_file_name($pdf);
+			$temp_img_dest = "$coverthumbs_dir_full_path/" . $sanitized_filename . '-temp' . ".$format";
+			$final_img_dest = $storageprefix . $coverthumbs_dir . '/' . $sanitized_filename . ".$format";
+			//if (!file_exists($final_img_dest)) /* Dont need to check this anymore as we check if the field has content */
+			//{
+				/* We have to download the PDF else we couldn't get the cover page
+				 * (it always got the last page from remote URL even though specified [0]?)
+				 */
+				$pdf_dest = "$coverthumbs_dir_full_path/" . $sanitized_filename;
+				/* Here we download the pdf and save it locally */
+				$pdf_file = file_get_contents($source);
+				$fp  = fopen($pdf_dest, 'w+') or die('Could not create the file');
+				fputs($fp, $pdf_file) or die('Could not write to the file');
+				fclose($fp);
+				unset($pdf_file);
+				/* Now create the cover image file */
+				$imagick = new Imagick($pdf_dest . '[0]');
+				$imagick->setImageFormat($format);
+				$imagick->scaleImage($width, 0);
+				/* Set white background if transparent */
+				if($imagick->getImageAlphaChannel()){
+					$imagick->setImageBackgroundColor('white');
+					$imagick->setImageAlphaChannel(11);
+					$imagick->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+				}
+				$imagick->writeImage($temp_img_dest);
+				drupal_set_message('Cover thumbnail image created');
+				/* Now delete PDF file as we might not have hosting rights */
+				unlink($pdf_dest);
+				/* Now save the file in the way drupal likes it! i.e. save to DB */
+				$image = file_get_contents($temp_img_dest, FILE_USE_INCLUDE_PATH); // string
+				
+				$file = file_save_data($image, $final_img_dest, FILE_EXISTS_REPLACE);
+				/* Now delete temp image */
+				unlink($temp_img_dest);
+				return $file;
+			//}
+		}
+		catch(Exception $e) {
+			echo $e->getMessage();
+		}
+	}
+	return FALSE;
+}
+
+
+function _idsims_main_field_language($type, $entity, $field_id){
+	$field_language = field_language($type, $entity, $field_id);
+	if(!$field_language){
+		$field_language = LANGUAGE_NONE;
+	}
+	return $field_language;
+}
+
+
+/*
+ *  return Asset ID from entity or add if doesn't exist.
+ */
+function _idsims_main_get_asset_id(&$entity, $type){
+	/* Add an Asset ID if there isn't one */
+	$asset_id = FALSE;
+	$field_language = _idsims_main_field_language($type, $entity, 'field_object_id');
+
+	$objectid_set = TRUE;
+	if(!isset($entity->field_object_id[$field_language])){
+		$objectid_set = FALSE;
+	} elseif(!isset($entity->field_object_id[$field_language][0]['value'])){
+		$objectid_set = FALSE;
+	} elseif(!$entity->field_object_id[$field_language][0]['value']){
+		$objectid_set = FALSE;
+	}
+	if(!$objectid_set){
+		$new_object_id_num = variable_get('idsims_entity_next_id', IDSIMS_ENTITY_NEXT_ID_START);
+		$new_object_id_num++;
+		$new_object_id = FALSE;
+		if($type == 'node'){
+			$new_object_id = 'A' . $new_object_id_num;
+		}
+		if($type == 'taxonomy_term'){
+			if($entity->vocabulary_machine_name == 'ids_countries'){
+				$new_object_id = 'A' . $new_object_id_num;
+			} else {
+				$new_object_id = 'C' . $new_object_id_num;
+			}
+		}
+		if($new_object_id && isset($entity->field_object_id)){
+			drupal_set_message('Object ID (' . $new_object_id . ') created for entity (' . $type . ')');
+			_idsims_main_update_entity_field($entity, 'field_object_id', $new_object_id);
+			variable_set('idsims_entity_next_id', $new_object_id_num);
+		}
+		$asset_id = $new_object_id;
+	} else {
+		$asset_id = $entity->field_object_id[$field_language][0]['value'];
+	}
+	return $asset_id;
+}
+
+
+/*
+ * Update shared fields across sites/branches
+ */
+function _idsims_main_update_shared_fields(&$entity, $type, $asset_id){
+	/*
+	 * Array of sheared field IDs -- add to this if you want this field to update across all sites/branches
+	 */
+}
+
+
+/*
+ * Create references to Document Abstracts on Document URL nodes
+ */
+function _idsims_main_update_references_to_document_abstracts(&$entity, $type, $asset_id){
+	/*
+	 * Make references in IDS Document URL Entities to IDS Document nodes
+	 * Add IDS Document node Asset ID (object_id) as Asset ID (object_id) in entity
+	 *
+	 * First find the IDS Document URL Entities attached to this node
+	 */
+	$field_language = _idsims_main_field_language($type, $entity, 'field_document_urls');
+	if(isset($entity->field_document_urls[$field_language])){
+		$document_url_entity_ids = array();
+		foreach($entity->field_document_urls[$field_language] as $key => $item){
+			$document_url_entity_ids[] = $item['target_id'];
+		}
+		if(count($document_url_entity_ids)){
+			$document_url_entities = entity_load('ids_document_url', $document_url_entity_ids);
+			foreach($document_url_entities as $key => $document_url_entity){
+				_idsims_main_update_entity_field($document_url_entity, 'field_object_id', $asset_id);
+				field_attach_update('ids_document_url', $document_url_entity);
+			}
+		}
+	}
+}
+
+/*
+ * updates an entity field item for all language versions
+ */
+
+function _idsims_main_update_entity_field(&$entity, $field_id, $value, $delta = 0, $store_id = 'value'){
+	foreach($entity->{$field_id} as $lang => $field_obj){
+		$entity->{$field_id}[$lang][$delta][$store_id] = $value;
+	}
+}
+
+
+
