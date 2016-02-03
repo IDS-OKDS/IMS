@@ -215,8 +215,8 @@ function _idsims_main_thumb_pdf($pdf, $width = 300) {
 			$sanitized_filename = _idsims_main_sanitize_file_name($pdf);
 			$temp_img_dest = "$coverthumbs_dir_full_path/" . $sanitized_filename . '-temp' . ".$format";
 			$final_img_dest = $storageprefix . $coverthumbs_dir . '/' . $sanitized_filename . ".$format";
-			if (!file_exists($final_img_dest))
-			{
+			//if (!file_exists($final_img_dest)) /* Dont need to check this anymore as we check if the field has content */
+			//{
 				/* We have to download the PDF else we couldn't get the cover page
 				 * (it always got the last page from remote URL even though specified [0]?)
 				 */
@@ -248,7 +248,7 @@ function _idsims_main_thumb_pdf($pdf, $width = 300) {
 				/* Now delete temp image */
 				unlink($temp_img_dest);
 				return $file;
-			}
+			//}
 		}
 		catch(Exception $e) {
 			echo $e->getMessage();
@@ -351,6 +351,10 @@ function _idsims_main_update_references_to_document_abstracts(&$entity, $type, $
  */
 
 function _idsims_main_update_entity_field(&$entity, $field_id, $value, $delta = 0, $store_id = 'value'){
+	if(!isset($entity->{$field_id})){
+		$entity->{$field_id} = array();
+		$entity->{$field_id}[LANGUAGE_NONE] = array();
+	}
 	foreach($entity->{$field_id} as $lang => $field_obj){
 		$entity->{$field_id}[$lang][$delta][$store_id] = $value;
 	}

@@ -926,12 +926,10 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 		/* there are some repeats in the URLs so let's ignore those by writting to and checking an array */
 		$external_url_arr = array();
 		/* get best guess language from the abstract language */
-		$lang = LANGUAGE_NONE;
+		$node_lang = 'English'; /* default to English */
 		if(isset($node->field_language[LANGUAGE_NONE][0]['tid'])){
 			$lang_term = taxonomy_term_load($node->field_language[LANGUAGE_NONE][0]['tid']);
-			if(isset($lang_term->field_iso_two_code[0]['value'])){
-				$lang = $lang_term->field_iso_two_code[0]['value'];
-			}
+			$node_lang = $lang_term->name;
 		}
 		$document_url_entity_id_arr = array();
 		foreach($node->field_external_urls[LANGUAGE_NONE] as $external_url_obj){
@@ -942,8 +940,20 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 				$entity = entity_create($entity_type, array('type' => 'ids_document_url'));
   				$entity_wrapper = entity_metadata_wrapper($entity_type, $entity);
   				$entity_wrapper->field_document_url->set($external_url);
+  				if($language_term = taxonomy_get_term_by_name($node_lang, $vocabulary = 'ids_language')){
+  					$lang_tid = (isset($language_term->tid)) ? $language_term->tid:FALSE;
+  					if(is_array($language_term)){
+  						foreach($language_term as $language_term_item){
+  							$lang_tid = (isset($language_term_item->tid)) ? $language_term_item->tid:FALSE;
+  						}
+  					}
+  					if($lang_tid){
+	  					$entity_wrapper->field_language_ref->set($lang_tid);
+  					}
+  				}
+  				$entity_wrapper->save();
   				$entity_id_arr = entity_extract_ids($entity_type, $entity);
-  				$entity_id = $entity_ids[0];
+  				$entity_id = $entity_id_arr[0];
   				$document_url_entity_id_arr[$entity_id] = $entity; 
 			}
 			$external_url_arr[] = $external_url;
@@ -954,12 +964,12 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 			$node->field_document_urls[LANGUAGE_NONE][$cnt] = array();
 			$node->field_document_urls[LANGUAGE_NONE][$cnt]['target_id'] = $eid;
 			$node->field_document_urls[LANGUAGE_NONE][$cnt]['entity'] = $entity;
+			$node->field_document_urls[LANGUAGE_NONE][$cnt]['access'] = 1;
 			$cnt++;
 		}
 	}
 	
 	if($node_updated){
-		drupal_set_message(print_r($node->field_publishers[LANGUAGE_NONE], TRUE));
 		node_save($node);
 	}
 
