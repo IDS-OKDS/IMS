@@ -49,6 +49,11 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 			    'timezone_db' => 'UTC',
 			);
 		}
+		/* 
+		 * Reorder Authoring/Publishng info tabs on edit screens so that Publising Options are top and therefore open
+		 */
+		$form['options']['#weight'] = 90;
+		$form['author']['#weight'] = 95;
 		_idsims_main_entity_translate_ids_document_node_form_alter($form, $form_state, $form_id);
 	}
 }
