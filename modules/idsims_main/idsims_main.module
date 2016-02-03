@@ -54,6 +54,11 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 		 */
 		$form['options']['#weight'] = 90;
 		$form['author']['#weight'] = 95;
+		/*
+		 * Hide Promote/Sticky options, we don't care about these
+		 */
+		unset($form['options']['promote']);
+		unset($form['options']['sticky']);
 		_idsims_main_entity_translate_ids_document_node_form_alter($form, $form_state, $form_id);
 	}
 }
