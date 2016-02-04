@@ -163,6 +163,8 @@ function _idsims_main_save_full_document_url_info(&$entity){
 	if(isset($entity->field_document_url[$field_language])){
 		$full_url = $entity->field_document_url[$field_language][0]['value'];
 		if($full_url){
+			/* If file upload then property set full document URL */
+			
 			/* set mime type field */
 			$mime_type = _idsims_main_get_url_mime_type($full_url);
 			if($mime_type){

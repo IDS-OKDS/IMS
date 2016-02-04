@@ -6,17 +6,18 @@ body.mq-tablet.admin-menu.adminimal-menu:before {
 	display:none;
 }
 
-.node-ids_document-form .field-name-field-document-urls .field-name-field-document-url {
+.node-ids_document-form .field-name-field-document-urls .field-group-htabs-wrapper {
 	float:left;	
-	width:50%;
+	width:57%;
+	margin-right:3%;
 }
 .node-ids_document-form .field-name-field-document-urls .field-name-field-language-ref {
 	float:left;	
-	width:25%;
+	width:20%;
 }
 .node-ids_document-form .field-name-field-document-urls .field-name-field-format {
 	float:left;	
-	width:25%;
+	width:20%;
 }
 
 .group-more {
@@ -50,4 +51,43 @@ fieldset fieldset.collapsed {
 table th, table td {
 	font-size:1em;	
 	padding:5px;	
+}
+
+fieldset {
+    border-top: 2px solid #ddd;
+}
+
+fieldset fieldset {
+	border-top: 2px solid #ddd;
+}
+
+.horizontal-tabs-panes fieldset {
+	border-top: none;
+}
+
+fieldset.collapsed {
+	border-top: none;
+}
+
+.adminimal-theme .field-widget-inline-entity-form fieldset {
+    /* border-top: solid 3px #ddd; */
+    border-top: 2px solid #ddd;
+}
+
+.adminimal-theme .field-widget-inline-entity-form fieldset fieldset {
+	border-top: 2px solid #ddd;
+	margin-bottom:15px;
+}
+
+.adminimal-theme .field-widget-inline-entity-form fieldset.collapsed,
+.adminimal-theme .field-widget-inline-entity-form fieldset fieldset.collapsed {
+	border-top: none;
+}
+
+.adminimal-theme .field-widget-inline-entity-form .horizontal-tabs-panes fieldset {
+	border-top: none;
+}
+
+.node-form .form-wrapper{
+	margin-bottom:0;
 }
