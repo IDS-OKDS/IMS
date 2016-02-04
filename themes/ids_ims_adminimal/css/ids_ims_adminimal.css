@@ -91,3 +91,8 @@ fieldset.collapsed {
 .node-form .form-wrapper{
 	margin-bottom:0;
 }
+
+body.adminimal-theme .autocomplete-deluxe-item,
+div.autocomplete-deluxe-container input.autocomplete-deluxe-form {
+	margin:3px;
+}
