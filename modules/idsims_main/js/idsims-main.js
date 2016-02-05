@@ -21,6 +21,17 @@
 	      /* If a Document file is uploaded set the Full Text Document URL */
 	      $(this).closest('.horizontal-tabs-panes').find('.field-name-field-document-url input.form-text').val();
 	  });
+	  /* Licence Type Quick links - Set licence type on quick values */ 
+	  $(".field-name-field-licence-type-quick-links input").change(function(){
+	      //$(".field-name-field-licence-type-term input").filter('[value="'+$(this).val()+'"]').attr('checked', true);
+	      $(".field-name-field-licence-type-term select").val($(this).val());
+	  });
+	  /* If Licence type specified directly then uncheck Quick values */
+	  $(".field-name-field-licence-type-term select").change(function(){
+	      if($(this).val() && $(this).val()!='_none'){
+		  $(".field-name-field-licence-type-quick-links input").attr('checked', false);
+	      }
+	  });
       }
     });
   }

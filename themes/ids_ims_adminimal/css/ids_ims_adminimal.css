@@ -100,3 +100,18 @@ div.autocomplete-deluxe-container input.autocomplete-deluxe-form {
 .chosen-container-single .chosen-search input[type="text"] {
 	width:90%;
 }
+
+.field-name-field-licence-type-quick-links label {
+	display:none;
+}
+
+.field-name-field-licence-type-quick-links label.option {
+	display:inline-block;
+}
+
+.field-name-field-licence-type-quick-links .form-type-radio {
+	display:inline-block;
+	margin-right:1em;	
+}
+
+.field-name-field-licence-type-quick-links 
