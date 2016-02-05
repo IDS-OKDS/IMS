@@ -8,9 +8,10 @@ body.mq-tablet.admin-menu.adminimal-menu:before {
 
 .node-ids_document-form .field-name-field-document-urls .field-group-htabs-wrapper {
 	float:left;	
-	width:57%;
+	width:72%;
 	margin-right:3%;
 }
+/*
 .node-ids_document-form .field-name-field-document-urls .field-name-field-language-ref {
 	float:left;	
 	width:20%;
@@ -18,6 +19,19 @@ body.mq-tablet.admin-menu.adminimal-menu:before {
 .node-ids_document-form .field-name-field-document-urls .field-name-field-format {
 	float:left;	
 	width:20%;
+}
+*/
+
+.node-ids_document-form .field-name-field-document-urls  .field-name-field-document-url input{
+	width:90%;
+}
+.node-ids_document-form .group-url-metadata {
+	float:left;	
+	width:25%;	
+}
+
+.node-ids_document-form .group-url-metadata h3 {
+	display:none;
 }
 
 .group-more {
@@ -114,4 +128,3 @@ div.autocomplete-deluxe-container input.autocomplete-deluxe-form {
 	margin-right:1em;	
 }
 
-.field-name-field-licence-type-quick-links 
