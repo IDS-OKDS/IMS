@@ -5,6 +5,9 @@
 
             $(window).ready(function () {
                 // Execute code once the window is ready.
+        	$('.view-site-toggle #edit-user-1-field-selected-site-und').change(function(){
+        	    $('#editableviews-entity-form-site-toggle').submit();
+        	});
             });
 
             $(window).load(function () {

@@ -6,16 +6,24 @@
 ?>
 
 <div id="branding" class="clearfix">
-
+	<div id="branding-left">
 	<?php print $breadcrumb; ?>
 
 	<?php print render($title_prefix); ?>
 
 	<?php if ($title): ?>
-		<h1 class="page-title"><?php if ($asset_id): ?><?php print $asset_id; ?> - <?php endif; ?><?php print $title; ?></h1>
+		<h1 class="page-title"><?php print $title; ?></h1>
 	<?php endif; ?>
 
 	<?php print render($title_suffix); ?>
+	</div>
+	<div id="branding-right">
+		<div id="branding-right-inner">
+		<?php if (isset($page['branding_right'])): ?>
+			<?php print render($page['branding_right']); ?>
+		<?php endif; ?>
+		</div>
+	</div>
 
 </div>
 

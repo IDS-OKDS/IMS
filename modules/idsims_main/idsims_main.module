@@ -38,6 +38,9 @@ function idsims_main_menu() {
  * Implimentation of hook_form_alter()
  */
 function idsims_main_form_alter(&$form, &$form_state, $form_id) {
+	if($form_id == 'editableviews_entity_form_site_toggle'){
+		$form['#submit'][] = '_idsims_main_editableviews_entity_form_site_toggle_submit_function';
+	}
 	/* Hide all revision information/functionality on edit forms */
 	unset($form['revision_information']);
 	if($form_id == 'ids_document_node_form'){
@@ -73,6 +76,28 @@ function idsims_main_inline_entity_form_entity_form_alter(&$entity_form, &$form_
 		if(!in_array('title', $entity_form['#groups']['group_more']->children)){
 			$entity_form['#groups']['group_more']->children[] = 'title';
 			$entity_form['#group_children']['title'] = 'group_more';
+		}
+	}
+}
+
+
+/**
+ * Implementation of hook_preprocess_html
+ */
+function idsims_main_preprocess_html(&$vars) {
+	global $user;
+	$account = user_load($user->uid);
+	$vars['idsims_site_id'] = '';
+	$vars['idsims_site_color_1'] = '';
+	$vars['idsims_site_color_2'] = '';
+	$vars['idsims_site_logo_url'] = '';
+	if(isset($account->field_selected_site[LANGUAGE_NONE][0]['tid'])){
+		$site_term = taxonomy_term_load($account->field_selected_site[LANGUAGE_NONE][0]['tid']);
+		if($site_term){
+			$vars['idsims_site_id'] = $site_term->name;
+			$vars['idsims_site_colour_1'] = $site_term->field_site_colour_1[LANGUAGE_NONE][0]['value'];
+			$vars['idsims_site_colour_2'] = $site_term->field_site_colour_2[LANGUAGE_NONE][0]['value'];
+			$vars['idsims_site_logo_url'] = file_create_url($site_term->field_site_logo[LANGUAGE_NONE][0]['uri']);	
 		}
 	}
 }
@@ -387,5 +412,13 @@ function _idsims_main_remove_radio_na($element) {
 	unset($element['_none']);
 	return $element;
 }
+
+/*
+ * Submit handler for Site Toggle View (to supress messages for User form update)
+ */
+function _idsims_main_editableviews_entity_form_site_toggle_submit_function(){
+	unset($_SESSION['messages']);
+}
+
 
 
