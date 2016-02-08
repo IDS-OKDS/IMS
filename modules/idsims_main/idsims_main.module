@@ -36,6 +36,7 @@ function idsims_main_menu() {
     'description' => 'Copy content from site to site',
     'page callback' => '_ids_main_copy_page_callback',
     'access arguments' => array('access administration pages'),
+    'access callback' => '_ids_main_copy_access_callback',
 	'type' => MENU_CALLBACK,
 	);
 	$items['copy/%nid'] = array(
@@ -43,8 +44,8 @@ function idsims_main_menu() {
     'description' => 'Copy content from site to site',
     'page callback' => '_ids_main_copy_page_callback',
 	'page arguments' => array(1),
-    'access callback' => '_ids_main_copy_access_callback',
     'access arguments' => array('access administration pages'),
+    'access callback' => '_ids_main_copy_access_callback',
 	'type' => MENU_CALLBACK,
 	);
 	return $items ;
