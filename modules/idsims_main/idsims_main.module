@@ -94,7 +94,7 @@ function idsims_main_preprocess_html(&$vars) {
 	if(isset($account->field_selected_site[LANGUAGE_NONE][0]['tid'])){
 		$site_term = taxonomy_term_load($account->field_selected_site[LANGUAGE_NONE][0]['tid']);
 		if($site_term){
-			$vars['idsims_site_id'] = $site_term->name;
+			$vars['idsims_site_id'] = $site_term->field_machine_name[LANGUAGE_NONE][0]['value'];
 			$vars['idsims_site_colour_1'] = $site_term->field_site_colour_1[LANGUAGE_NONE][0]['value'];
 			$vars['idsims_site_colour_2'] = $site_term->field_site_colour_2[LANGUAGE_NONE][0]['value'];
 			$vars['idsims_site_logo_url'] = file_create_url($site_term->field_site_logo[LANGUAGE_NONE][0]['uri']);	
