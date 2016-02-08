@@ -51,16 +51,12 @@
   <title><?php print $head_title; ?></title>
   <?php print $styles; ?>
   <?php print $scripts; ?>
+  <?php if(isset($idsims_site_logo_url) && isset($idsims_site_colour_1)): ?>
   <style>
   	<?php print "#branding-right-inner { background-image:url('" . $idsims_site_logo_url ."'); }" ; ?>
   	<?php print "#branding { background-color:#" . $idsims_site_colour_1 ."; }" ; ?>
-  	input[type="submit"][id^="edit-submit"], input#edit-actions-submit, input[id^="save-continue"], input[type="submit"][id^="edit-save"], input#edit-save, input#edit-submit, input#edit-actions-save, .field-widget-inline-entity-form .container-inline .form-submit, #media-browser-page a.button-yes, input.add-new-condition, #edit-field-product-und-form-actions input.ief-entity-submit {
-  		background-color:#<?php print $idsims_site_colour_1; ?>; 
-  	}
-  	input[type="submit"][id^="edit-submit"]:hover, input#edit-actions-submit:hover, input[id^="save-continue"]:hover, input[type="submit"][id^="edit-save"]:hover, input#edit-save:hover, input#edit-submit:hover, input#edit-actions-save:hover, .field-widget-inline-entity-form .container-inline .form-submit:hover, #media-browser-page a.button-yes:hover, input.add-new-condition:hover, #edit-field-product-und-form-actions input.ief-entity-submit:hover {
-  		background-color:#<?php print $idsims_site_colour_2; ?>; 
-  	}
   </style>
+  <?php endif; ?>
 </head>
 <body class="<?php print $classes; ?> <?php print 'site-' . $idsims_site_id; ?>" <?php print $attributes;?>>
 	<script>
