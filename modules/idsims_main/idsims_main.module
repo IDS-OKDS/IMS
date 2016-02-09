@@ -35,16 +35,8 @@ function idsims_main_menu() {
     'title' => 'Copy',
     'description' => 'Copy content from site to site',
     'page callback' => '_ids_main_copy_page_callback',
-    'access arguments' => array('access administration pages'),
-    'access callback' => '_ids_main_copy_access_callback',
-	'type' => MENU_CALLBACK,
-	);
-	$items['copy/%nid'] = array(
-    'title' => 'Copy',
-    'description' => 'Copy content from site to site',
-    'page callback' => '_ids_main_copy_page_callback',
 	'page arguments' => array(1),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array(1),
     'access callback' => '_ids_main_copy_access_callback',
 	'type' => MENU_CALLBACK,
 	);
@@ -52,11 +44,228 @@ function idsims_main_menu() {
 }
 
 function _ids_main_copy_page_callback($nid){
+	/*
+	 * Because of the access callback we know that if we have got here then there must be a
+	 * copy that is valid and that
+	 */
+
+	/*
+	 * Load the node we are trying to copy
+	 */
+	$node_to_be_copied = node_load($nid);
+	$node_to_be_copied_site_tid = FALSE;
+	if(isset($node_to_be_copied->field_site_ref[LANGUAGE_NONE][0]['tid'])){
+		$node_to_be_copied_site_tid = $node_to_be_copied->field_site_ref[LANGUAGE_NONE][0]['tid'];
+	}
+
+	if($node_to_be_copied_site_tid){
+		$copy_from_array = array(); /* nid => site_name */
+		$copy_to_array = array(); /* site_tid => site_name */
+		/*
+		 * get all Site terms
+		 */
+		$site_terms = _ids_main_get_all_site_terms();
+			
+		/*
+		 * Check the sites the logged in user can edit
+		 */
+		$sites_user_can_edit = _ids_main_get_sites_user_can_edit();
+
+		/*
+		 * Get all site versions
+		 */
+		$asset_id = _idsims_main_get_asset_id($node_to_be_copied, 'node');
+		$site_versions_nids = _ids_main_get_all_site_abstracts_nids($asset_id);
+		$existing_site_versions = entity_load('node', $site_versions_nids);
+
+		$existing_site_versions_sites_arr = _ids_main_get_site_tids_from_nodes($existing_site_versions);
+
+		foreach($site_terms as $site_term){
+			/*
+			 * If the Site version exists add to the COPY FROM array
+			 */
+			if(array_key_exists($site_term->tid, $existing_site_versions_sites_arr)){
+				$nid = $existing_site_versions_sites_arr[$site_term->tid];
+				$copy_from_array[$nid] = $site_term->name;
+			} else {
+				/*
+				 * if this is a site the user can edit and the Site version doesn't alread exist
+				 * then add to the COPY TO array
+				 */
+				if(in_array($site_term->tid, $sites_user_can_edit)){
+					$copy_to_array[$site_term->tid] = $site_term->name;
+				}
+			}
+		}
+
+		//return print_r($copy_from_array, true) . '::' . print_r($copy_to_array, true);
+
+		/*
+		 * simple version -- the user only has one editable site (that isn't the current node site)
+		 * So go straight to the create page and pass the site param
+		 */
+		
+		if(count($copy_from_array)==1 && count($copy_to_array)==1){
+			foreach($copy_from_array as $nid => $site_name){
+				$from_nid = $nid; /* only one */
+				$from_site_name = $site_name;
+			}
+			foreach($copy_to_array as $tid => $site_name){
+				$to_site_tid = $tid; /* only one */
+				$to_site_name = $site_name;
+			}
+			//$options = array('query' => array('from_nid' => $from_nid, 'to_site_tid' => $to_site_tid,));
+			
+			$new_node_copy = _ids_main_copy_node($from_nid, $to_site_tid);
+			$new_nid = $new_node_copy->nid;
+			if($new_nid){
+				drupal_set_message('Created new ' . $to_site_name . ' copy of '. $from_site_name .' document.');
+				drupal_goto('node/'. $new_nid .'/edit');
+			} else {
+				drupal_set_message(t('Copy could not be made'), 'error');
+			}
+		}
+
+		/*
+		 * complex version -- the user needs to choose which Site they want to copy to (and from if there are multiple)
+		 */
+
+	} else {
+		drupal_set_message(t('Node trying to copy has no Site set'), 'error');
+	}
+
 	return $nid;
 }
 
-function _ids_main_copy_access_callback(){
-	return TRUE;
+function _ids_main_copy_node($nid, $site_tid = FALSE){
+	// Load a node
+	$node = node_load($nid);
+	// unset version and node id's
+	unset($node->nid);
+	unset($node->vid);
+	unset($node->path);
+	// Save the copy
+	node_save($node);	
+	// write new site reference if supplied
+	if($site_tid){
+		if(isset($node->field_site_ref)){
+			_idsims_main_update_entity_field($node, 'field_site_ref', $site_tid, $delta = 0, $store_id = 'tid');
+		}
+		
+	}
+	field_attach_update('node', $node);
+	return $node;
+}
+
+
+function _ids_main_copy_access_callback($nid){
+	global $user;
+	$access = TRUE;
+	$document_node = node_load($nid);
+	/* we only care about Document Abstract nodes (no other type can be copied) */
+	if($document_node->type == 'ids_document'){
+		/*
+		 * get all Site terms
+		 */
+		$site_terms = _ids_main_get_all_site_terms();
+		/*
+		 * Get the Asset ID (object_id) of this Document node
+		 */
+		$asset_id = _idsims_main_get_asset_id($document_node, 'node');
+		$site_versions_nids = _ids_main_get_all_site_abstracts_nids($asset_id);
+		if($site_versions_nids){
+			$number_of_existing_site_versions = count($site_versions_nids);
+			$number_of_sites = count($site_terms);
+			/*
+			 * If we have as many site versions as there are sites then we can't make a copy
+			 */
+			if($number_of_existing_site_versions == $number_of_sites){
+				$access = FALSE;
+			} else {
+				$access = FALSE;
+				$existing_site_versions = entity_load('node', $site_versions_nids);
+				/*
+				 * Now check as an editor there is at least one site the user can create a copy for that
+				 * doesn't already exist
+				 */
+				$existing_site_versions_sites_arr = _ids_main_get_site_tids_from_nodes($existing_site_versions);
+
+				$sites_user_can_edit = _ids_main_get_sites_user_can_edit();
+				foreach($sites_user_can_edit as $site_user_can_edit){
+					if(!array_key_exists($site_user_can_edit, $existing_site_versions_sites_arr)){
+						$access = TRUE;
+					}
+				}
+			}
+		}
+	} else {
+		$access = FALSE;
+	}
+	return $access;
+}
+
+/*
+ * Return Site TIDs from all nodes passed
+ */
+function _ids_main_get_site_tids_from_nodes($node_arr){
+	$existing_site_versions_sites_arr = array();
+	foreach($node_arr as $node){
+		if(isset($node->field_site_ref[LANGUAGE_NONE][0]['tid'])){
+			$tid = $node->field_site_ref[LANGUAGE_NONE][0]['tid'];
+			$existing_site_versions_sites_arr[$tid] = $node->nid;
+		}
+	}
+	return $existing_site_versions_sites_arr;
+}
+
+/*
+ * Return Node IDs of all Site versions of Document abstract nodes with passed Asset ID
+ */
+function _ids_main_get_all_site_abstracts_nids($asset_id){
+	$site_versions_nids = FALSE;
+	$query = new EntityFieldQuery();
+	$query->entityCondition('entity_type', 'node')
+	->entityCondition('bundle', 'ids_document')
+	->fieldCondition('field_object_id', 'value', $asset_id, '=')
+	->addMetaData('account', user_load(1)); // Run the query as user 1.
+
+	$result = $query->execute();
+	if (isset($result['node'])) {
+		$site_versions_nids = array_keys($result['node']);
+	}
+	return $site_versions_nids;
+}
+
+/*
+ * Get all sites user can edit
+ */
+
+function _ids_main_get_sites_user_can_edit($uid = 0){
+	/* if $uid not set then get current user */
+	global $user;
+	if(!$uid){
+		$uid = $user->uid;
+	}
+	$account = user_load($uid);
+	$site_tid_arr = array();
+	if(isset($account->field_site_ref[LANGUAGE_NONE][0]['tid'])){
+		foreach($account->field_site_ref[LANGUAGE_NONE] as $site_ref){
+			$site_tid_arr[] = $site_ref['tid'];
+		}
+	}
+	return $site_tid_arr;
+}
+
+/*
+ * get all terms in site taxonomy
+ */
+function _ids_main_get_all_site_terms(){
+	static $site_terms;
+	if(!isset($site_terms)){
+		$vocabulary_object = taxonomy_vocabulary_machine_name_load('ids_site');
+		$site_terms = taxonomy_get_tree($vid = $vocabulary_object->vid, $parent = 0, $max_depth = NULL, $load_entities = TRUE);
+	}
+	return $site_terms;
 }
 
 /*
@@ -122,7 +331,7 @@ function idsims_main_preprocess_html(&$vars) {
 			$vars['idsims_site_id'] = $site_term->field_machine_name[LANGUAGE_NONE][0]['value'];
 			$vars['idsims_site_colour_1'] = $site_term->field_site_colour_1[LANGUAGE_NONE][0]['value'];
 			$vars['idsims_site_colour_2'] = $site_term->field_site_colour_2[LANGUAGE_NONE][0]['value'];
-			$vars['idsims_site_logo_url'] = file_create_url($site_term->field_site_logo[LANGUAGE_NONE][0]['uri']);	
+			$vars['idsims_site_logo_url'] = file_create_url($site_term->field_site_logo[LANGUAGE_NONE][0]['uri']);
 		}
 	}
 }
@@ -214,7 +423,7 @@ function _idsims_main_save_full_document_url_info(&$entity){
 		$full_url = $entity->field_document_url[$field_language][0]['value'];
 		if($full_url){
 			/* If file upload then property set full document URL */
-			 	
+
 			/* set mime type field */
 			$mime_type = _idsims_main_get_url_mime_type($full_url);
 			if($mime_type){
@@ -283,8 +492,8 @@ function _idsims_main_thumb_pdf($pdf, $width = 300) {
 			//if (!file_exists($final_img_dest)) /* Dont need to check this anymore as we check if the field has content */
 			//{
 			/* We have to download the PDF else we couldn't get the cover page
-			* (it always got the last page from remote URL even though specified [0]?)
-			*/
+			 * (it always got the last page from remote URL even though specified [0]?)
+			 */
 			$pdf_dest = "$coverthumbs_dir_full_path/" . $sanitized_filename;
 			/* Here we download the pdf and save it locally */
 			$pdf_file = file_get_contents($source);
