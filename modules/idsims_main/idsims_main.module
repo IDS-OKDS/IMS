@@ -43,7 +43,7 @@ function idsims_main_menu() {
 	return $items ;
 }
 
-function _ids_main_copy_page_callback($nid){
+function _ids_main_copy_page_callback($copy_from_nid){
 	/*
 	 * Because of the access callback we know that if we have got here then there must be a
 	 * copy that is valid and that
@@ -52,7 +52,7 @@ function _ids_main_copy_page_callback($nid){
 	/*
 	 * Load the node we are trying to copy
 	 */
-	$node_to_be_copied = node_load($nid);
+	$node_to_be_copied = node_load($copy_from_nid);
 	$node_to_be_copied_site_tid = FALSE;
 	if(isset($node_to_be_copied->field_site_ref[LANGUAGE_NONE][0]['tid'])){
 		$node_to_be_copied_site_tid = $node_to_be_copied->field_site_ref[LANGUAGE_NONE][0]['tid'];
@@ -104,7 +104,7 @@ function _ids_main_copy_page_callback($nid){
 		 * simple version -- the user only has one editable site (that isn't the current node site)
 		 * So go straight to the create page and pass the site param
 		 */
-		
+
 		if(count($copy_from_array)==1 && count($copy_to_array)==1){
 			foreach($copy_from_array as $nid => $site_name){
 				$from_nid = $nid; /* only one */
@@ -114,27 +114,59 @@ function _ids_main_copy_page_callback($nid){
 				$to_site_tid = $tid; /* only one */
 				$to_site_name = $site_name;
 			}
-			//$options = array('query' => array('from_nid' => $from_nid, 'to_site_tid' => $to_site_tid,));
 			
-			$new_node_copy = _ids_main_copy_node($from_nid, $to_site_tid);
-			$new_nid = $new_node_copy->nid;
-			if($new_nid){
-				drupal_set_message('Created new ' . $to_site_name . ' copy of '. $from_site_name .' document.');
-				drupal_goto('node/'. $new_nid .'/edit');
-			} else {
-				drupal_set_message(t('Copy could not be made'), 'error');
-			}
+			_ids_main_create_new_site_version($from_nid, $to_site_tid, $from_site_name, $to_site_name);
+
 		}
 
 		/*
-		 * complex version -- the user needs to choose which Site they want to copy to (and from if there are multiple)
+		 * complex version! -- the user needs to choose which Site they want to copy to (and from if there are multiple)
 		 */
+		$form['#attributes'] = array(
+	    'enctype' => 'multipart/form-data'
+	    );
+	    $form['intro_text'] = array(
+	    '#markup' => '<h2>Copy to Site</h2>'
+	    . '<p>Copy a document from on Site to another, Choose form the options below and when ready select Copy.</p>',
+	    );
+	    $form['copy_from'] = array(
+		    '#title' => t('Copy from'),
+		    '#type' => 'select',
+		    '#options' => $copy_from_array, 
+		    '#default_value' => $copy_from_nid,
+	    	'#value' => $copy_from_nid,
+		    '#description' => t('The Site you are copying from.'),
+	    );
+	    $form['copy_to'] = array(
+		    '#title' => t('Copy to'),
+		    '#type' => 'select',
+		    '#options' => $copy_to_array, 
+		    '#description' => t('The Site you are copying to.'),
+	    );
+	    $form['submit'] = array(
+	    '#type' => 'submit',
+	    '#value' => t('Copy'),
+	    '#submit' => array('ids_main_copy_site_node_form_submit'),
+	    );
+	    return $form;
 
 	} else {
 		drupal_set_message(t('Node trying to copy has no Site set'), 'error');
 	}
 
-	return $nid;
+	return FALSE;
+}
+
+
+function _ids_main_create_new_site_version($from_nid, $to_site_tid, $from_site_name, $to_site_name){
+	$new_node_copy = _ids_main_copy_node($from_nid, $to_site_tid);
+	$new_nid = $new_node_copy->nid;
+	if($new_nid){
+		drupal_set_message('Created new ' . $to_site_name . ' copy of '. $from_site_name .' document.');
+		drupal_goto('node/'. $new_nid .'/edit');
+	} else {
+		drupal_set_message(t('Copy could not be made'), 'error');
+	}	
 }
 
 function _ids_main_copy_node($nid, $site_tid = FALSE){
@@ -145,13 +177,13 @@ function _ids_main_copy_node($nid, $site_tid = FALSE){
 	unset($node->vid);
 	unset($node->path);
 	// Save the copy
-	node_save($node);	
+	node_save($node);
 	// write new site reference if supplied
 	if($site_tid){
 		if(isset($node->field_site_ref)){
 			_idsims_main_update_entity_field($node, 'field_site_ref', $site_tid, $delta = 0, $store_id = 'tid');
 		}
-		
+
 	}
 	field_attach_update('node', $node);
 	return $node;
@@ -492,8 +524,8 @@ function _idsims_main_thumb_pdf($pdf, $width = 300) {
 			//if (!file_exists($final_img_dest)) /* Dont need to check this anymore as we check if the field has content */
 			//{
 			/* We have to download the PDF else we couldn't get the cover page
-			 * (it always got the last page from remote URL even though specified [0]?)
-			 */
+			* (it always got the last page from remote URL even though specified [0]?)
+			*/
 			$pdf_dest = "$coverthumbs_dir_full_path/" . $sanitized_filename;
 			/* Here we download the pdf and save it locally */
 			$pdf_file = file_get_contents($source);
