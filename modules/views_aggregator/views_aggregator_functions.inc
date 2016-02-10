@@ -49,6 +49,11 @@ function views_aggregator_views_aggregation_functions_info() {
       'column' => t('Enumerate (sort, no dupl.) *'),
       'is_renderable' => FALSE,
     ),
+    'views_aggregator_enumerate_no_sort' => array(
+      'group' => t('Enumerate (no sort, no dupl.) *'),
+      'column' => t('Enumerate (no sort, no dupl.) *'),
+      'is_renderable' => FALSE,
+    ),
     'views_aggregator_replace' => array(
       'group' => t('Label (enter below) *'),
       'column' => t('Label (enter below) *'),
@@ -278,6 +283,27 @@ function views_aggregator_count($groups, $field_handler, $group_regexp = NULL, $
  */
 function views_aggregator_enumerate($groups, $field_handler, $separator_group, $separator_column) {
   return _views_aggregator_enumerate($groups, $field_handler, $separator_group, $separator_column, TRUE, FALSE);
+}
+
+/**
+ * Aggregates a field group as the enumeration of its members.
+ *
+ * Joe McP added - The enumeration is not sorted but duplicates are removed.
+ *
+ * @param array $groups
+ *   an array of groups of rows, each group indexed by group value
+ * @param object $field_handler
+ *   the handler for the view column to find members of the group
+ * @param string $separator_group
+ *   the separator to use in group enumerations, defaults to '<br/>'
+ * @param string $separator_column
+ *   the separator to use for the column enumeration, defaults to '<br/>'
+ *
+ * @return array
+ *   an array of values, one for each group.
+ */
+function views_aggregator_enumerate_no_sort($groups, $field_handler, $separator_group, $separator_column) {
+  return _views_aggregator_enumerate($groups, $field_handler, $separator_group, $separator_column, FALSE, FALSE);
 }
 
 /**

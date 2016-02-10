@@ -1,5 +1,5 @@
-name = Views Aggregator Plus
-description = A Views plugin that operates on the results <em>after</em> the database query has run, thus offering aggregation functions not otherwise possible.
+name = Views Aggregator Plus - MODIFIED
+description = A Views plugin that operates on the results <em>after</em> the database query has run, thus offering aggregation functions not otherwise possible. MODIFIED: Joe McP added function views_aggregator_enumerate_no_sort() as that's what I needed! (file changed: views_aggregator_functions.inc)
 configure = admin/config/content/views_aggregator
 package = Views
 dependencies[] = views
