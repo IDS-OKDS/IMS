@@ -47,7 +47,7 @@ function idsims_main_menu() {
 function ids_main_copy_site_node_form($form, &$form_state, $copy_from_nid){
 	/*
 	 * Because of the access callback we know that if we have got here then there must be a
-	 * copy that is valid and that
+	 * copy that is valid to make
 	 */
 
 	/*
@@ -98,8 +98,6 @@ function ids_main_copy_site_node_form($form, &$form_state, $copy_from_nid){
 				}
 			}
 		}
-
-		//return print_r($copy_from_array, true) . '::' . print_r($copy_to_array, true);
 
 		/*
 		 * simple version -- the user only has one editable site (that isn't the current node site)
@@ -279,10 +277,27 @@ function _ids_main_get_all_site_abstracts_nids($asset_id){
 	return $site_versions_nids;
 }
 
+
+/*
+ * Gets the selected site from the user
+ * This is the Site they are currently working with (more often that not set to the one they normally add Documents to) 
+ */
+function _ids_main_get_users_selected_site($uid = 0){
+	/* if $uid not set then get current user */
+	global $user;
+	if(!$uid){
+		$uid = $user->uid;
+	}
+	$account = user_load($uid);
+	if(isset($account->field_selected_site[LANGUAGE_NONE][0]['tid'])){
+		return $account->field_selected_site[LANGUAGE_NONE][0]['tid'];
+	}
+	return FALSE;
+}
+
 /*
  * Get all sites user can edit
  */
-
 function _ids_main_get_sites_user_can_edit($uid = 0){
 	/* if $uid not set then get current user */
 	global $user;
@@ -322,6 +337,17 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 	unset($form['revision_information']);
 	if($form_id == 'ids_document_node_form'){
 		if(arg(1) == 'add'){
+			/*
+			 * Set Site from User Selected Site field
+			 */
+			$user_selected_site_tid = _ids_main_get_users_selected_site();
+			$form["field_site_ref"][LANGUAGE_NONE]['#default_value'] = array(
+			    0 => $user_selected_site_tid,
+			);
+			
+			/*
+			 * Set publish day/month to 01/01 as it's normally only the year they know
+			 */
 			$first_day_of_year = format_date(strtotime('now'), 'custom', 'Y', 'UTC') . '-01-01 00:00:00';
 			$form["field_publication_date"][LANGUAGE_NONE][0]['#default_value'] = array(
 			    'value' => $first_day_of_year,
@@ -329,6 +355,12 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 			    'timezone_db' => 'UTC',
 			);
 		}
+		/*
+		 * Make sure Site and Object ID are not editable (as these are set programatically)
+		 */
+		$form['field_site_ref']['#disabled'] = TRUE;
+		$form['field_object_id']['#disabled'] = TRUE;
+		
 		/*
 		 * Reorder Authoring/Publishng info tabs on edit screens so that Publising Options are top and therefore open
 		 */
