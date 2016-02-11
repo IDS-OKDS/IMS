@@ -39,7 +39,7 @@
 
 </div>
 
-<div id="page">
+<div id="page" class="idsims_document_num_translations_<?php print $idsims_document_num_translations; ?>">
 
 	<div id="content" class="clearfix">
 		<div class="element-invisible"><a id="main-content"></a></div>
@@ -95,3 +95,9 @@
 	</div>
 
 </div>
+
+<?php if ($idsims_document_site_logo_url): ?>
+  <style>
+  	<?php print "#block-system-main { background-image:url('" . $idsims_document_site_logo_url ."'); }" ; ?>
+  </style>
+<?php endif; ?>

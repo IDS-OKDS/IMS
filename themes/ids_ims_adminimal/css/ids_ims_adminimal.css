@@ -188,3 +188,16 @@ div.breadcrumb a {
 	margin:4em 0 0 0;
 	float:right;
 }
+
+#block-system-main {
+	background-position: right 20px top 60px;
+	background-repeat:no-repeat;	
+}
+
+.page-node-edit #block-system-main {
+	background-position: right 20px top 40px;	
+}
+
+.page-node-edit .idsims_document_num_translations_1 #block-system-main {
+	background-position: right 20px top 105px;	
+}
