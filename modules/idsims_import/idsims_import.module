@@ -995,6 +995,16 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 	if($node_updated){
 		node_save($node);
 	}
+	
+	/*
+	 * Date Updated/Created - straight to DB as wiht node_save updated date would be the save date/time
+	 */
+	if(isset($node->field_date_updated[LANGUAGE_NONE][0]['value']) 
+		&& isset($node->field_date_created[LANGUAGE_NONE][0]['value'])){
+		$updated_date_unix_timestamp = strtotime($node->field_date_updated[LANGUAGE_NONE][0]['value']);
+		$created_date_unix_timestamp = strtotime($node->field_date_created[LANGUAGE_NONE][0]['value']);
+		db_query('UPDATE {node} SET created=:created, changed=:changed WHERE nid=:nid', array(':created'=>$created_date_unix_timestamp,':changed'=>$updated_date_unix_timestamp,':nid'=>$node->nid));
+	}
 
 }
 
