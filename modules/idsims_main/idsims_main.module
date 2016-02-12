@@ -332,6 +332,18 @@ function _ids_main_get_all_site_terms(){
 function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 	if($form_id == 'editableviews_entity_form_site_toggle'){
 		$form['#submit'][] = '_idsims_main_editableviews_entity_form_site_toggle_submit_function';
+		global $user;
+		$sites_user_can_edit = _ids_main_get_sites_user_can_edit();
+		$sites_terms = _ids_main_get_all_site_terms();
+		$sites_options_arr = array();
+		foreach($sites_user_can_edit as $site_user_can_edit_tid){
+			foreach($sites_terms as $sites_term){
+				if($sites_term->tid == $site_user_can_edit_tid){
+					$sites_options_arr[$sites_term->tid] = $sites_term->name;
+				}
+			}
+		}
+		$form['user'][$user->uid]['field_selected_site'][LANGUAGE_NONE]['#options'] = $sites_options_arr;
 	}
 	/* Hide all revision information/functionality on edit forms */
 	unset($form['revision_information']);
