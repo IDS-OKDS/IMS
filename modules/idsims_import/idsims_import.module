@@ -37,6 +37,11 @@ define('IDSIMS_COLLECTION_UPDATES_2014_SID', 1998);
 define('IDSIMS_FUNDER_PARENT_SID', 1842);
 define('IDSIMS_CONTENT_PARTNER_PARENT_SID', 1957);
 
+/*
+ * Site term ids 
+ */
+define('IDSIMS_SITE_ELDIS_TID', 96624);
+define('IDSIMS_SITE_BRIDGE_TID', 96625);
 
 /**
  * Implement hook_menu()
@@ -225,6 +230,8 @@ function idsims_import_import_post_process_form() {
     . '<p>Process tasks:</p>'
     . '<ul>'
     . '<li>From the Pubisher ID field populate Publisers field which is a node reference to Organisations</li>'
+    . '<li>Update Site taxonomy reference from field_site</li>'
+    . '<li>Move external url field into new Document URL entity</li>'
     . '</ul>',
     );
     $form['import_limit'] = array(
@@ -918,6 +925,22 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 
 		$node_updated = TRUE;
 	}
+	
+	/*
+	 * Update Site taxonomy reference from field_site
+	 */
+	if(isset($node->field_site[LANGUAGE_NONE][0]['value'])){
+		if($node->field_site[LANGUAGE_NONE][0]['value'] == 'bridge'){
+			$site_tid = IDSIMS_SITE_BRIDGE_TID;
+		} else {
+			$site_tid = IDSIMS_SITE_ELDIS_TID;
+		}
+		$node->field_site_ref[LANGUAGE_NONE] = array();
+		$node->field_site_ref[LANGUAGE_NONE][0]['tid'] = $site_tid;
+		
+		$node_updated = TRUE;
+	}
+	
 	
 	/*
 	 * Move external url field into new Document URL entity
