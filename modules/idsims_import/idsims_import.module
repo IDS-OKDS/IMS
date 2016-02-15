@@ -38,7 +38,7 @@ define('IDSIMS_FUNDER_PARENT_SID', 1842);
 define('IDSIMS_CONTENT_PARTNER_PARENT_SID', 1957);
 
 /*
- * Site term ids 
+ * Site term ids
  */
 define('IDSIMS_SITE_ELDIS_TID', 96624);
 define('IDSIMS_SITE_BRIDGE_TID', 96625);
@@ -101,8 +101,8 @@ function idsims_import_settings_form() {
     '#title' => t('Set mime types for full text documents on import'),
     '#type' => 'select',
     '#options' => array(
-	    0 => 'No',
-	    1 => 'Yes',
+    0 => 'No',
+    1 => 'Yes',
     ),
     '#required' => TRUE,
     '#default_value' => variable_get('idsims_import_do_set_mime_types', 0),
@@ -112,8 +112,8 @@ function idsims_import_settings_form() {
     '#title' => t('Set cover thumbnail image for full text documents on import'),
     '#type' => 'select',
     '#options' => array(
-	    0 => 'No',
-	    1 => 'Yes',
+    0 => 'No',
+    1 => 'Yes',
     ),
     '#required' => TRUE,
     '#default_value' => variable_get('idsims_import_do_set_cover_thumb_image', 0),
@@ -654,6 +654,22 @@ function _idsims_import_process_import_extras_update_node(&$node, &$field_data, 
 		$node_updated = TRUE;
 	}
 
+	/*
+	 * Apply Corperate Author
+	 */
+	if(isset($field_data['corporate_author']['name'])){
+		$node->field_corporate_author_text[LANGUAGE_NONE] = array();
+		$cnt = 0;
+		if(is_array($field_data['corporate_author']['name'])){
+			foreach($field_data['corporate_author']['name'] as $value){
+				$node->field_corporate_author_text[LANGUAGE_NONE][$cnt]['value'] = $value;
+				$cnt++;
+			}
+		} else {
+			$node->field_corporate_author_text[LANGUAGE_NONE][$cnt]['value'] = $value;
+		}
+	}
+
 	$site = isset($node->field_site[LANGUAGE_NONE][0]['value']) ? $node->field_site[LANGUAGE_NONE][0]['value']:'';
 	/*
 	 * process subjects (Eldis)
@@ -737,9 +753,9 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 	if(isset($field_data['results']['et_al'])){
 		$et_al = ( $field_data['results']['et_al'] == 'false') ? 0:1;
 		$node->field_et_al[LANGUAGE_NONE][0]['value'] = $et_al;
-		$node->field_et_al[LANGUAGE_NONE][0]['safe_value'] = $et_al;	
-	}	
-	
+		$node->field_et_al[LANGUAGE_NONE][0]['safe_value'] = $et_al;
+	}
+
 	/*
 	 * Firstly we need to set the default language for this node and set the translatable field values
 	 */
@@ -934,7 +950,7 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 
 		$node_updated = TRUE;
 	}
-	
+
 	/*
 	 * Update Site taxonomy reference from field_site
 	 */
@@ -946,11 +962,11 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 		}
 		$node->field_site_ref[LANGUAGE_NONE] = array();
 		$node->field_site_ref[LANGUAGE_NONE][0]['tid'] = $site_tid;
-		
+
 		$node_updated = TRUE;
 	}
-	
-	
+
+
 	/*
 	 * Move external url field into new Document URL entity
 	 */
@@ -970,23 +986,23 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 			if(!in_array($external_url)){
 				$entity_type = 'ids_document_url';
 				$entity = entity_create($entity_type, array('type' => 'ids_document_url'));
-  				$entity_wrapper = entity_metadata_wrapper($entity_type, $entity);
-  				$entity_wrapper->field_document_url->set($external_url);
-  				if($language_term = taxonomy_get_term_by_name($node_lang, $vocabulary = 'ids_language')){
-  					$lang_tid = (isset($language_term->tid)) ? $language_term->tid:FALSE;
-  					if(is_array($language_term)){
-  						foreach($language_term as $language_term_item){
-  							$lang_tid = (isset($language_term_item->tid)) ? $language_term_item->tid:FALSE;
-  						}
-  					}
-  					if($lang_tid){
-	  					$entity_wrapper->field_language_ref->set($lang_tid);
-  					}
-  				}
-  				$entity_wrapper->save();
-  				$entity_id_arr = entity_extract_ids($entity_type, $entity);
-  				$entity_id = $entity_id_arr[0];
-  				$document_url_entity_id_arr[$entity_id] = $entity; 
+				$entity_wrapper = entity_metadata_wrapper($entity_type, $entity);
+				$entity_wrapper->field_document_url->set($external_url);
+				if($language_term = taxonomy_get_term_by_name($node_lang, $vocabulary = 'ids_language')){
+					$lang_tid = (isset($language_term->tid)) ? $language_term->tid:FALSE;
+					if(is_array($language_term)){
+						foreach($language_term as $language_term_item){
+							$lang_tid = (isset($language_term_item->tid)) ? $language_term_item->tid:FALSE;
+						}
+					}
+					if($lang_tid){
+						$entity_wrapper->field_language_ref->set($lang_tid);
+					}
+				}
+				$entity_wrapper->save();
+				$entity_id_arr = entity_extract_ids($entity_type, $entity);
+				$entity_id = $entity_id_arr[0];
+				$document_url_entity_id_arr[$entity_id] = $entity;
 			}
 			$external_url_arr[] = $external_url;
 		}
@@ -1000,16 +1016,16 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 			$cnt++;
 		}
 	}
-	
+
 	if($node_updated){
 		node_save($node);
 	}
-	
+
 	/*
 	 * Date Updated/Created - straight to DB as wiht node_save updated date would be the save date/time
 	 */
-	if(isset($node->field_date_updated[LANGUAGE_NONE][0]['value']) 
-		&& isset($node->field_date_created[LANGUAGE_NONE][0]['value'])){
+	if(isset($node->field_date_updated[LANGUAGE_NONE][0]['value'])
+	&& isset($node->field_date_created[LANGUAGE_NONE][0]['value'])){
 		$updated_date_unix_timestamp = strtotime($node->field_date_updated[LANGUAGE_NONE][0]['value']);
 		$created_date_unix_timestamp = strtotime($node->field_date_created[LANGUAGE_NONE][0]['value']);
 		db_query('UPDATE {node} SET created=:created, changed=:changed WHERE nid=:nid', array(':created'=>$created_date_unix_timestamp,':changed'=>$updated_date_unix_timestamp,':nid'=>$node->nid));
