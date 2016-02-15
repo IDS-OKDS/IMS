@@ -113,7 +113,7 @@ function ids_main_copy_site_node_form($form, &$form_state, $copy_from_nid){
 				$to_site_tid = $tid; /* only one */
 				$to_site_name = $site_name;
 			}
-				
+
 			_ids_main_create_new_site_version($from_nid, $to_site_tid, $from_site_name, $to_site_name);
 
 		}
@@ -123,31 +123,31 @@ function ids_main_copy_site_node_form($form, &$form_state, $copy_from_nid){
 		 */
 		$form['#attributes'] = array(
 		    'enctype' => 'multipart/form-data'
-	    );
-		$form['intro_text'] = array(
+		    );
+		    $form['intro_text'] = array(
 		    '#markup' => '<h2>Copy to Site</h2>'
 		    . '<p>Copy a document from on Site to another, Choose form the options below and when ready select Copy.</p>',
 		    );
-	    $form['copy_from'] = array(
+		    $form['copy_from'] = array(
 		    '#title' => t('Copy from'),
 		    '#type' => 'select',
 		    '#options' => $copy_from_array, 
 		    '#default_value' => $copy_from_nid,
 	    	'#value' => $copy_from_nid,
 		    '#description' => t('The Site you are copying from.'),
-	    );
-	    $form['copy_to'] = array(
+		    );
+		    $form['copy_to'] = array(
 		    '#title' => t('Copy to'),
 		    '#type' => 'select',
 		    '#options' => $copy_to_array, 
 		    '#description' => t('The Site you are copying to.'),
-	    );
-	    $form['submit'] = array(
+		    );
+		    $form['submit'] = array(
 		    '#type' => 'submit',
 		    '#value' => t('Copy'),
 		    '#submit' => array('ids_main_copy_site_node_form_submit'),
-	    );
-	    return $form;
+		    );
+		    return $form;
 
 	} else {
 		drupal_set_message(t('Node trying to copy has no Site set'), 'error');
@@ -280,7 +280,7 @@ function _ids_main_get_all_site_abstracts_nids($asset_id){
 
 /*
  * Gets the selected site from the user
- * This is the Site they are currently working with (more often that not set to the one they normally add Documents to) 
+ * This is the Site they are currently working with (more often that not set to the one they normally add Documents to)
  */
 function _ids_main_get_users_selected_site($uid = 0){
 	/* if $uid not set then get current user */
@@ -327,9 +327,26 @@ function _ids_main_get_all_site_terms(){
 }
 
 /*
+ * Custom validaton for user_profile_form
+ */
+function _ids_main_user_profile_form_validate($form, &$form_state){
+	/*
+	 * Check that user has edit rights for Site that is their Selected Site
+	 */
+	$selected_site_valid = (in_array($form_state['values']['field_selected_site'][LANGUAGE_NONE][0], $form_state['values']['field_site_ref'][LANGUAGE_NONE])) ? TRUE:FALSE;
+	if (!$selected_site_valid) {
+		form_set_error('field_selected_site', t('You cannot have a Selected Site that\'s not in your availble Site list'));
+	}
+}
+
+/*
  * Implimentation of hook_form_alter()
  */
 function idsims_main_form_alter(&$form, &$form_state, $form_id) {
+	if($form_id == 'user_profile_form'){
+		/* add custom validation function to user account form */
+		$form['#validate'][] = '_ids_main_user_profile_form_validate';
+	}
 	if($form_id == 'editableviews_entity_form_site_toggle'){
 		$form['#submit'][] = '_idsims_main_editableviews_entity_form_site_toggle_submit_function';
 		global $user;
@@ -354,9 +371,9 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 			 */
 			$user_selected_site_tid = _ids_main_get_users_selected_site();
 			$form["field_site_ref"][LANGUAGE_NONE]['#default_value'] = array(
-			    0 => $user_selected_site_tid,
+			0 => $user_selected_site_tid,
 			);
-			
+				
 			/*
 			 * Set publish day/month to 01/01 as it's normally only the year they know
 			 */
@@ -372,7 +389,7 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 		 */
 		$form['field_site_ref']['#disabled'] = TRUE;
 		$form['field_object_id']['#disabled'] = TRUE;
-		
+
 		/*
 		 * Reorder Authoring/Publishng info tabs on edit screens so that Publising Options are top and therefore open
 		 */
