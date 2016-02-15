@@ -732,6 +732,15 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 	$node_updated = FALSE;
 
 	/*
+	 * Et al. field
+	 */
+	if(isset($field_data['results']['et_al'])){
+		$et_al = ( $field_data['results']['et_al'] == 'false') ? 0:1;
+		$node->field_et_al[LANGUAGE_NONE][0]['value'] = $et_al;
+		$node->field_et_al[LANGUAGE_NONE][0]['safe_value'] = $et_al;	
+	}	
+	
+	/*
 	 * Firstly we need to set the default language for this node and set the translatable field values
 	 */
 	$default_languge = LANGUAGE_NONE;
