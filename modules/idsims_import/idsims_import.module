@@ -637,6 +637,22 @@ function _idsims_import_process_import_extras_update_organisation_node(&$node, &
 
 function _idsims_import_process_import_extras_update_node(&$node, &$field_data, $assetid) {
 	/*
+	 * Journal/Volume information
+	 */
+	if(isset($field_data['source_journal'])){
+		$node->field_source_journal[LANGUAGE_NONE] = array();
+		$node->field_source_journal[LANGUAGE_NONE][0]['value'] = $field_data['source_journal'];
+	}
+	if(isset($field_data['volume_part_in_series'])){
+		$node->field_volume_part_in_series[LANGUAGE_NONE] = array();
+		$node->field_volume_part_in_series[LANGUAGE_NONE][0]['value'] = $field_data['volume_part_in_series'];
+	}
+	if(isset($field_data['blds'])){
+		$node->field_blds_record_number[LANGUAGE_NONE] = array();
+		$node->field_blds_record_number[LANGUAGE_NONE][0]['value'] = $field_data['blds'];
+	}	
+	
+	/*
 	 * Publication date uncertain field
 	 */
 	$node_updated = FALSE;
