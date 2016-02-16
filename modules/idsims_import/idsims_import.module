@@ -499,6 +499,11 @@ function _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($
 	 * Funders
 	 */
 	$asset_id_matrix['C1834'] = 'A56922'; /* CDKN */
+	
+	/*
+	 * Sevices
+	 */
+	$asset_id_matrix['C1878'] = 'A59314'; /* APCOM */
 
 	return (isset($asset_id_matrix[$cat_assetid])) ? $asset_id_matrix[$cat_assetid] : FALSE;
 }
@@ -885,6 +890,14 @@ function _idsims_import_process_import_extras_update_node_subjects(&$node, $subj
 		$org_asset_id = _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($cat_assetid);
 		if($org_asset_id){
 			_idsims_import_apply_organsation_ref($node, 'content_partner_ref', array($org_asset_id));
+		}
+		
+		/*
+		 * Process Services
+		 */
+		$org_asset_id = _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($cat_assetid);
+		if($org_asset_id){
+			_idsims_import_apply_organsation_ref($node, 'service_ref', array($org_asset_id));
 		}
 
 		/*
