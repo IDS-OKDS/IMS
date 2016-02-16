@@ -504,6 +504,40 @@ function _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($
 	 * Sevices
 	 */
 	$asset_id_matrix['C1878'] = 'A59314'; /* APCOM */
+	$asset_id_matrix['C1867'] = 'A2792'; /* FAC */
+	$asset_id_matrix['C1883'] = 'A63489'; /* FBFI */
+	/*
+	 * 	TODO
+	 * 
+	 * 	CSDMS
+		DNet
+		Evidence on Demand
+		GSDRC
+		HDRC
+		HEART
+		Ideas to Impact
+		IID
+		LANSA
+		Making All Voices Count
+		Malawi Development Exchange
+		3ie
+		APAN
+		BRIDGE
+		CCCCC
+		ELLA/PALA
+		IGIDR
+		K-Developedia
+		ObservAction
+		OpenDocs
+		PIDS SERP-P
+		Sendesal
+		SoulBeat
+		SPREP
+		PIP
+		PLAAS
+		SPARC Nigeria
+		Transform Nutrition
+	 */
 
 	return (isset($asset_id_matrix[$cat_assetid])) ? $asset_id_matrix[$cat_assetid] : FALSE;
 }
