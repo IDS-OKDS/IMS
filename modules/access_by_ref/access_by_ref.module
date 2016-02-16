@@ -32,7 +32,13 @@ function access_by_ref_node_access($node, $op, $account) {
 				 (isset($item['target_id'])&&$item['target_id'] == $userfield['target_id']) ){
 				   //drupal_set_message("match");
 			       return NODE_ACCESS_ALLOW; // they match.  We're in
-			     }			 
+			     }	
+			     /* Joe McP -- Added for term reference fields */
+		         if((isset($item['tid'])&&$item['tid'] == $userfield['tid']) ||
+				 (isset($item['target_id'])&&$item['target_id'] == $userfield['target_id']) ){
+				   //drupal_set_message("match");
+			       return NODE_ACCESS_ALLOW; // they match.  We're in
+			     }		 
 			   }		    
 		     }
 		   }

@@ -1,6 +1,6 @@
 ; $Id: listing.info,v 1.4 2009/09/09 04:58:38 cayenne Exp $
-name = Access by Reference
-description = Set Access by Entity Reference. Use shared values or referenced nodes to allow edit access
+name = Access by Reference - MODIFIED
+description = Set Access by Entity Reference. Use shared values or referenced nodes to allow edit access. MODIFIED - Added functionality so Term Reference type fields can be used for matching as shared fields
 core = 7.x
 
 ; Information added by Drupal.org packaging script on 2014-05-01
