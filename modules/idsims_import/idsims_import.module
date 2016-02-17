@@ -746,7 +746,7 @@ function _idsims_import_process_import_extras_update_node(&$node, &$field_data, 
 	 * Apply User ID for document creator
 	 */
 	if(isset($field_data['creator_id'])){
-		$uid = _idsims_import_get_uid_from_creator_id($field_data['creator_id']);
+		$uid = _idsims_import_get_uid_from_creator_id($field_data['creator_id'], $assetid);
 		if($uid){
 			$node->uid = $uid;
 			$node_updated = TRUE;
@@ -758,7 +758,7 @@ function _idsims_import_process_import_extras_update_node(&$node, &$field_data, 
 	}
 }
 
-function _idsims_import_get_uid_from_creator_id($oryx_creator_id){
+function _idsims_import_get_uid_from_creator_id($oryx_creator_id, $assetid){
 	static $uid_to_creator_map;
 	if(!is_array($uid_to_creator_map)){
 		$uid_to_creator_map =  unserialize(variable_get('idsims_updates_uid_to_creator_map', 0));
@@ -779,7 +779,7 @@ function _idsims_import_get_uid_from_creator_id($oryx_creator_id){
 	if(isset($uid_to_creator_map[$oryx_creator_id])){
 		return $uid_to_creator_map[$oryx_creator_id];
 	} else {
-		drupal_set_message('Warning:No User match for Oryx ID:'. $oryx_creator_id);
+		drupal_set_message('Warning:No User match on Asset:' . $assetid . ' for Oryx ID:'. $oryx_creator_id);
 	}
 	return FALSE;
 }
