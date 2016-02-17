@@ -8,6 +8,21 @@
         	$('.view-site-toggle #edit-user-1-field-selected-site-und').change(function(){
         	    $('#editableviews-entity-form-site-toggle').submit();
         	});
+        	/* Add help to labels on forms */
+        	$('div.form-wrapper').each(function(){
+                    var label_obj = $(this).find('label').first();
+                    var description_obj = $(this).find('.description').first();
+        	    if(description_obj){
+        		var description_html = description_obj.html();
+        		if(description_html){
+        		    alert(description_html);
+                		label_obj.attr('title', description_html);
+                		label_obj.addClass('helpTip');
+                		label_obj.find('.help').first().remove();
+                		label_obj.append('<span class="help">?</span>');
+        	    	}
+        	    }
+        	});
             });
 
             $(window).load(function () {

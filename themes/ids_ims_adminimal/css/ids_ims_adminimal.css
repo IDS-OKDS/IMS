@@ -201,3 +201,22 @@ div.breadcrumb a {
 .page-node-edit .idsims_document_num_translations_1 #block-system-main {
 	background-position: right 20px top 105px;	
 }
+
+.filter-wrapper {
+	display:none;
+}
+
+.has-js .form-wrapper .description {
+	display:none;
+}
+
+.form-item  label.helpTip span.help {
+    background-image: linear-gradient(90deg, #23408e, #3e76af);
+	display:inline-block;
+    text-align: center;
+    padding: 0.1em 0.5em;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    font-weight:bold;
+}
