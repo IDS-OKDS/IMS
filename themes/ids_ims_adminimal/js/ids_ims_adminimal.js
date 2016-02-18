@@ -26,8 +26,15 @@
                         	        my: "left bottom",
                         	        at: "left top-10",
                         	        collision: "none"
-                        	    }
-                        	});
+                        	    },
+                		    hide: { delay: 2000 }
+                        	})
+                        	  .off( "mouseover" )
+                                  .on( "click", function(){
+                                      $( this ).tooltip( "enable" );
+                                      $( this ).tooltip( "open" );
+                                      return false;
+                                    }).attr( "title", " " );
         	    	}
         	    }
         	});
