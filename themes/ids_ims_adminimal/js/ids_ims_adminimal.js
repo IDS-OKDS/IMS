@@ -31,17 +31,6 @@
         	    	}
         	    }
         	});
-        	/* Set tooltips (jQuery UI) */
-        /*	$( "div.form-wrapper label" ).each(function(){
-        	    var description_html = $(this).attr('title');
-        	    $(this).tooltip({
-                	    position: {
-                	        my: "left bottom",
-                	        at: "left top-10",
-                	        collision: "none"
-                	    }
-                	});
-        	});*/
             });
 
             $(window).load(function () {
