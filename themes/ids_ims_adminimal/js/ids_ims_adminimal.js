@@ -15,14 +15,33 @@
         	    if(description_obj){
         		var description_html = description_obj.html();
         		if(description_html){
-        		    alert(description_html);
-                		label_obj.attr('title', description_html);
+                		//label_obj.attr('title', description_html);
+        		    	label_obj.attr('title', idsIMShtmlEncode(description_html)); 
                 		label_obj.addClass('helpTip');
                 		label_obj.find('.help').first().remove();
                 		label_obj.append('<span class="help">?</span>');
+                		label_obj.tooltip({
+                		    content: description_html,
+                        	    position: {
+                        	        my: "left bottom",
+                        	        at: "left top-10",
+                        	        collision: "none"
+                        	    }
+                        	});
         	    	}
         	    }
         	});
+        	/* Set tooltips (jQuery UI) */
+        /*	$( "div.form-wrapper label" ).each(function(){
+        	    var description_html = $(this).attr('title');
+        	    $(this).tooltip({
+                	    position: {
+                	        my: "left bottom",
+                	        at: "left top-10",
+                	        collision: "none"
+                	    }
+                	});
+        	});*/
             });
 
             $(window).load(function () {
@@ -65,6 +84,12 @@
             });
         }
     };
+    
+    function idsIMShtmlEncode(value){
+	  //create a in-memory div, set it's inner text(which jQuery automatically encodes)
+	  //then grab the encoded contents back out.  The div never exists on the page.
+	  return $('<div/>').text(value).html();
+	}
 
 
 })(jQuery, Drupal, this, this.document);
