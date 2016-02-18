@@ -844,6 +844,7 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 	}
 	if($default_languge == LANGUAGE_NONE){
 		drupal_set_message('Warning: No default language set for Node ID('.$node->nid.') Asset ID('.$assetid.')');
+		drupal_set_message('$field_data:' . print_r($field_data, TRUE));
 	}
 
 	/*
