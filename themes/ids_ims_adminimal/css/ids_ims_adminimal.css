@@ -207,6 +207,7 @@ div.breadcrumb a {
 	display:none;
 }
 
+.has-js .view-find-content  .views-exposed-widget .description,
 .has-js .form-wrapper .description {
 	display:none;
 }
@@ -219,7 +220,8 @@ div.breadcrumb a {
 	display:block;
 }
 
-.form-item  label.helpTip span.help {
+.view-find-content  .views-exposed-widget label.helpTip span.help,
+.form-item label.helpTip span.help {
     background-image: linear-gradient(90deg, #23408e, #3e76af);
 	display:inline-block;
     text-align: center;
@@ -228,6 +230,7 @@ div.breadcrumb a {
     color: white;
     cursor: pointer;
     font-weight:bold;
+    color:#fff;
 }
 
 .horizontal-tabs ul.horizontal-tabs-list li a:hover,
