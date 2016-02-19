@@ -1,0 +1,11 @@
+name = IDS IMS Solr
+description = Module for IDS IMS integration with Solr search
+core = 7.x
+package = IDS
+version = "7.x-1.0"
+core = "7.x"
+project = "idsims_solr"
+dependencies[] = idsims_main
+dependencies[] = search_api_solr
+
+

@@ -1,0 +1,25 @@
+<?php
+/**
+ * @file
+ * Module for IDS IMS integration with Solr search
+ */
+
+/**
+ * Alter Solr documents before they are sent to Solr for indexing.
+ *
+ * @param array $documents
+ *   An array of SearchApiSolrDocument objects ready to be indexed, generated
+ *   from $items array.
+ * @param SearchApiIndex $index
+ *   The search index for which items are being indexed.
+ * @param array $items
+ *   An array of items being indexed.
+ */
+function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchApiIndex $index, array $items) {
+	foreach ($documents as $document) {
+		drupal_set_message(print_r($document, true));
+		$item_id_arr = $document->getField('item_id');
+		drupal_set_message('indexing item_id:' . $item_id_arr['value']);
+		$document->setField('object_id', $item_id_arr['value']);
+	}
+}
