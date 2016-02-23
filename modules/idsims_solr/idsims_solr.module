@@ -16,10 +16,45 @@
  *   An array of items being indexed.
  */
 function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchApiIndex $index, array $items) {
-	foreach ($documents as $document) {
-		drupal_set_message(print_r($document, true));
+	
+	$sites_terms = _ids_main_get_all_site_terms();
+	
+	foreach ($documents as $document_key => $document) {
 		$item_id_arr = $document->getField('item_id');
-		drupal_set_message('indexing item_id:' . $item_id_arr['value']);
-		$document->setField('object_id', $item_id_arr['value']);
+		$node = node_load($item_id_arr['value']);
+		if($node){
+			$field_language = _idsims_main_field_language($node->type, $node, 'field_site_ref');
+			$site_term_tid = $node->field_site_ref[$field_language][0]['tid'];
+			$site_term = taxonomy_term_load($site_term_tid);
+
+			/* Object ID (object_id) */
+			$document->setField('object_id', $node->field_object_id[$field_language][0]['value']);
+
+			/* Asset ID (asset_id) */
+			$assetid = substr($node->field_object_id[$field_language][0]['value'], 1);/*remove 'A' at front of asset ID */
+			$document->setField('asset_id', $assetid);
+
+			/* Author (author) */
+			foreach($node->field_authors[$field_language] as $author_item){
+				$author_term = taxonomy_term_load($author_item['tid']);
+				$document->addField('author', $author_term->name);
+			}
+
+			/* Asset ID (asset_id) */
+			$assetid = substr($node->field_object_id[$field_language][0]['value'], 1);/*remove 'A' at front of asset ID */
+			$document->setField('asset_id', $assetid);
+
+			/* Site (site_red) */
+			$site_ref_tid = $node->field_site_ref[$field_language][0]['tid'];
+			$sites_machine_name = $sites_terms[$site_ref_tid]->field_machine_name[LANGUAGE_NONE][0]['value'];
+			$document->setField('site', $sites_machine_name);
+			
+			/* Title (title_field) */
+			$document->setField('title', $node->title_field[$field_language][0]['value']);
+			
+		}
 	}
+	
 }
+
+

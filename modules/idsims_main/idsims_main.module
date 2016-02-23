@@ -321,7 +321,10 @@ function _ids_main_get_all_site_terms(){
 	static $site_terms;
 	if(!isset($site_terms)){
 		$vocabulary_object = taxonomy_vocabulary_machine_name_load('ids_site');
-		$site_terms = taxonomy_get_tree($vid = $vocabulary_object->vid, $parent = 0, $max_depth = NULL, $load_entities = TRUE);
+		$site_terms_tree = taxonomy_get_tree($vid = $vocabulary_object->vid, $parent = 0, $max_depth = NULL, $load_entities = TRUE);
+		foreach($site_terms_tree as $site_term){
+			$site_terms[$site_term->tid] = $site_term;
+		}
 	}
 	return $site_terms;
 }
