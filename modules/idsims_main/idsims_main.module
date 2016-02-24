@@ -669,5 +669,19 @@ function _idsims_main_get_term_depth($tid) {
   }
 }
 
+/*
+ *  this function returns the path of a term as a string delimited with .
+ *  e.g parenttermname.termname
+ */
+function _idsims_main_get_term_path($tid) {
+  $parent = db_query("SELECT parent FROM {taxonomy_term_hierarchy} WHERE tid = :tid", array(':tid' => $tid))->fetchField();
+  $term = taxonomy_term_load($tid);
+  if($parent == 0) {
+    return trim($term->name);
+  }else  {
+    return _idsims_main_get_term_path($parent) . '.' . trim($term->name);
+  }
+}
+
 
 
