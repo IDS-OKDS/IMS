@@ -655,5 +655,19 @@ function _idsims_main_editableviews_entity_form_site_toggle_submit_function(){
 	unset($_SESSION['messages']);
 }
 
+/*
+ *  this function returns the depth of a tid
+ *  1 = first level
+ *  2 = second level etc...
+ */
+function _idsims_main_get_term_depth($tid) {
+  $parent = db_query("SELECT parent FROM {taxonomy_term_hierarchy} WHERE tid = :tid", array(':tid' => $tid))->fetchField();
+  if($parent == 0) {
+    return 1;
+  }else  {
+    return 1+_idsims_main_get_term_depth($parent);
+  }
+}
+
 
 
