@@ -1,5 +1,5 @@
 name = Search API - MODIFIED
-description = "Provides a generic API for modules offering search capabilites. MODIFIED JoeMcP - added callback_site_ref_field_filter.inc for filtering (Solr) Search Index on taxonomyfield (site_ref)"
+description = "Provides a generic API for modules offering search capabilites. MODIFIED JoeMcP - added callback_site_ref_field_filter.inc for filtering (Solr) Search Index on taxonomyfield (site_ref)". Also MODIFIED - Patched with https://www.drupal.org/node/2524314#comment-10361319 
 dependencies[] = entity
 core = 7.x
 package = Search

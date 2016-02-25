@@ -20,42 +20,57 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 	$sites_terms = _ids_main_get_all_site_terms();
 	
 	foreach ($documents as $document_key => $document) {
+		drupal_set_message('document:'. print_r($document, true));
+		$index_id_arr = $document->getField('index_id');
+		$index_id = $index_id_arr['value'];
 		$item_id_arr = $document->getField('item_id');
-		$node = node_load($item_id_arr['value']);
-		if($node){
-			$field_language = _idsims_main_field_language($node->type, $node, 'field_site_ref');
-			$site_term_tid = $node->field_site_ref[$field_language][0]['tid'];
-			$site_term = taxonomy_term_load($site_term_tid);
-
-			/* Object ID (object_id) */
-			$document->setField('object_id', $node->field_object_id[$field_language][0]['value']);
-
-			/* Asset ID (asset_id) */
-			$assetid = substr($node->field_object_id[$field_language][0]['value'], 1);/*remove 'A' at front of asset ID */
-			$document->setField('asset_id', $assetid);
-
-			/* Author (author) */
-			foreach($node->field_authors[$field_language] as $author_item){
-				$author_term = taxonomy_term_load($author_item['tid']);
-				$document->addField('author', $author_term->name);
+		if($index_id == 'openapi_index_taxonomy'){
+			$taxonomy_term = taxonomy_term_load($item_id_arr['value']);
+			if($taxonomy_term){			
+				/* Index TAXONOMY TERMS */
+				drupal_set_message('taxonomy_term:'. print_r($taxonomy_term, true));
+				/* Object ID (object_id) */
+				$field_language = _idsims_main_field_language($taxonomy_term->vocabulary_machine_name, $taxonomy_term, 'field_site_ref');
+				$document->setField('object_id', $taxonomy_term->field_object_id[$field_language][0]['value']);
 			}
-
-			/* Site (site_red) */
-			$site_ref_tid = $node->field_site_ref[$field_language][0]['tid'];
-			$site_machine_name = $sites_terms[$site_ref_tid]->field_machine_name[LANGUAGE_NONE][0]['value'];
-			$document->setField('site', $site_machine_name);
-			
-			/* Title (title_field) */
-			$document->setField('title', $node->title_field[$field_language][0]['value']);
-			
-			/* Regions (field_SITE_regions) */
-			_idsims_solr_build_category_fields($document, $node, 'region', $site_machine_name, $object_xml = FALSE);
-			
-			/* Subjects (field_SITE_subjects) */
-			_idsims_solr_build_category_fields($document, $node, 'subject', $site_machine_name);
-			
-			/* Theme (field_SITE_themes) */
-			_idsims_solr_build_category_fields($document, $node, 'theme', $site_machine_name);
+		} else {
+			/* Index NODES */
+			$node = node_load($item_id_arr['value']);
+			if($node){
+				$field_language = _idsims_main_field_language($node->type, $node, 'field_site_ref');
+				$site_term_tid = $node->field_site_ref[$field_language][0]['tid'];
+				$site_term = taxonomy_term_load($site_term_tid);
+	
+				/* Object ID (object_id) */
+				$document->setField('object_id', $node->field_object_id[$field_language][0]['value']);
+	
+				/* Asset ID (asset_id) */
+				$assetid = substr($node->field_object_id[$field_language][0]['value'], 1);/*remove 'A' at front of asset ID */
+				$document->setField('asset_id', $assetid);
+	
+				/* Author (author) */
+				foreach($node->field_authors[$field_language] as $author_item){
+					$author_term = taxonomy_term_load($author_item['tid']);
+					$document->addField('author', $author_term->name);
+				}
+	
+				/* Site (site_red) */
+				$site_ref_tid = $node->field_site_ref[$field_language][0]['tid'];
+				$site_machine_name = $sites_terms[$site_ref_tid]->field_machine_name[LANGUAGE_NONE][0]['value'];
+				$document->setField('site', $site_machine_name);
+				
+				/* Title (title_field) */
+				$document->setField('title', $node->title_field[$field_language][0]['value']);
+				
+				/* Regions (field_SITE_regions) */
+				_idsims_solr_build_category_fields($document, $node, 'region', $site_machine_name, $object_xml = FALSE);
+				
+				/* Subjects (field_SITE_subjects) */
+				_idsims_solr_build_category_fields($document, $node, 'subject', $site_machine_name);
+				
+				/* Theme (field_SITE_themes) */
+				_idsims_solr_build_category_fields($document, $node, 'theme', $site_machine_name);
+			}
 		}
 	}
 	
