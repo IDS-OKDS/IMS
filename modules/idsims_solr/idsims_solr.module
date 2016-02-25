@@ -20,7 +20,6 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 	$sites_terms = _ids_main_get_all_site_terms();
 	
 	foreach ($documents as $document_key => $document) {
-		drupal_set_message('document:'. print_r($document, true));
 		$index_id_arr = $document->getField('index_id');
 		$index_id = $index_id_arr['value'];
 		$item_id_arr = $document->getField('item_id');
@@ -28,10 +27,24 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 			$taxonomy_term = taxonomy_term_load($item_id_arr['value']);
 			if($taxonomy_term){			
 				/* Index TAXONOMY TERMS */
-				drupal_set_message('taxonomy_term:'. print_r($taxonomy_term, true));
+				$vocabulary_machine_name = $taxonomy_term->vocabulary_machine_name;
 				/* Object ID (object_id) */
-				$field_language = _idsims_main_field_language($taxonomy_term->vocabulary_machine_name, $taxonomy_term, 'field_site_ref');
+				$field_language = _idsims_main_field_language($vocabulary_machine_name, $taxonomy_term, 'field_site_ref');
 				$document->setField('object_id', $taxonomy_term->field_object_id[$field_language][0]['value']);
+				/* Title (title_field) */
+				$document->setField('title', $taxonomy_term->name);
+				/* Site (taken from taxonomy vocabulary machine name e.g. ids_bridge_themes) */
+				$vocabulary_machine_name_arr = explode('_', $vocabulary_machine_name);
+				$site_machine_name = $vocabulary_machine_name_arr[1];
+				$document->setField('site', $site_machine_name);
+				/*Object type*/
+				$object_type = (isset($vocabulary_machine_name_arr[2])) ? $vocabulary_machine_name_arr[2]:$vocabulary_machine_name_arr[1];
+				$document->setField('object_type', $object_type);
+				/* Asset ID (asset_id) */
+				$category_id = substr($taxonomy_term->field_object_id[$field_language][0]['value'], 1);/*remove 'C' at front of category ID */
+				$document->setField('category_id', $category_id);
+				/* Category path (category_path) */
+				$document->addField('category_path', _idsims_main_get_term_path($taxonomy_term->tid));
 			}
 		} else {
 			/* Index NODES */
@@ -54,7 +67,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					$document->addField('author', $author_term->name);
 				}
 	
-				/* Site (site_red) */
+				/* Site (site_ref) */
 				$site_ref_tid = $node->field_site_ref[$field_language][0]['tid'];
 				$site_machine_name = $sites_terms[$site_ref_tid]->field_machine_name[LANGUAGE_NONE][0]['value'];
 				$document->setField('site', $site_machine_name);
