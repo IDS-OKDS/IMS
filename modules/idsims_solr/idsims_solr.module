@@ -19,6 +19,11 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 	
 	$sites_terms = _ids_main_get_all_site_terms();
 	
+	$server = $index->server();
+	$server_machine_name = $server->machine_name;
+	$server_site_machine_name_arr = explode('_', $server_machine_name);
+	$server_site_machine_name = $server_site_machine_name_arr[0];
+	
 	foreach ($documents as $document_key => $document) {
 		$index_id_arr = $document->getField('index_id');
 		$index_id = $index_id_arr['value'];
@@ -37,8 +42,12 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$vocabulary_machine_name_arr = explode('_', $vocabulary_machine_name);
 				$site_machine_name = $vocabulary_machine_name_arr[1];
 				$document->setField('site', $site_machine_name);
-				/*Object type*/
-				$object_type = (isset($vocabulary_machine_name_arr[2])) ? $vocabulary_machine_name_arr[2]:$vocabulary_machine_name_arr[1];
+				/*Object type -- remove plural */
+				$object_type = (isset($vocabulary_machine_name_arr[2])) ? substr($vocabulary_machine_name_arr[2], 0, -1):$vocabulary_machine_name_arr[1];
+				if($site_machine_name == 'countries'){
+					$site_machine_name = $server_site_machine_name;
+					$object_type = 'country';
+				}
 				$document->setField('object_type', $object_type);
 				/* Asset ID (asset_id) */
 				$category_id = substr($taxonomy_term->field_object_id[$field_language][0]['value'], 1);/*remove 'C' at front of category ID */
