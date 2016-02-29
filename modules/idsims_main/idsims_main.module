@@ -688,8 +688,8 @@ function _idsims_main_get_term_path($tid) {
  */
 function _idsims_main_get_parent_tid_array(&$parent_tids, $tid) {
   $parent = db_query("SELECT parent FROM {taxonomy_term_hierarchy} WHERE tid = :tid", array(':tid' => $tid))->fetchField();
-  $parent_tids[] = $parent;
   if($parent != 0) {
+  	$parent_tids[] = $parent;
     _idsims_main_get_parent_tid_array($parent_tids, $parent);
   }
 }
@@ -709,5 +709,22 @@ function _idsims_main_get_child_tid_array($parent_tid) {
   return $children;
 }
 
+/*
+ * this function returns a numeric asset id 
+ */
+function _idsims_main_get_numeric_asset_id($type, $eid){
+	$entity = FALSE;
+	if($type == 'taxonomy_term'){
+		$entity = taxonomy_term_load($eid);
+	}
+	if($type == 'node'){
+		$entity = node_load($eid);
+	}
+	if(!$entity){
+		return FALSE;
+	}
+	$asset_id = _idsims_main_get_asset_id($entity, $type);
+	return substr($asset_id, 1); /*remove 'C' at front of category ID and 'A' in front of asset ID */
+}
 
 

@@ -74,6 +74,15 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					$xmlString = _idsims_solr_build_category_array_field('parent', $category_objects);
 					$document->addField('parent_object_array', $xmlString);
 				}
+				/* First Parent / Super Parent (vocabulary ID) */
+				if(count($parent_tids)){
+					$document->addField('cat_first_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $parent_tids[0]));
+					$document->addField('cat_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $parent_tids[count($parent_tids)-1]));
+				} else {
+					$document->addField('cat_first_parent', $category_id);
+					$document->addField('cat_parent', $taxonomy_term->vid);
+				}
+				$document->addField('cat_superparent', $taxonomy_term->vid);
 				/* Child array */
 				$child_tids = _idsims_main_get_child_tid_array($taxonomy_term->tid);
 				$category_objects = array();
