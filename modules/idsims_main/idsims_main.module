@@ -683,5 +683,31 @@ function _idsims_main_get_term_path($tid) {
   }
 }
 
+/*
+ *  this function returns an array of parent term ids (tids) from a given tid 
+ */
+function _idsims_main_get_parent_tid_array(&$parent_tids, $tid) {
+  $parent = db_query("SELECT parent FROM {taxonomy_term_hierarchy} WHERE tid = :tid", array(':tid' => $tid))->fetchField();
+  $parent_tids[] = $parent;
+  if($parent != 0) {
+    _idsims_main_get_parent_tid_array($parent_tids, $parent);
+  }
+}
+
+/*
+ *  this function returns an array of child term ids (tids) from a given parent tid 
+ */
+function _idsims_main_get_child_tid_array($parent_tid) {
+  $result = db_query("SELECT tid FROM {taxonomy_term_hierarchy} WHERE parent = :tid", array(':tid' => $parent_tid));
+  $children = FALSE;
+  foreach ($result as $record) {
+  	if(!$children){
+  		$children = array();
+  	}
+  	$children[] = $record->tid;
+  }
+  return $children;
+}
+
 
 
