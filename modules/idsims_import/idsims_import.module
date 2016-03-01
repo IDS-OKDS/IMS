@@ -504,40 +504,35 @@ function _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($
 	 * Sevices
 	 */
 	$asset_id_matrix['C1878'] = 'A59314'; /* APCOM */
-	$asset_id_matrix['C1867'] = 'A2792'; /* FAC */
+	$asset_id_matrix['C1815'] = 'A61093'; /* CSDMS */
+	$asset_id_matrix['C1790'] = 'A32790'; /* DNet */
+	$asset_id_matrix['C1905'] = 'A65311'; /* Evidence on Demand */
+	$asset_id_matrix['C1867'] = 'A31035'; /* FAC */
 	$asset_id_matrix['C1883'] = 'A63489'; /* FBFI */
-	/*
-	 * 	TODO
-	 * 
-	 * 	CSDMS
-		DNet
-		Evidence on Demand
-		GSDRC
-		HDRC
-		HEART
-		Ideas to Impact
-		IID
-		LANSA
-		Making All Voices Count
-		Malawi Development Exchange
-		3ie
-		APAN
-		BRIDGE
-		CCCCC
-		ELLA/PALA
-		IGIDR
-		K-Developedia
-		ObservAction
-		OpenDocs
-		PIDS SERP-P
-		Sendesal
-		SoulBeat
-		SPREP
-		PIP
-		PLAAS
-		SPARC Nigeria
-		Transform Nutrition
-	 */
+	$asset_id_matrix['C2050'] = 'A6247'; /* GSDRC */
+	$asset_id_matrix['C1846'] = 'A7686'; /* HDRC */
+	$asset_id_matrix['C1946'] = 'A63060'; /* HEART */
+	$asset_id_matrix['C2056'] = 'A72848'; /* Ideas to Impact */
+	$asset_id_matrix['C1868'] = 'A59436'; /* IID */
+	$asset_id_matrix['C1948'] = 'A66570'; /* LANSA */
+	$asset_id_matrix['C1981'] = 'A68930'; /* Making All Voices Count */
+	$asset_id_matrix['C1989'] = 'A58708'; /* 3ie */
+	$asset_id_matrix['C2063'] = 'A64967'; /* APAN */
+	$asset_id_matrix['C1994'] = 'A2921'; /* BRIDGE */
+	$asset_id_matrix['C1990'] = 'A31711'; /* CCCCC */
+	$asset_id_matrix['C1896'] = 'A61421'; /* ELLA/PALA */
+	$asset_id_matrix['C1991'] = 'A4210'; /* IGIDR */
+	$asset_id_matrix['C2062'] = 'A75055'; /* K-Developedia */
+	$asset_id_matrix['C1996'] = 'A75054'; /* ObservAction */
+	$asset_id_matrix['C1995'] = 'A75056'; /* OpenDocs */
+	$asset_id_matrix['C1992'] = 'A3160'; /* PIDS SERP-P */
+	$asset_id_matrix['C1997'] = 'A75100'; /* Sendesal (now Anacaonas) */
+	$asset_id_matrix['C1882'] = 'A62277'; /* SoulBeat */
+	$asset_id_matrix['C1993'] = 'A6071'; /* SPREP */
+	$asset_id_matrix['C1897'] = 'A59959'; /* PIP */
+	$asset_id_matrix['C1898'] = 'A6360'; /* PLAAS */
+	$asset_id_matrix['C1947'] = 'A66149'; /* SPARC Nigeria */
+	$asset_id_matrix['C1949'] = 'A65945'; /* Transform Nutrition */
 
 	return (isset($asset_id_matrix[$cat_assetid])) ? $asset_id_matrix[$cat_assetid] : FALSE;
 }
