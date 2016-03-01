@@ -147,6 +147,11 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$document->setField('date_created', $timestamp);
 				$timestamp = date("Y-m-d\Th:i:s\Z", $node->changed);
 				$document->setField('date_updated', $timestamp);
+				
+				/* Description */
+				$document->setField('description', $node->body);
+				
+
 			}
 		}
 	}
