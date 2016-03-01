@@ -109,7 +109,10 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$document->setField('object_id', $node->field_object_id[$field_language][0]['value']);
 				
 				/* Object type */
-				$object_type  = 'Document';
+				$object_type = 'Document';
+				if($node->type == 'ids_organisation'){
+					$object_type = 'Organisation';
+				}
 				$document->setField('object_type', $object_type);
 	
 				/* Asset ID (asset_id) */
