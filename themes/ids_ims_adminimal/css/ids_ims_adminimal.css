@@ -305,3 +305,7 @@ fieldset.date-combo .container-inline-date .date-padding {
 .node-form .horizontal-tabs-panes {
 	padding-top:1em;
 }
+
+.node-ids-document .field-name-body .field-items {
+	width: 80%;
+}
