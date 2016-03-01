@@ -16,21 +16,21 @@
  *   An array of items being indexed.
  */
 function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchApiIndex $index, array $items) {
-	
+
 	$sites_terms = _ids_main_get_all_site_terms();
-	
+
 	$server = $index->server();
 	$server_machine_name = $server->machine_name;
 	$server_site_machine_name_arr = explode('_', $server_machine_name);
 	$server_site_machine_name = $server_site_machine_name_arr[0];
-	
+
 	foreach ($documents as $document_key => $document) {
 		$index_id_arr = $document->getField('index_id');
 		$index_id = $index_id_arr['value'];
 		$item_id_arr = $document->getField('item_id');
 		if($index_id == 'openapi_index_taxonomy'){
 			$taxonomy_term = taxonomy_term_load($item_id_arr['value']);
-			if($taxonomy_term){			
+			if($taxonomy_term){
 				/* Index TAXONOMY TERMS */
 				$vocabulary_machine_name = $taxonomy_term->vocabulary_machine_name;
 				/* Object ID (object_id) */
@@ -104,47 +104,53 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$field_language = _idsims_main_field_language($node->type, $node, 'field_site_ref');
 				$site_term_tid = $node->field_site_ref[$field_language][0]['tid'];
 				$site_term = taxonomy_term_load($site_term_tid);
-	
+
 				/* Object ID (object_id) */
 				$document->setField('object_id', $node->field_object_id[$field_language][0]['value']);
-				
+
 				/* Object type */
 				$object_type = 'Document';
 				if($node->type == 'ids_organisation'){
 					$object_type = 'Organisation';
 				}
 				$document->setField('object_type', $object_type);
-	
+
 				/* Asset ID (asset_id) */
 				$assetid = substr($node->field_object_id[$field_language][0]['value'], 1);/*remove 'A' at front of asset ID */
 				$document->setField('asset_id', $assetid);
-	
+
 				/* Author (author) */
 				foreach($node->field_authors[$field_language] as $author_item){
 					$author_term = taxonomy_term_load($author_item['tid']);
 					$document->addField('author', $author_term->name);
 				}
-	
+
 				/* Site (site_ref) */
 				$site_ref_tid = $node->field_site_ref[$field_language][0]['tid'];
 				$site_machine_name = $sites_terms[$site_ref_tid]->field_machine_name[LANGUAGE_NONE][0]['value'];
 				$document->setField('site', $site_machine_name);
-				
+
 				/* Title (title_field) */
 				$document->setField('title', $node->title_field[$field_language][0]['value']);
-				
+
 				/* Regions (field_SITE_regions) */
 				_idsims_solr_build_category_fields($document, $node, 'region', $site_machine_name, $object_xml = FALSE);
-				
+
 				/* Subjects (field_SITE_subjects) */
 				_idsims_solr_build_category_fields($document, $node, 'subject', $site_machine_name);
-				
+
 				/* Theme (field_SITE_themes) */
 				_idsims_solr_build_category_fields($document, $node, 'theme', $site_machine_name);
+
+				/* Set date created/updated */
+				$timestamp = date("Y-m-d\Th:i:s\Z", $node->created);
+				$document->setField('date_created', $timestamp);
+				$timestamp = date("Y-m-d\Th:i:s\Z", $node->changed);
+				$document->setField('date_updated', $timestamp);
 			}
 		}
 	}
-	
+
 }
 
 /*
@@ -177,7 +183,7 @@ function _idsims_solr_build_category_object_arr($tid = FALSE, $term = FALSE, $ca
  * Build the fields for categories. Regions, Themes, Subjects
  */
 function _idsims_solr_build_category_fields(&$document, $node, $category_ref, $site_machine_name, $object_xml = TRUE){
-	$category_ref_field = 'field_' . $site_machine_name . '_' . $category_ref . 's'; 
+	$category_ref_field = 'field_' . $site_machine_name . '_' . $category_ref . 's';
 	$category_objects = array();
 	foreach($node->{$category_ref_field}[LANGUAGE_NONE] as $term_ref_item){
 		$term = taxonomy_term_load($term_ref_item['tid']);
@@ -192,7 +198,7 @@ function _idsims_solr_build_category_fields(&$document, $node, $category_ref, $s
 		if($category_object){
 			$category_objects[] = $category_object;
 		}
-	}	
+	}
 	if(count($category_objects)){
 		$xmlString = _idsims_solr_build_category_array_field($category_ref, $category_objects);
 		$document->addField('category_' . $category_ref . '_array', $xmlString);
@@ -227,7 +233,7 @@ function _idsims_solr_build_category_object_output($category_object, $category_r
 			}
 			$outputString .= $value;
 		}
-	}	
+	}
 	if($object_xml){
 		if($outputString){
 			$outputString = '<' . $category_ref . '>' . $outputString .  '</' . $category_ref . '>';
