@@ -148,9 +148,44 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$timestamp = date("Y-m-d\Th:i:s\Z", $node->changed);
 				$document->setField('date_updated', $timestamp);
 				
-				/* Description */
+				/* Description/Abstract */
 				$document->setField('description', $node->body);
+
+				/* Document medium (change to an array? Keeping inline with old API which is single value string) */
+				foreach($node->field_media[$field_language] as $document_medium_item){
+					$document_medium_term = taxonomy_term_load($document_medium_item['tid']);
+					$document->setField('document_medium', $document_medium_term->name);
+					break;
+				}
+		
+				/* Document types */
+				foreach($node->field_document_medium[$field_language] as $document_medium_item){
+					$document_medium_term = taxonomy_term_load($document_medium_item['tid']);
+					$document->addField('document_medium', $document_medium_term->name);
+				}
 				
+				/* Et al. */
+				if(isset($node->field_et_al[$field_language][0]['value'])){
+					$et_al_value = ($node->field_et_al[$field_language][0]['value']) ? 'true':'false';
+					$document->addField('et_al', $et_al_value);
+				}
+				
+				/* Headline */
+				if(isset($node->field_headline[$field_language][0]['value'])){
+					$document->addField('headline', $node->field_headline[$field_language][0]['value']);
+				}
+				
+				/* Keyword */
+				foreach($node->field_tags[$field_language] as $keyword_item){
+					$keyword_term = taxonomy_term_load($keyword_item['tid']);
+					$document->addField('keyword', $keyword_term->name);
+				}
+				
+				/* Collections */
+				foreach($node->field_tags[$field_language] as $collection_item){
+					$collection_term = taxonomy_term_load($collection_item['tid']);
+					$document->addField('keyword', $collection_term->name);
+				}
 
 			}
 		}
