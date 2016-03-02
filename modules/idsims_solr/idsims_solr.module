@@ -71,7 +71,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					}
 				}
 				if(count($category_objects)){
-					$xmlString = _idsims_solr_build_category_array_field('parent', $category_objects);
+					$xmlString = _idsims_solr_build_list_object_array_field('parent', $category_objects);
 					$document->addField('parent_object_array', $xmlString);
 				}
 				/* First Parent / Super Parent (vocabulary ID) */
@@ -93,7 +93,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					}
 				}
 				if(count($category_objects)){
-					$xmlString = _idsims_solr_build_category_array_field('child', $category_objects);
+					$xmlString = _idsims_solr_build_list_object_array_field('child', $category_objects);
 					$document->addField('children_object_array', $xmlString);
 				}
 			}
@@ -233,14 +233,14 @@ function _idsims_solr_build_category_fields(&$document, $node, $category_ref, $s
 			$document->addField('category_' . $category_ref . '_ids', $category_object_id);
 		}
 		$document->addField('category_' . $category_ref . '_path', _idsims_main_get_term_path($term->tid));
-		$category_object_output = _idsims_solr_build_category_object_output($category_object, $category_ref, $object_xml);
+		$category_object_output = _idsims_solr_build_list_object_output($category_object, $category_ref, $object_xml);
 		$document->addField('category_' . $category_ref . '_objects', $category_object_output);
 		if($category_object){
 			$category_objects[] = $category_object;
 		}
 	}
 	if(count($category_objects)){
-		$xmlString = _idsims_solr_build_category_array_field($category_ref, $category_objects);
+		$xmlString = _idsims_solr_build_list_object_array_field($category_ref, $category_objects);
 		$document->addField('category_' . $category_ref . '_array', $xmlString);
 	}
 }
@@ -248,21 +248,21 @@ function _idsims_solr_build_category_fields(&$document, $node, $category_ref, $s
 /*
  * Builds object array fields
  */
-function _idsims_solr_build_category_array_field($category_ref, $category_objects){
-	$xmlString = '<' . $category_ref . 'List>';
-	foreach($category_objects as $category_object){
-		$xmlString .= _idsims_solr_build_category_object_output($category_object, $category_ref);
+function _idsims_solr_build_list_object_array_field($list_ref, $list_objects){
+	$xmlString = '<' . $list_ref . 'List>';
+	foreach($list_objects as $list_object){
+		$xmlString .= _idsims_solr_build_list_object_output($list_object, $list_ref);
 	}
-	$xmlString .= '</' . $category_ref . 'List>';
+	$xmlString .= '</' . $list_ref . 'List>';
 	return $xmlString;
 }
 
 /*
  * Builds object fields
  */
-function _idsims_solr_build_category_object_output($category_object, $category_ref, $object_xml = TRUE){
+function _idsims_solr_build_list_object_output($list_object, $list_ref, $object_xml = TRUE){
 	$outputString = '';
-	foreach($category_object as $key => $value){
+	foreach($list_object as $key => $value){
 		if($object_xml){
 			$outputString .= '<' . $key . '>';
 			$outputString .= $value;
@@ -276,7 +276,7 @@ function _idsims_solr_build_category_object_output($category_object, $category_r
 	}
 	if($object_xml){
 		if($outputString){
-			$outputString = '<' . $category_ref . '>' . $outputString .  '</' . $category_ref . '>';
+			$outputString = '<' . $list_ref . '>' . $outputString .  '</' . $list_ref . '>';
 		}
 	}
 	return $outputString;
