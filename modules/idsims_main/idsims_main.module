@@ -315,6 +315,21 @@ function _ids_main_get_sites_user_can_edit($uid = 0){
 }
 
 /*
+ * get all terms in language taxonomy
+ */
+function _ids_main_get_all_language_terms(){
+	static $language_terms;
+	if(!isset($language_terms)){
+		$vocabulary_object = taxonomy_vocabulary_machine_name_load('ids_language');
+		$language_terms_tree = taxonomy_get_tree($vid = $vocabulary_object->vid, $parent = 0, $max_depth = NULL, $load_entities = TRUE);
+		foreach($language_terms_tree as $language_term){
+			$language_terms[$language_term->tid] = $language_term;
+		}
+	}
+	return $language_terms;
+}
+
+/*
  * get all terms in site taxonomy
  */
 function _ids_main_get_all_site_terms(){
@@ -739,6 +754,7 @@ function _idsims_main_get_oryx_id_iso_lang_arr(){
 	$lang_code_arr[1] = 'en'; //English
 	$lang_code_arr[146] = 'fr'; //French
 	$lang_code_arr[429] = 'es'; //Spanish
+	$lang_code_arr[10] = 'af'; //Afrikaans
 	$lang_code_arr[23] = 'ar'; //Arabic
 	$lang_code_arr[92] = 'zh-hans'; //Simlified Chinese (Traditional 'zh-hant')
 	$lang_code_arr[368] = 'pt'; // Portuguese

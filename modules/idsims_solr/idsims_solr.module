@@ -18,6 +18,7 @@
 function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchApiIndex $index, array $items) {
 
 	$sites_terms = _ids_main_get_all_site_terms();
+	$language_terms = _ids_main_get_all_language_terms();
 
 	$server = $index->server();
 	$server_machine_name = $server->machine_name;
