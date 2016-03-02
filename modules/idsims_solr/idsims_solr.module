@@ -57,10 +57,10 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$category_id = substr($taxonomy_term->field_object_id[$field_language][0]['value'], 1);/*remove 'C' at front of category ID */
 				$document->setField('category_id', $category_id);
 				/* Category path (category_path) */
-				$document->addField('category_path', _idsims_main_get_term_path($taxonomy_term->tid));
+				$document->setField('category_path', _idsims_main_get_term_path($taxonomy_term->tid));
 				/* Category term level */
 				$level = _idsims_main_get_term_depth($taxonomy_term->tid);
-				$document->addField('cat_level', $level);
+				$document->setField('cat_level', $level);
 				/* Parent array */
 				$parent_tids = array();
 				_idsims_main_get_parent_tid_array($parent_tids, $taxonomy_term->tid);
@@ -73,17 +73,17 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				}
 				if(count($category_objects)){
 					$xmlString = _idsims_solr_build_list_object_array_field('parent', $category_objects);
-					$document->addField('parent_object_array', $xmlString);
+					$document->setField('parent_object_array', $xmlString);
 				}
 				/* First Parent / Super Parent (vocabulary ID) */
 				if(count($parent_tids)){
-					$document->addField('cat_first_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $parent_tids[0]));
-					$document->addField('cat_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $parent_tids[count($parent_tids)-1]));
+					$document->setField('cat_first_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $parent_tids[0]));
+					$document->setField('cat_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $parent_tids[count($parent_tids)-1]));
 				} else {
-					$document->addField('cat_first_parent', $category_id);
-					$document->addField('cat_parent', $taxonomy_term->vid);
+					$document->setField('cat_first_parent', $category_id);
+					$document->setField('cat_parent', $taxonomy_term->vid);
 				}
-				$document->addField('cat_superparent', $taxonomy_term->vid);
+				$document->setField('cat_superparent', $taxonomy_term->vid);
 				/* Child array */
 				$child_tids = _idsims_main_get_child_tid_array($taxonomy_term->tid);
 				$category_objects = array();
@@ -95,7 +95,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				}
 				if(count($category_objects)){
 					$xmlString = _idsims_solr_build_list_object_array_field('child', $category_objects);
-					$document->addField('children_object_array', $xmlString);
+					$document->setField('children_object_array', $xmlString);
 				}
 			}
 		} else {
@@ -149,6 +149,9 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$timestamp = date("Y-m-d\Th:i:s\Z", $node->changed);
 				$document->setField('date_updated', $timestamp);
 				
+				/* We need to write the timestamp out explicitly even though Drupal adds it anyway
+				 * as it needs to be in this format for the API or it errors
+				 */
 				$timestamp_now = date("Y-m-d\Th:i:s\Z");
 				$document->setField('timestamp', $timestamp);
 				
@@ -171,12 +174,12 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				/* Et al. */
 				if(isset($node->field_et_al[$field_language][0]['value'])){
 					$et_al_value = ($node->field_et_al[$field_language][0]['value']) ? 'true':'false';
-					$document->addField('et_al', $et_al_value);
+					$document->setField('et_al', $et_al_value);
 				}
 				
 				/* Headline */
 				if(isset($node->field_headline[$field_language][0]['value'])){
-					$document->addField('headline', $node->field_headline[$field_language][0]['value']);
+					$document->setField('headline', $node->field_headline[$field_language][0]['value']);
 				}
 				
 				/* Keyword */
@@ -216,7 +219,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				/* Language Array */
 				if(count($lang_list_objects)){
 					$xmlString = _idsims_solr_build_list_object_array_field('language', $lang_list_objects);
-					$document->addField('language_array', $xmlString);
+					$document->setField('language_array', $xmlString);
 				}
 				
 				/* Language Name (change to an array using $node->translations above? Keeping inline with old API which is single value string) */
@@ -292,7 +295,7 @@ function _idsims_solr_build_category_fields(&$document, $node, $category_ref, $s
 	}
 	if(count($category_objects)){
 		$xmlString = _idsims_solr_build_list_object_array_field($category_ref, $category_objects);
-		$document->addField('category_' . $category_ref . '_array', $xmlString);
+		$document->setField('category_' . $category_ref . '_array', $xmlString);
 	}
 }
 
