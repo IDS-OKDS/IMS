@@ -186,7 +186,35 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					$collection_term = taxonomy_term_load($collection_item['tid']);
 					$document->addField('collection', $collection_term->name);
 				}
-
+				
+				/* Translations */
+				/* Language ID */
+				if(isset($node->translations->data)){
+					$lang_list_objects = array();
+					foreach($node->translations->data as $lang_iso_code => $translation_data){
+						$oryx_lang_id = _idsims_solr_iso_code_to_ids_api_lang_id_for_drupal($lang_iso_code);
+						$document->addField('language_id', $oryx_lang_id);
+						$lang_list_object = array();
+						$lang_list_object['isocode'] = $lang_iso_code;
+						if(isset($node->title_field[$lang_iso_code][0]['value'])){
+							$lang_list_object['title'] = $node->title_field[$lang_iso_code][0]['value'];
+						}
+						if(isset($node->body[$lang_iso_code][0]['value'])){
+							$lang_list_object['description'] = $node->body[$lang_iso_code][0]['value'];
+						}
+						if(isset($node->field_headline[$lang_iso_code][0]['value'])){
+							$lang_list_object['headline'] = $node->field_headline[$lang_iso_code][0]['value'];
+						}
+						$lang_list_object['language_id'] = $oryx_lang_id;
+						$lang_list_objects[] = $lang_list_object;
+					}
+				}
+				/* Language Array */
+				if(count($lang_list_objects)){
+					$xmlString = _idsims_solr_build_list_object_array_field('language', $lang_list_objects);
+					$document->addField('language_array', $xmlString);
+				}
+				
 			}
 		}
 	}
@@ -282,4 +310,13 @@ function _idsims_solr_build_list_object_output($list_object, $list_ref, $object_
 	return $outputString;
 }
 
+
+function _idsims_solr_iso_code_to_ids_api_lang_id_for_drupal($lang_iso_code){
+	$lang_code_arr = _idsims_main_get_oryx_id_iso_lang_arr();
+	$lang_code_arr = array_flip($lang_code_arr);
+	if(isset($lang_code_arr[$lang_iso_code])){
+		return $lang_code_arr[$lang_iso_code];
+	}
+	return FALSE;
+}
 

@@ -780,14 +780,7 @@ function _idsims_import_get_uid_from_creator_id($oryx_creator_id, $assetid){
 }
 
 function _idsims_import_ids_api_lang_id_to_iso_code_for_drupal($api_lang_id){
-	$lang_code_arr = array();
-	$lang_code_arr[1] = 'en'; //English
-	$lang_code_arr[146] = 'fr'; //French
-	$lang_code_arr[429] = 'es'; //Spanish
-	$lang_code_arr[23] = 'ar'; //Arabic
-	$lang_code_arr[92] = 'zh-hans'; //Simlified Chinese (Traditional 'zh-hant')
-	$lang_code_arr[368] = 'pt'; // Portuguese
-	$lang_code_arr[382] = 'ru'; //Russian
+	$lang_code_arr = _idsims_main_get_oryx_id_iso_lang_arr();
 	if(isset($lang_code_arr[$api_lang_id])){
 		return $lang_code_arr[$api_lang_id];
 	}

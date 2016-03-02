@@ -727,4 +727,23 @@ function _idsims_main_get_numeric_asset_id($type, $eid){
 	return substr($asset_id, 1); /*remove 'C' at front of category ID and 'A' in front of asset ID */
 }
 
+/*
+ * get lang codes lookup for old oryx IDs, 
+ * this function is used for data import from Oryx
+ * and for Solr output.
+ * On review this could be removed? But Solr output will 
+ * need to be considered/reworked
+ */
+function _idsims_main_get_oryx_id_iso_lang_arr(){
+	$lang_code_arr = array();
+	$lang_code_arr[1] = 'en'; //English
+	$lang_code_arr[146] = 'fr'; //French
+	$lang_code_arr[429] = 'es'; //Spanish
+	$lang_code_arr[23] = 'ar'; //Arabic
+	$lang_code_arr[92] = 'zh-hans'; //Simlified Chinese (Traditional 'zh-hant')
+	$lang_code_arr[368] = 'pt'; // Portuguese
+	$lang_code_arr[382] = 'ru'; //Russian
+	return $lang_code_arr;
+}
+
 
