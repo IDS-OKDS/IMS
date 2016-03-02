@@ -97,6 +97,13 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					$xmlString = _idsims_solr_build_list_object_array_field('child', $category_objects);
 					$document->setField('children_object_array', $xmlString);
 				}
+				
+				/* We need to write the timestamp out explicitly even though Drupal adds it anyway
+				 * as it needs to be in this format for the API or it errors
+				 */
+				$timestamp_now = date("Y-m-d\Th:i:s\Z");
+				$document->setField('timestamp', $timestamp_now);
+				
 			}
 		} else {
 			/* Index NODES */
@@ -153,7 +160,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				 * as it needs to be in this format for the API or it errors
 				 */
 				$timestamp_now = date("Y-m-d\Th:i:s\Z");
-				$document->setField('timestamp', $timestamp);
+				$document->setField('timestamp', $timestamp_now);
 				
 				/* Description/Abstract */
 				$document->setField('description', $node->body[$field_language][0]['value']);
@@ -219,7 +226,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				/* Language Array */
 				if(count($lang_list_objects)){
 					$xmlString = _idsims_solr_build_list_object_array_field('language', $lang_list_objects);
-					$document->setField('language_array', $xmlString);
+					//$document->setField('language_array', $xmlString);
 				}
 				
 				/* Language Name (change to an array using $node->translations above? Keeping inline with old API which is single value string) */
