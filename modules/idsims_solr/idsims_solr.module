@@ -310,7 +310,11 @@ function _idsims_solr_build_list_object_output($list_object, $list_ref, $object_
 	return $outputString;
 }
 
-
+/*
+ * Get Old Oryx language ID from ISO code
+ * Needs review ... do we need to preserve this ID?
+ * What is it used for?
+ */
 function _idsims_solr_iso_code_to_ids_api_lang_id_for_drupal($lang_iso_code){
 	$lang_code_arr = _idsims_main_get_oryx_id_iso_lang_arr();
 	$lang_code_arr = array_flip($lang_code_arr);
