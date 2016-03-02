@@ -323,7 +323,7 @@ function _ids_main_get_all_language_terms(){
 		$vocabulary_object = taxonomy_vocabulary_machine_name_load('ids_language');
 		$language_terms_tree = taxonomy_get_tree($vid = $vocabulary_object->vid, $parent = 0, $max_depth = NULL, $load_entities = TRUE);
 		foreach($language_terms_tree as $language_term){
-			$language_terms[$language_term->tid] = $language_term;
+			$language_terms[$language_term->field_iso_two_code[LANGUAGE_NONE][0]['value']] = $language_term;
 		}
 	}
 	return $language_terms;
