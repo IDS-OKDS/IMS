@@ -215,6 +215,18 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					$document->addField('language_array', $xmlString);
 				}
 				
+				/* Website URL */
+				$website_url = '';
+				if($site_machine_name == 'bridge'){
+					$website_url = 'http://www.bridge.ids.ac.uk/go/display&amp;type=' . $object_type . '&amp;id=' . $assetid;
+				}
+				if($site_machine_name == 'eldis'){
+					$website_url = 'http://www.eldis.org/go/display&type=' . $object_type . '&id=' . $assetid;
+				}
+				if($website_url){
+					$document->setField('website_url', $website_url);
+				}
+				
 			}
 		}
 	}
