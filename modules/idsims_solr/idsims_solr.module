@@ -29,7 +29,8 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 		$index_id_arr = $document->getField('index_id');
 		$index_id = $index_id_arr['value'];
 		$item_id_arr = $document->getField('item_id');
-		if($index_id == 'openapi_index_taxonomy'){
+		$index_id_arr = explode('_', $index_id);
+		if($index_id_arr[count($index_id_arr)-1] == 'taxonomy'){
 			$taxonomy_term = taxonomy_term_load($item_id_arr['value']);
 			if($taxonomy_term){
 				/* Index TAXONOMY TERMS */
