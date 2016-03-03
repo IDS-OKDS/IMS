@@ -269,7 +269,20 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$timestamp = _idsims_solr_drupal_field_date_to_solr_friendly_date($publication_date_raw);
 				$document->setField('publication_date', $timestamp);	
 				$publication_date_raw_arr = explode('-', $publication_date_raw);
-				$document->setField('publication_year', $publication_date_raw_arr[0]);		
+				$document->setField('publication_year', $publication_date_raw_arr[0]);	
+
+				/* Document URLs */
+				$document_url_entity_id_arr = array();
+				foreach($node->field_document_urls[$field_language] as $document_url_item){
+					$document_url_entity_id_arr[] = $document_url_item['target_id'];
+					
+				}	
+				if(count($document_url_entity_id_arr)){
+					$ids_document_url_entities = entity_load('ids_document_url', $document_url_entity_id_arr);
+					foreach($ids_document_url_entities as $entity_id => $ids_document_url_entity){
+						$document->addField('urls', $ids_document_url_entity->field_document_url[LANGUAGE_NONE][0]['value']);
+					}
+				}
 				
 			}
 		}
