@@ -151,15 +151,15 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				_idsims_solr_build_category_fields($document, $node, 'theme', $site_machine_name);
 
 				/* Set date created/updated */
-				$timestamp = date("Y-m-d\Th:i:s\Z", $node->created);
+				$timestamp = _idsims_solr_uxix_date_to_solr_friendly_date($node->created);
 				$document->setField('date_created', $timestamp);
-				$timestamp = date("Y-m-d\Th:i:s\Z", $node->changed);
+				$timestamp = _idsims_solr_uxix_date_to_solr_friendly_date($node->changed);
 				$document->setField('date_updated', $timestamp);
 				
 				/* We need to write the timestamp out explicitly even though Drupal adds it anyway
 				 * as it needs to be in this format for the API or it errors
 				 */
-				$timestamp_now = date("Y-m-d\Th:i:s\Z");
+				$timestamp_now = _idsims_solr_uxix_date_to_solr_friendly_date();
 				$document->setField('timestamp', $timestamp_now);
 				
 				/* Description/Abstract */
@@ -208,6 +208,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					foreach($node->translations->data as $lang_iso_code => $translation_data){
 						$oryx_lang_id = _idsims_solr_iso_code_to_ids_api_lang_id_for_drupal($lang_iso_code);
 						$document->addField('language_id', $oryx_lang_id);
+						$document->addField('metadata_languages', $lang_iso_code);
 						$lang_list_object = array();
 						$lang_list_object['isocode'] = $lang_iso_code;
 						if(isset($node->title_field[$lang_iso_code][0]['value'])){
@@ -255,10 +256,32 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					break;
 				}
 				
+				/*
+				 * Permission to Host
+				 */
+				if(isset($node->field_permission_to_host_info[$field_language][0]['value'])){
+					$document->setField('permission_to_host_info', $node->field_permission_to_host_info[$field_language][0]['value']);
+				}
+				
+				/* Publication date*/
+				$timestamp = _idsims_solr_uxix_date_to_solr_friendly_date($node->field_publication_date[$field_language][0]['value']);
+				$document->setField('publication_date', $timestamp);				
+				
 			}
 		}
 	}
 
+}
+
+/*
+ * Format dates for Solr index
+ */
+function _idsims_solr_uxix_date_to_solr_friendly_date($unix_date = FALSE){
+	$date_format = "Y-m-d\Th:i:s\Z";
+	if(!$unix_date){
+		return date($date_format);
+	}
+	return date($date_format, $unix_date);
 }
 
 /*
