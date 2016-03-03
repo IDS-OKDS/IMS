@@ -248,6 +248,13 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					$document->setField('website_url', $website_url);
 				}
 				
+				/* Licence Type */
+				foreach($node->field_licence_type_term[$field_language] as $licence_type_item){
+					$licence_type_term = taxonomy_term_load($licence_type_item['tid']);
+					$document->addField('licence_type', $licence_type_term->name);
+					break;
+				}
+				
 			}
 		}
 	}
