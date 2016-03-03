@@ -168,7 +168,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				/* Document medium (change to an array? Keeping inline with old API which is single value string) */
 				foreach($node->field_media[$field_language] as $document_medium_item){
 					$document_medium_term = taxonomy_term_load($document_medium_item['tid']);
-					$document->setField('document_medium', $document_medium_term->name);
+					$document->addField('document_medium', $document_medium_term->name);
 					break;
 				}
 		
@@ -211,13 +211,13 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 						$lang_list_object = array();
 						$lang_list_object['isocode'] = $lang_iso_code;
 						if(isset($node->title_field[$lang_iso_code][0]['value'])){
-							$lang_list_object['title'] = $node->title_field[$lang_iso_code][0]['value'];
+							$lang_list_object['title'] = htmlspecialchars($node->title_field[$lang_iso_code][0]['value']);
 						}
 						if(isset($node->body[$lang_iso_code][0]['value'])){
-							$lang_list_object['description'] = $node->body[$lang_iso_code][0]['value'];
+							$lang_list_object['description'] = htmlspecialchars($node->body[$lang_iso_code][0]['value']);
 						}
 						if(isset($node->field_headline[$lang_iso_code][0]['value'])){
-							$lang_list_object['headline'] = $node->field_headline[$lang_iso_code][0]['value'];
+							$lang_list_object['headline'] = htmlspecialchars($node->field_headline[$lang_iso_code][0]['value']);
 						}
 						$lang_list_object['language_id'] = $oryx_lang_id;
 						$lang_list_objects[] = $lang_list_object;
@@ -226,7 +226,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				/* Language Array */
 				if(count($lang_list_objects)){
 					$xmlString = _idsims_solr_build_list_object_array_field('language', $lang_list_objects);
-					//$document->setField('language_array', $xmlString);
+					$document->setField('language_array', $xmlString);
 				}
 				
 				/* Language Name (change to an array using $node->translations above? Keeping inline with old API which is single value string) */
