@@ -263,9 +263,12 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					$document->setField('permission_to_host_info', $node->field_permission_to_host_info[$field_language][0]['value']);
 				}
 				
-				/* Publication date*/
-				$timestamp = _idsims_solr_uxix_date_to_solr_friendly_date($node->field_publication_date[$field_language][0]['value']);
-				$document->setField('publication_date', $timestamp);				
+				/* Publication date / year */
+				$publication_date_raw = $node->field_publication_date[$field_language][0]['value'];
+				$timestamp = _idsims_solr_drupal_field_date_to_solr_friendly_date($publication_date_raw);
+				$document->setField('publication_date', $timestamp);	
+				$publication_date_raw_arr = explode('-', $publication_date_raw);
+				$document->setField('publication_year', $publication_date_raw_arr[0]);		
 				
 			}
 		}
@@ -274,7 +277,15 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 }
 
 /*
- * Format dates for Solr index
+ * Format drupal field dates for Solr index
+ */
+function _idsims_solr_drupal_field_date_to_solr_friendly_date($drupal_field_date = FALSE){
+	$drupal_field_date_arr = explode(' ', $drupal_field_date);
+	return $drupal_field_date_arr[0] . 'T' . $drupal_field_date_arr[1] . 'Z';
+}
+
+/*
+ * Format unix dates for Solr index
  */
 function _idsims_solr_uxix_date_to_solr_friendly_date($unix_date = FALSE){
 	$date_format = "Y-m-d\Th:i:s\Z";
