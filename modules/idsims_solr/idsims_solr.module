@@ -40,7 +40,8 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				if(!isset($taxonomy_term->field_object_id[$field_language])){
 					drupal_set_message('NO object ID set for :' . $taxonomy_term->name);
 				}
-				$document->setField('object_id', $taxonomy_term->field_object_id[$field_language][0]['value']);
+				$object_id = $taxonomy_term->field_object_id[$field_language][0]['value'];
+				$document->setField('object_id', $object_id);
 				/* Title (title_field) */
 				$document->setField('title', $taxonomy_term->name);
 				/* Site (taken from taxonomy vocabulary machine name e.g. ids_bridge_themes) */
@@ -55,7 +56,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$document->setField('site', $site_machine_name);
 				$document->setField('object_type', $object_type);
 				/* Asset ID (asset_id) */
-				$category_id = substr($taxonomy_term->field_object_id[$field_language][0]['value'], 1);/*remove 'C' at front of category ID */
+				$category_id = substr($object_id, 1);/*remove 'C' at front of category ID */
 				$document->setField('category_id', $category_id);
 				/* Category path (category_path) */
 				$document->setField('category_path', _idsims_main_get_term_path($taxonomy_term->tid));
@@ -80,9 +81,11 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				if(count($parent_tids)){
 					$document->setField('cat_first_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $parent_tids[0]));
 					$document->setField('cat_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $parent_tids[count($parent_tids)-1]));
+					$document->setField('parent_object_id', $object_id);
 				} else {
 					$document->setField('cat_first_parent', $category_id);
 					$document->setField('cat_parent', $taxonomy_term->vid);
+					$document->setField('parent_object_id', $taxonomy_term->vid); /* This probably doesn't make sence (but there is no level object ID in the new system this is the vobab ID) */
 				}
 				$document->setField('cat_superparent', $taxonomy_term->vid);
 				/* Child array */
