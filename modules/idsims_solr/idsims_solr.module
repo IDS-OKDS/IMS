@@ -80,8 +80,13 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				/* First Parent / Super Parent (vocabulary ID) */
 				if(count($parent_tids)){
 					$document->setField('cat_first_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $parent_tids[0]));
-					$document->setField('cat_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $parent_tids[count($parent_tids)-1]));
-					$document->setField('parent_object_id', $object_id);
+					$cat_parent_tid = $parent_tids[count($parent_tids)-1];
+					$document->setField('cat_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $cat_parent_tid));
+					$cat_parent_term = taxonomy_term_load($cat_parent_tid);
+					$cat_parent_object_id = _idsims_main_get_asset_id($cat_parent_term, 'taxonomy_term');
+					if($cat_parent_object_id){
+						$document->setField('parent_object_id', $cat_parent_object_id);
+					}
 				} else {
 					$document->setField('cat_first_parent', $category_id);
 					$document->setField('cat_parent', $taxonomy_term->vid);
