@@ -60,9 +60,9 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$document->setField('category_id', $category_id);
 				/* Category path (category_path) */
 				$document->setField('category_path', _idsims_main_get_term_path($taxonomy_term->tid));
-				/* Category term level */
+				/* Category term level (also wries cat_level) */
 				$level = _idsims_main_get_term_depth($taxonomy_term->tid);
-				$document->setField('cat_level', $level);
+				$document->setField('level', $level);
 				/* Parent array */
 				$parent_tids = array();
 				_idsims_main_get_parent_tid_array($parent_tids, $taxonomy_term->tid);
@@ -107,6 +107,11 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				 */
 				$timestamp_now = date("Y-m-d\Th:i:s\Z");
 				$document->setField('timestamp', $timestamp_now);
+				
+				if(isset($taxonomy_term->field_archived[LANGUAGE_NONE][0]['value'])){
+					$archived = ($taxonomy_term->field_archived[LANGUAGE_NONE][0]['value']) ? 'true':'false';
+					$document->setField('archived', $archived);
+				}
 				
 			}
 		} else {
@@ -384,7 +389,7 @@ function _idsims_solr_build_list_object_output($list_object, $list_ref, $object_
 	foreach($list_object as $key => $value){
 		if($object_xml){
 			$outputString .= '<' . $key . '>';
-			$outputString .= $value;
+			$outputString .= htmlspecialchars($value);
 			$outputString .= '</' . $key . '>';
 		} else {
 			if($outputString){
