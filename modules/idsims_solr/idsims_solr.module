@@ -238,7 +238,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				if(isset($language_terms[$node->language]->name)){
 					$document->setField('language_name', $language_terms[$node->language]->name);
 				} else {
-					drupal_set_message('Language not set for node(' . $node->id . ') asset ID:' . $assetid);
+					drupal_set_message('Language not set for node(' . $node->nid . ') asset ID:' . $assetid);
 				}
 				
 				/* Website URL */
