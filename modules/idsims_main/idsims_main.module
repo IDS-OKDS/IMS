@@ -315,6 +315,20 @@ function _ids_main_get_sites_user_can_edit($uid = 0){
 }
 
 /*
+ * Drupal language code from language term
+ * Only used if alternative to ISO Two letter code e.g. Chinese ISO = zh Drupal = zh-hans (Simplified Chinese, Traditional  = zh-hant)
+ */
+function _ids_main_drupal_language_code_from_term($language_term){
+	$code = $language_term->field_iso_two_code[LANGUAGE_NONE][0]['value'];
+	if(isset($language_term->field_drupal_language_code[LANGUAGE_NONE][0]['value'])){
+		if($language_term->field_drupal_language_code[LANGUAGE_NONE][0]['value']){
+			$code = $language_term->field_drupal_language_code[LANGUAGE_NONE][0]['value'];
+		}
+	}
+	return $code;
+}
+
+/*
  * get all terms in language taxonomy
  */
 function _ids_main_get_all_language_terms(){
@@ -750,15 +764,16 @@ function _idsims_main_get_numeric_asset_id($type, $eid){
  * need to be considered/reworked
  */
 function _idsims_main_get_oryx_id_iso_lang_arr(){
-	$lang_code_arr = array();
-	$lang_code_arr[1] = 'en'; //English
-	$lang_code_arr[146] = 'fr'; //French
-	$lang_code_arr[429] = 'es'; //Spanish
-	$lang_code_arr[10] = 'af'; //Afrikaans
-	$lang_code_arr[23] = 'ar'; //Arabic
-	$lang_code_arr[92] = 'zh-hans'; //Simlified Chinese (Traditional 'zh-hant')
-	$lang_code_arr[368] = 'pt'; // Portuguese
-	$lang_code_arr[382] = 'ru'; //Russian
+	static $lang_code_arr;
+	if(!isset($lang_code_arr)){
+		$language_terms =  _ids_main_get_all_language_terms();
+		$lang_code_arr = array();
+		foreach($language_terms as $language_term){
+			$drupal_lang_code = _ids_main_drupal_language_code_from_term($language_term);
+			$oryx_legacy_id = $language_term->field_oryx_id[LANGUAGE_NONE][0]['value'];
+			$lang_code_arr[$oryx_legacy_id] = $drupal_lang_code;
+		}
+	}
 	return $lang_code_arr;
 }
 
