@@ -309,3 +309,27 @@ fieldset.date-combo .container-inline-date .date-padding {
 .node-ids-document .field-name-body .field-items {
 	width: 80%;
 }
+
+.field-name-field-authors-collection .field-name-field-author-ref {
+	display:inline;
+	float:left;
+	width:79%;
+	margin-right:1%;
+}
+
+
+.field-name-field-authors-collection .field-name-field-author-ref input.form-text {
+	width:75%;
+}
+
+.field-name-field-authors-collection .field-name-field-is-editor {
+	display:inline;
+	float:left;
+	width:8%;	
+	margin-right:1%;
+}
+
+.field-name-field-authors-collection .form-submit {
+	display:inline;
+	float:left;	
+}
