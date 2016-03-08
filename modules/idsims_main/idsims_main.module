@@ -422,7 +422,7 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 		/*
 		 * Hide Authors field (just used for import (old style before authors array, can be removed) 
 		 */
-		 $form['field_authors']['#type'] = 'hidden';
+		 //$form['field_authors']['#type'] = 'hidden';
 		/*
 		 * Customise Auther Collection fields
 		 */

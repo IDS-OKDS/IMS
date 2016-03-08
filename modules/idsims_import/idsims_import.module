@@ -9,6 +9,7 @@
  */
 
 define('IDSIMS_COLLECTIONS_VOC_NAME', 'ids_collections');
+define('IDSIMS_AUTHORS_VOC_NAME', 'ids_authors');
 
 define('IDSIMS_BRIDGE_ORGANISATION_ID', 2921);
 
@@ -417,6 +418,15 @@ function get_collections_taxonomy_vid(){
 	return $vid;
 }
 
+function get_authors_taxonomy_vid(){
+	$vid = variable_get('authors_taxonomy_vid', 0);
+	if(!$vid){
+		$vid = _idsims_main_get_vid_from_vocab_machine_name(IDSIMS_AUTHORS_VOC_NAME);
+		variable_set('authors_taxonomy_vid', $vid);
+	}
+	return $vid;
+}
+
 function _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($cat_assetid){
 	/*
 	 * Joe - it's a shame bu no way to do this apart from hardcode - the titles don't match
@@ -797,6 +807,45 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 		$et_al = ( $field_data['results']['et_al'] == 'false') ? 0:1;
 		$node->field_et_al[LANGUAGE_NONE][0]['value'] = $et_al;
 		$node->field_et_al[LANGUAGE_NONE][0]['safe_value'] = $et_al;
+	}
+	
+	/*
+	 * Authors array
+	 */
+	$vid = get_authors_taxonomy_vid();
+	if(isset($field_data['results']['author_array'])){
+		foreach($field_data['results']['author_array'] as $author_item_arr){
+			foreach($author_item_arr as $author_item){
+				$author_name = $author_item['first_name'] . ' ' . $author_item['last_name'];
+				if(trim($author_name)){
+					$is_editor = ($author_item['is_editor']) ? 1:0;
+					$term_array = taxonomy_get_term_by_name($author_name, $vid);
+					if(!count($term_array)){
+						/* If IDS author term doesn't exist. Then create it */
+						drupal_set_message('Creating IDS Author term: ' . $author_name);
+						$term = new stdClass();
+						$term->name = $author_name;
+						$term->field_first_name[LANGUAGE_NONE][0] = array('value' => $author_item['first_name']);
+						$term->field_last_name[LANGUAGE_NONE][0] = array('value' => $author_item['last_name']);
+						$term->vid = $vid;
+						$term->parent = array(0);
+						taxonomy_term_save($term);
+						$term_array = array();
+						$term_array[$term->tid] = $term;
+					}
+					foreach($term_array as $term){
+					  	// field collection items.
+					    $field_collection_item = entity_create('field_collection_item', array('field_name' => 'field_authors_collection'));
+					    $field_collection_item->setHostEntity('node', $node);
+						$field_collection_item->field_author_ref[LANGUAGE_NONE][0]['target_id'] = $term->tid;
+						$field_collection_item->field_author_ref[LANGUAGE_NONE][0]['entity'] = $term;
+						$field_collection_item->field_author_ref[LANGUAGE_NONE][0]['access'] = 1;					    
+					    $field_collection_item->field_is_editor[LANGUAGE_NONE][0] = array('value' => $is_editor);
+					    $field_collection_item->save();
+					}
+				}
+			}
+		}
 	}
 
 	/*
