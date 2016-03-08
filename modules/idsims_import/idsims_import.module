@@ -816,10 +816,11 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 	if(isset($field_data['results']['author_array'])){
 		foreach($field_data['results']['author_array'] as $author_item_arr){
 			foreach($author_item_arr as $author_item){
+				drupal_set_message('data:' . print_r($author_item, true));
 				$author_name = $author_item['first_name'] . ' ' . $author_item['last_name'];
 				if(trim($author_name)){
 					$is_editor = ($author_item['is_editor']) ? 1:0;
-					$term_array = taxonomy_get_term_by_name($author_name, $vid);
+					$term_array = taxonomy_get_term_by_name($author_name); /* opptional $vid don't work?? */
 					if(!count($term_array)){
 						/* If IDS author term doesn't exist. Then create it */
 						drupal_set_message('Creating IDS Author term: ' . $author_name);
@@ -834,6 +835,7 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 						$term_array[$term->tid] = $term;
 					}
 					foreach($term_array as $term){
+						drupal_set_message('$term:' . print_r($term, true));
 					  	// field collection items.
 					    $field_collection_item = entity_create('field_collection_item', array('field_name' => 'field_authors_collection'));
 					    $field_collection_item->setHostEntity('node', $node);
@@ -842,6 +844,7 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 						$field_collection_item->field_author_ref[LANGUAGE_NONE][0]['access'] = 1;					    
 					    $field_collection_item->field_is_editor[LANGUAGE_NONE][0] = array('value' => $is_editor);
 					    $field_collection_item->save();
+					    break; /* should only be one*/
 					}
 				}
 			}
