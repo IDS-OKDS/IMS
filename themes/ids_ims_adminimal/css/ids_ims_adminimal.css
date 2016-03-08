@@ -333,3 +333,7 @@ fieldset.date-combo .container-inline-date .date-padding {
 	display:inline;
 	float:left;	
 }
+
+.field-name-field-authors-collection thead {
+	display:none;
+}

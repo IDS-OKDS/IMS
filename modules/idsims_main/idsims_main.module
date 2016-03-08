@@ -396,6 +396,9 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 	}
 	/* Hide all revision information/functionality on edit forms */
 	unset($form['revision_information']);
+	/* 
+	 * IDS Document node Add/Edit form 
+	 */
 	if($form_id == 'ids_document_node_form'){
 		if(arg(1) == 'add'){
 			/*
@@ -416,6 +419,17 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 			    'timezone_db' => 'UTC',
 			);
 		}
+		/*
+		 * Hide Authors field (just used for import (old style before authors array, can be removed) 
+		 */
+		 $form['field_authors']['#type'] = 'hidden';
+		/*
+		 * Customise Auther Collection fields
+		 */
+		 $form['field_authors_collection'][LANGUAGE_NONE]['add_more']['#value'] = t('Add another author');
+		 //$form['field_authors_collection'][LANGUAGE_NONE]['#title'] = '';
+		 //$form['field_authors_collection'][LANGUAGE_NONE][0]['field_author_ref'][LANGUAGE_NONE]['#title'] = '';
+		 //$form['field_authors_collection'][LANGUAGE_NONE][0]['field_author_ref'][LANGUAGE_NONE][0]['target_id']['#title'] = '';
 		/*
 		 * Make sure Site and Object ID are not editable (as these are set programatically)
 		 */
