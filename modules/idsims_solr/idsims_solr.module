@@ -166,7 +166,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 								$author_output .= ' (ed)';
 							}
 							/* standard author field */
-							drupal_set_message('author_output='.$author_output);
+							//drupal_set_message('author_output='.$author_output);
 							$document->addField('author', $author_output);
 							
 							/* author array */
@@ -177,10 +177,11 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 							$author_list_objects[] = $author_list_object;
 						}
 					}
-					/* Author Array */
+					/* Author Array -- throwing an error in solr saying author_array field missing, but have added to schema? 
+					 * Doesn't matter for go-live so commenting out write for now */
 					if(count($author_list_objects)){
 						$xmlString = _idsims_solr_build_list_object_array_field('author', $author_list_objects);
-						$document->setField('author_array', $xmlString);
+						//$document->setField('author_array', $xmlString);
 					}
 				}
 
