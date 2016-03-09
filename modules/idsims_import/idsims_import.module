@@ -822,6 +822,7 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 					$collection_ids[] = $value['value'];
 				}
 				entity_delete_multiple('field_collection_item', $collection_ids);
+				$node->field_authors_collection[LANGUAGE_NONE] = array();
 			}
 			foreach($author_item_arr as $author_item){
 				//drupal_set_message('data:' . print_r($author_item, true));

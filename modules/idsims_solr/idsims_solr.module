@@ -142,10 +142,48 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$document->setField('asset_id', $assetid);
 
 				/* Author (author) */
-				foreach($node->field_authors[$field_language] as $author_item){
+			/*	foreach($node->field_authors[$field_language] as $author_item){
 					$author_term = taxonomy_term_load($author_item['tid']);
 					$document->addField('author', $author_term->name);
+				} */
+				
+				$author_collection_ids = array();
+				foreach($node->field_authors_collection[$field_language] as $author_collection_item){
+					$author_collection_id = $author_collection_item['value'];
+					$author_collection_ids[] = $author_collection_id;
 				}
+				
+				if(count($author_collection_ids)){
+					$author_collection_entities = entity_load('field_collection_item', $author_collection_ids);
+					$author_list_objects = array();
+					foreach($author_collection_entities as $collection_entity_id => $author_collection_entity){
+						if(isset($author_collection_entity->field_author_ref[LANGUAGE_NONE][0]['target_id'])){
+							$author_term = taxonomy_term_load($author_collection_entity->field_author_ref[LANGUAGE_NONE][0]['target_id']);
+							$author_name = $author_term->name;
+							$is_editor = ($author_collection_entity->field_is_editor[LANGUAGE_NONE][0]['value']) ? 1:0;
+							$author_output = $author_name;
+							if($is_editor){
+								$author_output .= ' (ed)';
+							}
+							/* standard author field */
+							drupal_set_message('author_output='.$author_output);
+							$document->addField('author', $author_output);
+							
+							/* author array */
+							$author_list_object = array();
+							$author_list_object['first_name'] = $author_term->field_first_name[LANGUAGE_NONE][0]['value'];
+							$author_list_object['last_name'] = $author_term->field_last_name[LANGUAGE_NONE][0]['value'];
+							$author_list_object['is_editor'] = $is_editor;
+							$author_list_objects[] = $author_list_object;
+						}
+					}
+					/* Author Array */
+					if(count($author_list_objects)){
+						$xmlString = _idsims_solr_build_list_object_array_field('author', $author_list_objects);
+						$document->setField('author_array', $xmlString);
+					}
+				}
+
 
 				/* Site (site_ref) */
 				$site_ref_tid = $node->field_site_ref[$field_language][0]['tid'];
