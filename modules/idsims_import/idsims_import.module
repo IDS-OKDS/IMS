@@ -815,8 +815,16 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 	$vid = get_authors_taxonomy_vid();
 	if(isset($field_data['results']['author_array'])){
 		foreach($field_data['results']['author_array'] as $author_item_arr){
+			/* Delete and any field collections attached in another import (ideally there will only be one round, but whilst testing this is useful) */
+			if(isset($node->field_authors_collection[LANGUAGE_NONE])){
+				$collection_ids = array();
+				foreach($node->field_authors_collection[LANGUAGE_NONE] as $delta => $value){
+					$collection_ids[] = $value['value'];
+				}
+				entity_delete_multiple('field_collection_item', $collection_ids);
+			}
 			foreach($author_item_arr as $author_item){
-				drupal_set_message('data:' . print_r($author_item, true));
+				//drupal_set_message('data:' . print_r($author_item, true));
 				$author_name = $author_item['first_name'] . ' ' . $author_item['last_name'];
 				if(trim($author_name)){
 					$is_editor = ($author_item['is_editor']) ? 1:0;
@@ -834,9 +842,11 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 						$term_array = array();
 						$term_array[$term->tid] = $term;
 					}
+	
 					foreach($term_array as $term){
-						drupal_set_message('$term:' . print_r($term, true));
+						//drupal_set_message('$term:' . print_r($term, true));
 					  	// field collection items.
+					  	
 					    $field_collection_item = entity_create('field_collection_item', array('field_name' => 'field_authors_collection'));
 					    $field_collection_item->setHostEntity('node', $node);
 						$field_collection_item->field_author_ref[LANGUAGE_NONE][0]['target_id'] = $term->tid;
