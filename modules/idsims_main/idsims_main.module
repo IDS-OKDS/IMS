@@ -653,6 +653,46 @@ function _idsims_main_get_asset_id(&$entity, $type){
 	return $asset_id;
 }
 
+/*
+ * Return item ID (node->nid OR term->tid) from asset ID 
+ * can take $asset_id as an array and will return an array if Drupal item IDs
+ */
+function _idsims_main_get_items_from_asset_id($asset_id, $entity_type, $bundle){
+	$multiple = (is_array($asset_id)) ? TRUE:FALSE;
+	$operator = ($multiple) ? 'IN':'=';
+	$query = new EntityFieldQuery();
+	$query->entityCondition('entity_type', $entity_type)
+	->entityCondition('bundle', $bundle)
+	->fieldCondition('field_object_id', 'value', $asset_id, $operator)
+	->addMetaData('account', user_load(1)); // Run the query as user 1.
+
+	$result = $query->execute();
+	
+	$id_array = array();
+	if(isset($result['node'])){
+		foreach($result['node'] as $item_obj){
+			if(count($result['node']) == 1){
+				return $item_obj->nid;
+			}
+			$id_array[] = $item_obj->nid;
+		}
+	}
+	if(isset($result['taxonomy_term'])){
+		foreach($result['taxonomy_term'] as $item_obj){
+			if(count($result['taxonomy_term']) == 1){
+				return $item_obj->tid;
+			}
+			$id_array[] = $item_obj->tid;
+		}
+	}
+	
+	if(count($id_array)){
+		return $id_array;
+	}
+	
+	return FALSE;
+}
+
 
 /*
  * Update shared fields across sites/branches

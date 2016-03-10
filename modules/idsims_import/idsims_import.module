@@ -807,6 +807,23 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 		$et_al = ( $field_data['results']['et_al'] == 'false') ? 0:1;
 		$node->field_et_al[LANGUAGE_NONE][0]['value'] = $et_al;
 		$node->field_et_al[LANGUAGE_NONE][0]['safe_value'] = $et_al;
+		$node_updated = TRUE;
+	}
+	
+	/*
+	 * Publication country
+	 */
+	if(isset($field_data['results']['publication_country_id'])){
+		if($field_data['results']['publication_country_id']){
+			$publication_country_id = 'A' . $field_data['results']['publication_country_id'];
+			$country_tid = _idsims_main_get_items_from_asset_id($publication_country_id, 'taxonomy_term', 'ids_countries');
+			if($country_tid){
+				drupal_set_message('publication_country_id='.$publication_country_id . ' for Asset:' . $assetid);
+				$node->field_country_of_publication[LANGUAGE_NONE] = array();
+				$node->field_country_of_publication[LANGUAGE_NONE][0]['tid'] = $country_tid;
+			}
+		}
+		$node_updated = TRUE;
 	}
 	
 	/*
@@ -855,6 +872,7 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 						$field_collection_item->field_author_ref[LANGUAGE_NONE][0]['access'] = 1;					    
 					    $field_collection_item->field_is_editor[LANGUAGE_NONE][0] = array('value' => $is_editor);
 					    $field_collection_item->save();
+					    $node_updated = TRUE;
 					    break; /* should only be one*/
 					}
 				}
@@ -897,7 +915,8 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 		drupal_set_message('Warning: No default language set for Node ID('.$node->nid.') Asset ID('.$assetid.')');
 		drupal_set_message('$field_data:' . print_r($field_data, TRUE));
 	}
-
+	
+	
 	/*
 	 * Interigate language array to build translations
 	 */
