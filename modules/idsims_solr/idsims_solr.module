@@ -123,6 +123,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 			/* Index NODES */
 			$node = node_load($item_id_arr['value']);
 			if($node){
+				
 				$field_language = _idsims_main_field_language($node->type, $node, 'field_site_ref');
 				$site_term_tid = $node->field_site_ref[$field_language][0]['tid'];
 				$site_term = taxonomy_term_load($site_term_tid);
@@ -140,75 +141,15 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				/* Asset ID (asset_id) */
 				$assetid = substr($node->field_object_id[$field_language][0]['value'], 1);/*remove 'A' at front of asset ID */
 				$document->setField('asset_id', $assetid);
-
-				/* Author (author) */
-			/*	foreach($node->field_authors[$field_language] as $author_item){
-					$author_term = taxonomy_term_load($author_item['tid']);
-					$document->addField('author', $author_term->name);
-				} */
 				
-				$author_collection_ids = array();
-				foreach($node->field_authors_collection[$field_language] as $author_collection_item){
-					$author_collection_id = $author_collection_item['value'];
-					$author_collection_ids[] = $author_collection_id;
-				}
-				
-				if(count($author_collection_ids)){
-					$author_collection_entities = entity_load('field_collection_item', $author_collection_ids);
-					$author_list_objects = array();
-					foreach($author_collection_entities as $collection_entity_id => $author_collection_entity){
-						if(isset($author_collection_entity->field_author_ref[LANGUAGE_NONE][0]['target_id'])){
-							$author_term = taxonomy_term_load($author_collection_entity->field_author_ref[LANGUAGE_NONE][0]['target_id']);
-							$author_name = $author_term->name;
-							$is_editor = ($author_collection_entity->field_is_editor[LANGUAGE_NONE][0]['value']) ? 1:0;
-							$author_output = $author_name;
-							if($is_editor){
-								$author_output .= ' (ed)';
-							}
-							/* standard author field */
-							//drupal_set_message('author_output='.$author_output);
-							$document->addField('author', $author_output);
-							
-							/* author array */
-							$author_list_object = array();
-							$author_list_object['first_name'] = $author_term->field_first_name[LANGUAGE_NONE][0]['value'];
-							$author_list_object['last_name'] = $author_term->field_last_name[LANGUAGE_NONE][0]['value'];
-							$author_list_object['is_editor'] = $is_editor;
-							$author_list_objects[] = $author_list_object;
-						}
-					}
-					/* Author Array -- throwing an error in solr saying author_array field missing, but have added to schema? 
-					 * Doesn't matter for go-live so commenting out write for now */
-					if(count($author_list_objects)){
-						$xmlString = _idsims_solr_build_list_object_array_field('author', $author_list_objects);
-						//$document->setField('author_array', $xmlString);
-					}
-				}
-
-
 				/* Site (site_ref) */
 				$site_ref_tid = $node->field_site_ref[$field_language][0]['tid'];
 				$site_machine_name = $sites_terms[$site_ref_tid]->field_machine_name[LANGUAGE_NONE][0]['value'];
 				$document->setField('site', $site_machine_name);
 
 				/* Title (title_field) */
-				$document->setField('title', $node->title_field[$field_language][0]['value']);
+				$document->setField('title', $node->title_field[$field_language][0]['value']);	
 
-				/* Regions (field_SITE_regions) */
-				_idsims_solr_build_category_fields($document, $node, 'region', $site_machine_name, $object_xml = FALSE);
-
-				/* Subjects (field_SITE_subjects) */
-				_idsims_solr_build_category_fields($document, $node, 'subject', $site_machine_name);
-
-				/* Theme (field_SITE_themes) */
-				_idsims_solr_build_category_fields($document, $node, 'theme', $site_machine_name);
-
-				/* Set date created/updated */
-				$timestamp = _idsims_solr_uxix_date_to_solr_friendly_date($node->created);
-				$document->setField('date_created', $timestamp);
-				$timestamp = _idsims_solr_uxix_date_to_solr_friendly_date($node->changed);
-				$document->setField('date_updated', $timestamp);
-				
 				/* We need to write the timestamp out explicitly even though Drupal adds it anyway
 				 * as it needs to be in this format for the API or it errors
 				 */
@@ -217,125 +158,186 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				
 				/* Description/Abstract */
 				$document->setField('description', $node->body[$field_language][0]['value']);
-
-				/* Document medium (change to an array? Keeping inline with old API which is single value string) */
-				foreach($node->field_media[$field_language] as $document_medium_item){
-					$document_medium_term = taxonomy_term_load($document_medium_item['tid']);
-					$document->addField('document_medium', $document_medium_term->name);
-					break;
-				}
-		
-				/* Document types */
-				foreach($node->field_document_medium[$field_language] as $document_medium_item){
-					$document_medium_term = taxonomy_term_load($document_medium_item['tid']);
-					$document->addField('document_medium', $document_medium_term->name);
-				}
 				
-				/* Et al. */
-				if(isset($node->field_et_al[$field_language][0]['value'])){
-					$et_al_value = ($node->field_et_al[$field_language][0]['value']) ? 'true':'false';
-					$document->setField('et_al', $et_al_value);
-				}
-				
-				/* Headline */
-				if(isset($node->field_headline[$field_language][0]['value'])){
-					$document->setField('headline', $node->field_headline[$field_language][0]['value']);
-				}
-				
-				/* Keyword */
-				foreach($node->field_tags[$field_language] as $keyword_item){
-					$keyword_term = taxonomy_term_load($keyword_item['tid']);
-					$document->addField('keyword', $keyword_term->name);
-				}
-				
-				/* Collections */
-				foreach($node->field_collections[$field_language] as $collection_item){
-					$collection_term = taxonomy_term_load($collection_item['tid']);
-					$document->addField('collection', $collection_term->name);
-				}
-				
-				/* Translations */
-				/* Language ID */
-				if(isset($node->translations->data)){
-					$lang_list_objects = array();
-					foreach($node->translations->data as $lang_iso_code => $translation_data){
-						$oryx_lang_id = _idsims_solr_iso_code_to_ids_api_lang_id_for_drupal($lang_iso_code);
-						$document->addField('language_id', $oryx_lang_id);
-						$document->addField('metadata_languages', $lang_iso_code);
-						$lang_list_object = array();
-						$lang_list_object['isocode'] = $lang_iso_code;
-						if(isset($node->title_field[$lang_iso_code][0]['value'])){
-							$lang_list_object['title'] = htmlspecialchars($node->title_field[$lang_iso_code][0]['value']);
-						}
-						if(isset($node->body[$lang_iso_code][0]['value'])){
-							$lang_list_object['description'] = htmlspecialchars($node->body[$lang_iso_code][0]['value']);
-						}
-						if(isset($node->field_headline[$lang_iso_code][0]['value'])){
-							$lang_list_object['headline'] = htmlspecialchars($node->field_headline[$lang_iso_code][0]['value']);
-						}
-						$lang_list_object['language_id'] = $oryx_lang_id;
-						$lang_list_objects[] = $lang_list_object;
-					}
-				}
-				/* Language Array */
-				if(count($lang_list_objects)){
-					$xmlString = _idsims_solr_build_list_object_array_field('language', $lang_list_objects);
-					$document->setField('language_array', $xmlString);
-				}
-				
-				/* Language Name (change to an array using $node->translations above? Keeping inline with old API which is single value string) */
-				if(isset($language_terms[$node->language]->name)){
-					$document->setField('language_name', $language_terms[$node->language]->name);
-				} else {
-					drupal_set_message('Language not set for node(' . $node->nid . ') asset ID:' . $assetid);
-				}
-				
-				/* Website URL */
-				$website_url = '';
-				if($site_machine_name == 'bridge'){
-					$website_url = 'http://www.bridge.ids.ac.uk/go/display&amp;type=' . $object_type . '&amp;id=' . $assetid;
-				}
-				if($site_machine_name == 'eldis'){
-					$website_url = 'http://www.eldis.org/go/display&type=' . $object_type . '&id=' . $assetid;
-				}
-				if($website_url){
-					$document->setField('website_url', $website_url);
-				}
-				
-				/* Licence Type */
-				foreach($node->field_licence_type_term[$field_language] as $licence_type_item){
-					$licence_type_term = taxonomy_term_load($licence_type_item['tid']);
-					$document->addField('licence_type', $licence_type_term->name);
-					break;
-				}
-				
-				/*
-				 * Permission to Host
-				 */
-				if(isset($node->field_permission_to_host_info[$field_language][0]['value'])){
-					$document->setField('permission_to_host_info', $node->field_permission_to_host_info[$field_language][0]['value']);
-				}
-				
-				/* Publication date / year */
-				$publication_date_raw = $node->field_publication_date[$field_language][0]['value'];
-				$timestamp = _idsims_solr_drupal_field_date_to_solr_friendly_date($publication_date_raw);
-				$document->setField('publication_date', $timestamp);	
-				$publication_date_raw_arr = explode('-', $publication_date_raw);
-				$document->setField('publication_year', $publication_date_raw_arr[0]);	
-
-				/* Document URLs */
-				$document_url_entity_id_arr = array();
-				foreach($node->field_document_urls[$field_language] as $document_url_item){
-					$document_url_entity_id_arr[] = $document_url_item['target_id'];
+				if($node->type == 'ids_document'){
 					
-				}	
-				if(count($document_url_entity_id_arr)){
-					$ids_document_url_entities = entity_load('ids_document_url', $document_url_entity_id_arr);
-					foreach($ids_document_url_entities as $entity_id => $ids_document_url_entity){
-						$document->addField('urls', $ids_document_url_entity->field_document_url[LANGUAGE_NONE][0]['value']);
+					/* Author (author) */
+				/*	foreach($node->field_authors[$field_language] as $author_item){
+						$author_term = taxonomy_term_load($author_item['tid']);
+						$document->addField('author', $author_term->name);
+					} */
+					
+					$author_collection_ids = array();
+					foreach($node->field_authors_collection[$field_language] as $author_collection_item){
+						$author_collection_id = $author_collection_item['value'];
+						$author_collection_ids[] = $author_collection_id;
+					}
+					
+					if(count($author_collection_ids)){
+						$author_collection_entities = entity_load('field_collection_item', $author_collection_ids);
+						$author_list_objects = array();
+						foreach($author_collection_entities as $collection_entity_id => $author_collection_entity){
+							if(isset($author_collection_entity->field_author_ref[LANGUAGE_NONE][0]['target_id'])){
+								$author_term = taxonomy_term_load($author_collection_entity->field_author_ref[LANGUAGE_NONE][0]['target_id']);
+								$author_name = $author_term->name;
+								$is_editor = ($author_collection_entity->field_is_editor[LANGUAGE_NONE][0]['value']) ? 1:0;
+								$author_output = $author_name;
+								if($is_editor){
+									$author_output .= ' (ed)';
+								}
+								/* standard author field */
+								//drupal_set_message('author_output='.$author_output);
+								$document->addField('author', $author_output);
+								
+								/* author array */
+								$author_list_object = array();
+								$author_list_object['first_name'] = $author_term->field_first_name[LANGUAGE_NONE][0]['value'];
+								$author_list_object['last_name'] = $author_term->field_last_name[LANGUAGE_NONE][0]['value'];
+								$author_list_object['is_editor'] = $is_editor;
+								$author_list_objects[] = $author_list_object;
+							}
+						}
+						/* Author Array -- throwing an error in solr saying author_array field missing, but have added to schema? 
+						 * Doesn't matter for go-live so commenting out write for now */
+						if(count($author_list_objects)){
+							$xmlString = _idsims_solr_build_list_object_array_field('author', $author_list_objects);
+							//$document->setField('author_array', $xmlString);
+						}
+					}
+	
+					/* Regions (field_SITE_regions) */
+					_idsims_solr_build_category_fields($document, $node, 'region', $site_machine_name, $object_xml = FALSE);
+	
+					/* Subjects (field_SITE_subjects) */
+					_idsims_solr_build_category_fields($document, $node, 'subject', $site_machine_name);
+	
+					/* Theme (field_SITE_themes) */
+					_idsims_solr_build_category_fields($document, $node, 'theme', $site_machine_name);
+	
+					/* Set date created/updated */
+					$timestamp = _idsims_solr_uxix_date_to_solr_friendly_date($node->created);
+					$document->setField('date_created', $timestamp);
+					$timestamp = _idsims_solr_uxix_date_to_solr_friendly_date($node->changed);
+					$document->setField('date_updated', $timestamp);
+	
+					/* Document medium (change to an array? Keeping inline with old API which is single value string) */
+					foreach($node->field_media[$field_language] as $document_medium_item){
+						$document_medium_term = taxonomy_term_load($document_medium_item['tid']);
+						$document->addField('document_medium', $document_medium_term->name);
+						break;
+					}
+			
+					/* Document types */
+					foreach($node->field_document_medium[$field_language] as $document_medium_item){
+						$document_medium_term = taxonomy_term_load($document_medium_item['tid']);
+						$document->addField('document_medium', $document_medium_term->name);
+					}
+					
+					/* Et al. */
+					if(isset($node->field_et_al[$field_language][0]['value'])){
+						$et_al_value = ($node->field_et_al[$field_language][0]['value']) ? 'true':'false';
+						$document->setField('et_al', $et_al_value);
+					}
+					
+					/* Headline */
+					if(isset($node->field_headline[$field_language][0]['value'])){
+						$document->setField('headline', $node->field_headline[$field_language][0]['value']);
+					}
+					
+					/* Keyword */
+					foreach($node->field_tags[$field_language] as $keyword_item){
+						$keyword_term = taxonomy_term_load($keyword_item['tid']);
+						$document->addField('keyword', $keyword_term->name);
+					}
+					
+					/* Collections */
+					foreach($node->field_collections[$field_language] as $collection_item){
+						$collection_term = taxonomy_term_load($collection_item['tid']);
+						$document->addField('collection', $collection_term->name);
+					}
+					
+					/* Translations */
+					/* Language ID */
+					if(isset($node->translations->data)){
+						$lang_list_objects = array();
+						foreach($node->translations->data as $lang_iso_code => $translation_data){
+							$oryx_lang_id = _idsims_solr_iso_code_to_ids_api_lang_id_for_drupal($lang_iso_code);
+							$document->addField('language_id', $oryx_lang_id);
+							$document->addField('metadata_languages', $lang_iso_code);
+							$lang_list_object = array();
+							$lang_list_object['isocode'] = $lang_iso_code;
+							if(isset($node->title_field[$lang_iso_code][0]['value'])){
+								$lang_list_object['title'] = htmlspecialchars($node->title_field[$lang_iso_code][0]['value']);
+							}
+							if(isset($node->body[$lang_iso_code][0]['value'])){
+								$lang_list_object['description'] = htmlspecialchars($node->body[$lang_iso_code][0]['value']);
+							}
+							if(isset($node->field_headline[$lang_iso_code][0]['value'])){
+								$lang_list_object['headline'] = htmlspecialchars($node->field_headline[$lang_iso_code][0]['value']);
+							}
+							$lang_list_object['language_id'] = $oryx_lang_id;
+							$lang_list_objects[] = $lang_list_object;
+						}
+					}
+					/* Language Array */
+					if(count($lang_list_objects)){
+						$xmlString = _idsims_solr_build_list_object_array_field('language', $lang_list_objects);
+						$document->setField('language_array', $xmlString);
+					}
+					
+					/* Language Name (change to an array using $node->translations above? Keeping inline with old API which is single value string) */
+					if(isset($language_terms[$node->language]->name)){
+						$document->setField('language_name', $language_terms[$node->language]->name);
+					} else {
+						drupal_set_message('Language not set for node(' . $node->nid . ') asset ID:' . $assetid);
+					}
+					
+					/* Website URL */
+					$website_url = '';
+					if($site_machine_name == 'bridge'){
+						$website_url = 'http://www.bridge.ids.ac.uk/go/display&amp;type=' . $object_type . '&amp;id=' . $assetid;
+					}
+					if($site_machine_name == 'eldis'){
+						$website_url = 'http://www.eldis.org/go/display&type=' . $object_type . '&id=' . $assetid;
+					}
+					if($website_url){
+						$document->setField('website_url', $website_url);
+					}
+					
+					/* Licence Type */
+					foreach($node->field_licence_type_term[$field_language] as $licence_type_item){
+						$licence_type_term = taxonomy_term_load($licence_type_item['tid']);
+						$document->addField('licence_type', $licence_type_term->name);
+						break;
+					}
+					
+					/*
+					 * Permission to Host
+					 */
+					if(isset($node->field_permission_to_host_info[$field_language][0]['value'])){
+						$document->setField('permission_to_host_info', $node->field_permission_to_host_info[$field_language][0]['value']);
+					}
+					
+					/* Publication date / year */
+					$publication_date_raw = $node->field_publication_date[$field_language][0]['value'];
+					$timestamp = _idsims_solr_drupal_field_date_to_solr_friendly_date($publication_date_raw);
+					$document->setField('publication_date', $timestamp);	
+					$publication_date_raw_arr = explode('-', $publication_date_raw);
+					$document->setField('publication_year', $publication_date_raw_arr[0]);	
+	
+					/* Document URLs */
+					$document_url_entity_id_arr = array();
+					foreach($node->field_document_urls[$field_language] as $document_url_item){
+						$document_url_entity_id_arr[] = $document_url_item['target_id'];
+						
+					}	
+					if(count($document_url_entity_id_arr)){
+						$ids_document_url_entities = entity_load('ids_document_url', $document_url_entity_id_arr);
+						foreach($ids_document_url_entities as $entity_id => $ids_document_url_entity){
+							$document->addField('urls', $ids_document_url_entity->field_document_url[LANGUAGE_NONE][0]['value']);
+						}
 					}
 				}
-				
 			}
 		}
 	}
