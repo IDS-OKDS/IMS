@@ -85,6 +85,13 @@ function idsims_import_menu() {
     'page arguments' => array('idsims_import_import_post_process_form'),
 	//  'file' => 'epdmod.admin.inc',
 	);
+	$items['admin/config/ids-ims/import_countries-regions'] = array(
+    'title' => 'Import Countries to Regions data',
+    'description' => 'Countries to Regions data',
+    'access arguments' => array('administer site configuration'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('idsims_import_country_regions_form'),
+	);
 	return $items;
 }
 
@@ -1237,3 +1244,158 @@ function idsims_import_get_endpoint_response($endpoint_url){
 	}
 	return false;
 }
+
+
+/* 
+ * Country CSV import thing - only need to run once!
+*/
+
+
+/**
+ * Build a form to upload CSV to.
+ */
+function idsims_import_country_regions_form() {
+	$form['#attributes'] = array(
+    'enctype' => 'multipart/form-data'
+    );
+    $form['csvfile'] = array(
+    '#title' => t('CSV File'),
+    '#type'  => 'file',
+    '#description' => ($max_size = parse_size(ini_get('upload_max_filesize'))) ? t('Due to server restrictions, the <strong>maximum upload file size is !max_size</strong>. Files that exceed this size will be disregarded.', array('!max_size' => format_size($max_size))) : '',    
+    );
+    $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Commence Import'),
+    );
+    $form['#validate'] = array(
+    'idsims_import_country_regions_validate_fileupload',
+    );
+    return $form ;
+}
+
+/**
+ * Handle form submission. Read the CSV into a set of batch operations
+ * and fire them off.
+ */
+function idsims_import_country_regions_form_submit(&$form, &$form_state) {
+	$batch = array(
+    'title' => t('Importing CSV ...'),
+    'operations' => array(),
+    'init_message' => t('Commencing'),
+    'progress_message' => t('Processed @current out of @total.'),
+    'error_message' => t('An error occurred during processing'),
+    'finished' => 'idsims_import_country_regions_form_finished',
+	) ;
+
+	if ( isset( $form_state['values']['csvupload'] ) ) {
+		if ( $handle = fopen($form_state['values']['csvupload'], 'r') ) {
+			$line_count = 1 ;
+			$first = TRUE ;
+			$line = fgetcsv($handle, 4096);
+			while ( $line = fgetcsv($handle, 4096) ) {
+				/**
+				 * we use base64_encode to ensure we don't overload the batch
+				 * processor by stuffing complex objects into it
+				 */
+				
+				$data = new stdClass();
+				$country_asset_id = trim($line[0]);
+				$region_object_id = trim($line[1]);
+				if($region_object_id && $country_asset_id){
+					$data->country_asset_id = $country_asset_id;
+					$data->region_object_id = $region_object_id;
+					$batch['operations'][] = array('_idsims_import_process_country_regions', array($data)); 
+				}
+					
+			}
+			fclose($handle);
+		} // we caught this in csvimport_form_validate()
+	} // we caught this in csvimport_form_validate()
+
+	batch_set($batch);
+}
+
+
+/**
+ * Handle batch completion.
+ */
+function idsims_import_country_regions_form_finished($success, $results, $operations) {
+	variable_set('idsims_import_batch_process_running', 0);
+	$message = t('The country to region import extras has completed.');
+	drupal_set_message($message);
+	return $message;
+}
+
+
+/**
+ * Validate the file upload. It must be a CSV, and we must
+ * successfully save it to our import directory.
+ */
+function idsims_import_country_regions_validate_fileupload(&$form, &$form_state) {
+	$validators = array(
+    'file_validate_extensions' => array( 'csv CSV' ),
+	) ;
+	if ( $file = file_save_upload('csvfile', $validators, 'temporary://') ) {
+		// The file was saved using file_save_upload() and was added to
+		// the files table as a temporary file. We'll make a copy and let
+		// the garbage collector delete the original upload.
+		$csv_dir = 'temporary://csvfile';
+		$directory_exists = file_prepare_directory($csv_dir, FILE_CREATE_DIRECTORY);
+		if ($directory_exists) {
+			$destination = $csv_dir .'/' . $file->filename;
+			if (file_copy($file, $destination, FILE_EXISTS_REPLACE)) {
+				$form_state['values']['csvupload'] = $destination;
+			}
+			else {
+				form_set_error('idsims_import', t('Unable to copy upload file to !dest', array('!dest' => $destination)));
+			}
+		}
+	}
+}
+
+
+/**
+ * Process an asset for extra fields import oganisations
+ */
+function _idsims_import_process_country_regions($data, &$context) {
+
+	/* Lookup region */
+	$query = new EntityFieldQuery();
+	$query->entityCondition('entity_type', 'taxonomy_term')
+	->entityCondition('bundle', 'ids_eldis_regions')
+	->fieldCondition('field_object_id', 'value', $data->region_object_id, '=')
+	->addMetaData('account', user_load(1)); // Run the query as user 1.
+
+	$result = $query->execute();
+	
+	if (!empty($result['taxonomy_term'])) {
+		foreach($result['taxonomy_term'] as $region_tid => $region_term){
+			$region_term_full = taxonomy_term_load($region_tid);
+		}
+	}
+	
+	/* Lookup country */
+	$query = new EntityFieldQuery();
+	$query->entityCondition('entity_type', 'taxonomy_term')
+	->entityCondition('bundle', 'ids_countries')
+	->fieldCondition('field_object_id', 'value', 'A' . $data->country_asset_id, '=')
+	->addMetaData('account', user_load(1)); // Run the query as user 1.
+
+	$result = $query->execute();
+	
+	if (!empty($result['taxonomy_term'])) {
+		foreach($result['taxonomy_term'] as $country_tid => $country_term){
+			$country_term_full = taxonomy_term_load($country_tid);
+		}
+	}
+	
+	$country_term_full->field_region_eldis[LANGUAGE_NONE] = array();
+	$country_term_full->field_region_eldis[LANGUAGE_NONE][0]['tid'] = $region_term_full->tid;
+	
+	taxonomy_term_save($country_term_full);
+	
+	$context['message'] = t('Updating country %title with Region = %region', array('%title' => $country_term_full->name, 'region' => $region_term_full->name));
+}
+
+
+
