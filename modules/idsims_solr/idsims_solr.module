@@ -49,81 +49,117 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$site_machine_name = $vocabulary_machine_name_arr[1];
 				/*Object type -- remove plural */
 				$object_type = (isset($vocabulary_machine_name_arr[2])) ? substr($vocabulary_machine_name_arr[2], 0, -1):$vocabulary_machine_name_arr[1];
-				if($site_machine_name == 'countries'){
-					$site_machine_name = $server_site_machine_name;
-					$object_type = 'country';
-				}
 				$document->setField('site', $site_machine_name);
-				$document->setField('object_type', $object_type);
-				/* Asset ID (asset_id) */
-				$category_id = substr($object_id, 1);/*remove 'C' at front of category ID */
-				$document->setField('category_id', $category_id);
-				/* Category path (category_path) */
-				$document->setField('category_path', _idsims_main_get_term_path($taxonomy_term->tid));
-				/* Category term level (also wries cat_level) */
-				$level = _idsims_main_get_term_depth($taxonomy_term->tid);
-				$document->setField('level', $level);
-				/* Parent array */
-				$parent_tids = array();
-				_idsims_main_get_parent_tid_array($parent_tids, $taxonomy_term->tid);
-				$category_objects = array();
-				foreach($parent_tids as $parent_tid){
-					$category_object = _idsims_solr_build_category_object_arr($parent_tid, $term = FALSE, $object_type);
-					if($category_object){
-						$category_objects[] = $category_object;
-					}
-				}
-				if(count($category_objects)){
-					$xmlString = _idsims_solr_build_list_object_array_field('parent', $category_objects);
-					$document->setField('parent_object_array', $xmlString);
-				}
-				/* First Parent / Super Parent (vocabulary ID) */
-				if(count($parent_tids)){
-					$document->setField('cat_first_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $parent_tids[0]));
-					$cat_parent_tid = $parent_tids[count($parent_tids)-1];
-					$document->setField('cat_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $cat_parent_tid));
-					$cat_parent_term = taxonomy_term_load($cat_parent_tid);
-					$cat_parent_object_id = _idsims_main_get_asset_id($cat_parent_term, 'taxonomy_term');
-					if($cat_parent_object_id){
-						$document->setField('parent_object_id', $cat_parent_object_id);
-					}
-				} else {
-					$document->setField('cat_first_parent', $category_id);
-					$document->setField('cat_parent', $taxonomy_term->vid);
-					$document->setField('parent_object_id', $taxonomy_term->vid); /* This probably doesn't make sence (but there is no level object ID in the new system this is the vobab ID) */
-				}
-				$document->setField('cat_superparent', $taxonomy_term->vid);
-				/* Child array */
-				$child_tids = _idsims_main_get_child_tid_array($taxonomy_term->tid);
-				$category_objects = array();
-				foreach($child_tids as $child_tid){
-					$category_object = _idsims_solr_build_category_object_arr($child_tid, $term = FALSE, $object_type);
-					if($category_object){
-						$category_objects[] = $category_object;
-					}
-				}
-				if(count($category_objects)){
-					$xmlString = _idsims_solr_build_list_object_array_field('child', $category_objects);
-					$document->setField('children_object_array', $xmlString);
-				}
-				
 				/* We need to write the timestamp out explicitly even though Drupal adds it anyway
 				 * as it needs to be in this format for the API or it errors
 				 */
 				$timestamp_now = date("Y-m-d\Th:i:s\Z");
-				$document->setField('timestamp', $timestamp_now);
+				$document->setField('timestamp', $timestamp_now);				
 				
-				if(isset($taxonomy_term->field_archived[LANGUAGE_NONE][0]['value'])){
-					$archived = ($taxonomy_term->field_archived[LANGUAGE_NONE][0]['value']) ? 'true':'false';
-					$document->setField('archived', $archived);
+				if($site_machine_name == 'countries'){
+					/* 
+					 * Countries work differently to other taxonomies (behave as Assets)
+					 */
+					$site_machine_name = $server_site_machine_name;
+					$object_type = 'Country';
+					/* ISO number/codes */
+					$iso_data = $taxonomy_term->field_iso_three_code[$field_language][0]['value'];
+					$document->setField('iso_three_letter_code', $iso_data);
+					$iso_data = $taxonomy_term->field_iso_two_code[$field_language][0]['value'];
+					$document->setField('iso_two_letter_code', $iso_data);
+					$iso_data = $taxonomy_term->field_iso_number[$field_language][0]['value'];
+					$document->setField('iso_number', $iso_data);
+					/* Asset ID (asset_id) */
+					$assetid = substr($taxonomy_term->field_object_id[$field_language][0]['value'], 1);/*remove 'A' at front of asset ID */
+					$document->setField('asset_id', $assetid);
+					/* Website URL */
+					$website_url = '';
+					if($site_machine_name == 'bridge'){
+						$website_url = 'http://www.bridge.ids.ac.uk/go/display&amp;type=Document&amp;id=' . $assetid;
+					}
+					if($site_machine_name == 'eldis'){
+						$website_url = 'http://www.eldis.org/go/country-profiles/&country=' . $assetid;
+					}
+					if($website_url){
+						$document->setField('website_url', $website_url);
+					}
+					/* Country name */
+					$document->setField('country_name', $taxonomy_term->name);
+					/* Alternative name */
+					$alternative_name = $taxonomy_term->field_alternative_name[$field_language][0]['value'];
+					$document->setField('alternative_name', $alternative_name);
+					/* Category Region Array */
+					$category_region_array = '<regionList><Region><object_id>C30</object_id><object_type>region</object_type><object_name>South Asia</object_name><archived>false</archived><deleted>0</deleted></Region></regionList>';
+					$document->setField('category_region_array', $category_region_array);
+					$category_region_ids = array('C30');
+					foreach($category_region_ids as $category_region_id){
+						$document->addField('category_region_ids', $category_region_id);
+					}
+				} else {
+					/* Category ID (category_id) */
+					$category_id = substr($object_id, 1);/*remove 'C' at front of category ID */
+					$document->setField('category_id', $category_id);
+
+					/* Category path (category_path) */
+					$document->setField('category_path', _idsims_main_get_term_path($taxonomy_term->tid));
+					/* Category term level (also wries cat_level) */
+					$level = _idsims_main_get_term_depth($taxonomy_term->tid);
+					$document->setField('level', $level);
+					/* Parent array */
+					$parent_tids = array();
+					_idsims_main_get_parent_tid_array($parent_tids, $taxonomy_term->tid);
+					$category_objects = array();
+					foreach($parent_tids as $parent_tid){
+						$category_object = _idsims_solr_build_category_object_arr($parent_tid, $term = FALSE, $object_type);
+						if($category_object){
+							$category_objects[] = $category_object;
+						}
+					}
+					if(count($category_objects)){
+						$xmlString = _idsims_solr_build_list_object_array_field('parent', $category_objects);
+						$document->setField('parent_object_array', $xmlString);
+					}
+					/* First Parent / Super Parent (vocabulary ID) */
+					if(count($parent_tids)){
+						$document->setField('cat_first_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $parent_tids[0]));
+						$cat_parent_tid = $parent_tids[count($parent_tids)-1];
+						$document->setField('cat_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $cat_parent_tid));
+						$cat_parent_term = taxonomy_term_load($cat_parent_tid);
+						$cat_parent_object_id = _idsims_main_get_asset_id($cat_parent_term, 'taxonomy_term');
+						if($cat_parent_object_id){
+							$document->setField('parent_object_id', $cat_parent_object_id);
+						}
+					} else {
+						$document->setField('cat_first_parent', $category_id);
+						$document->setField('cat_parent', $taxonomy_term->vid);
+						$document->setField('parent_object_id', $taxonomy_term->vid); /* This probably doesn't make sence (but there is no level object ID in the new system this is the vocab ID) */
+					}
+					$document->setField('cat_superparent', $taxonomy_term->vid);
+					/* Child array */
+					$child_tids = _idsims_main_get_child_tid_array($taxonomy_term->tid);
+					$category_objects = array();
+					foreach($child_tids as $child_tid){
+						$category_object = _idsims_solr_build_category_object_arr($child_tid, $term = FALSE, $object_type);
+						if($category_object){
+							$category_objects[] = $category_object;
+						}
+					}
+					if(count($category_objects)){
+						$xmlString = _idsims_solr_build_list_object_array_field('child', $category_objects);
+						$document->setField('children_object_array', $xmlString);
+					}
+					if(isset($taxonomy_term->field_archived[LANGUAGE_NONE][0]['value'])){
+						$archived = ($taxonomy_term->field_archived[LANGUAGE_NONE][0]['value']) ? 'true':'false';
+						$document->setField('archived', $archived);
+					}
 				}
-				
+				$document->setField('object_type', $object_type);
 			}
 		} else {
 			/* Index NODES */
 			$node = node_load($item_id_arr['value']);
 			if($node){
-				
+
 				$field_language = _idsims_main_field_language($node->type, $node, 'field_site_ref');
 				$site_term_tid = $node->field_site_ref[$field_language][0]['tid'];
 				$site_term = taxonomy_term_load($site_term_tid);
@@ -141,38 +177,38 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				/* Asset ID (asset_id) */
 				$assetid = substr($node->field_object_id[$field_language][0]['value'], 1);/*remove 'A' at front of asset ID */
 				$document->setField('asset_id', $assetid);
-				
+
 				/* Site (site_ref) */
 				$site_ref_tid = $node->field_site_ref[$field_language][0]['tid'];
 				$site_machine_name = $sites_terms[$site_ref_tid]->field_machine_name[LANGUAGE_NONE][0]['value'];
 				$document->setField('site', $site_machine_name);
 
 				/* Title (title_field) */
-				$document->setField('title', $node->title_field[$field_language][0]['value']);	
+				$document->setField('title', $node->title_field[$field_language][0]['value']);
 
 				/* We need to write the timestamp out explicitly even though Drupal adds it anyway
 				 * as it needs to be in this format for the API or it errors
 				 */
 				$timestamp_now = _idsims_solr_uxix_date_to_solr_friendly_date();
 				$document->setField('timestamp', $timestamp_now);
-				
+
 				/* Description/Abstract */
 				$document->setField('description', $node->body[$field_language][0]['value']);
-				
+
 				if($node->type == 'ids_document'){
-					
+
 					/* Author (author) */
-				/*	foreach($node->field_authors[$field_language] as $author_item){
+					/*	foreach($node->field_authors[$field_language] as $author_item){
 						$author_term = taxonomy_term_load($author_item['tid']);
 						$document->addField('author', $author_term->name);
-					} */
-					
+						} */
+
 					$author_collection_ids = array();
 					foreach($node->field_authors_collection[$field_language] as $author_collection_item){
 						$author_collection_id = $author_collection_item['value'];
 						$author_collection_ids[] = $author_collection_id;
 					}
-					
+
 					if(count($author_collection_ids)){
 						$author_collection_entities = entity_load('field_collection_item', $author_collection_ids);
 						$author_list_objects = array();
@@ -188,7 +224,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 								/* standard author field */
 								//drupal_set_message('author_output='.$author_output);
 								$document->addField('author', $author_output);
-								
+
 								/* author array */
 								$author_list_object = array();
 								$author_list_object['first_name'] = $author_term->field_first_name[LANGUAGE_NONE][0]['value'];
@@ -197,65 +233,65 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 								$author_list_objects[] = $author_list_object;
 							}
 						}
-						/* Author Array -- throwing an error in solr saying author_array field missing, but have added to schema? 
+						/* Author Array -- throwing an error in solr saying author_array field missing, but have added to schema?
 						 * Doesn't matter for go-live so commenting out write for now */
 						if(count($author_list_objects)){
 							$xmlString = _idsims_solr_build_list_object_array_field('author', $author_list_objects);
 							//$document->setField('author_array', $xmlString);
 						}
 					}
-	
+
 					/* Regions (field_SITE_regions) */
 					_idsims_solr_build_category_fields($document, $node, 'region', $site_machine_name, $object_xml = FALSE);
-	
+
 					/* Subjects (field_SITE_subjects) */
 					_idsims_solr_build_category_fields($document, $node, 'subject', $site_machine_name);
-	
+
 					/* Theme (field_SITE_themes) */
 					_idsims_solr_build_category_fields($document, $node, 'theme', $site_machine_name);
-	
+
 					/* Set date created/updated */
 					$timestamp = _idsims_solr_uxix_date_to_solr_friendly_date($node->created);
 					$document->setField('date_created', $timestamp);
 					$timestamp = _idsims_solr_uxix_date_to_solr_friendly_date($node->changed);
 					$document->setField('date_updated', $timestamp);
-	
+
 					/* Document medium (change to an array? Keeping inline with old API which is single value string) */
 					foreach($node->field_media[$field_language] as $document_medium_item){
 						$document_medium_term = taxonomy_term_load($document_medium_item['tid']);
 						$document->addField('document_medium', $document_medium_term->name);
 						break;
 					}
-			
+
 					/* Document types */
 					foreach($node->field_document_medium[$field_language] as $document_medium_item){
 						$document_medium_term = taxonomy_term_load($document_medium_item['tid']);
 						$document->addField('document_medium', $document_medium_term->name);
 					}
-					
+
 					/* Et al. */
 					if(isset($node->field_et_al[$field_language][0]['value'])){
 						$et_al_value = ($node->field_et_al[$field_language][0]['value']) ? 'true':'false';
 						$document->setField('et_al', $et_al_value);
 					}
-					
+
 					/* Headline */
 					if(isset($node->field_headline[$field_language][0]['value'])){
 						$document->setField('headline', $node->field_headline[$field_language][0]['value']);
 					}
-					
+
 					/* Keyword */
 					foreach($node->field_tags[$field_language] as $keyword_item){
 						$keyword_term = taxonomy_term_load($keyword_item['tid']);
 						$document->addField('keyword', $keyword_term->name);
 					}
-					
+
 					/* Collections */
 					foreach($node->field_collections[$field_language] as $collection_item){
 						$collection_term = taxonomy_term_load($collection_item['tid']);
 						$document->addField('collection', $collection_term->name);
 					}
-					
+
 					/* Translations */
 					/* Language ID */
 					if(isset($node->translations->data)){
@@ -284,14 +320,14 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 						$xmlString = _idsims_solr_build_list_object_array_field('language', $lang_list_objects);
 						$document->setField('language_array', $xmlString);
 					}
-					
+
 					/* Language Name (change to an array using $node->translations above? Keeping inline with old API which is single value string) */
 					if(isset($language_terms[$node->language]->name)){
 						$document->setField('language_name', $language_terms[$node->language]->name);
 					} else {
 						drupal_set_message('Language not set for node(' . $node->nid . ') asset ID:' . $assetid);
 					}
-					
+
 					/* Website URL */
 					$website_url = '';
 					if($site_machine_name == 'bridge'){
@@ -303,28 +339,28 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					if($website_url){
 						$document->setField('website_url', $website_url);
 					}
-					
+
 					/* Licence Type */
 					foreach($node->field_licence_type_term[$field_language] as $licence_type_item){
 						$licence_type_term = taxonomy_term_load($licence_type_item['tid']);
 						$document->addField('licence_type', $licence_type_term->name);
 						break;
 					}
-					
+
 					/*
 					 * Permission to Host
 					 */
 					if(isset($node->field_permission_to_host_info[$field_language][0]['value'])){
 						$document->setField('permission_to_host_info', $node->field_permission_to_host_info[$field_language][0]['value']);
 					}
-					
+
 					/* Publication date / year */
 					$publication_date_raw = $node->field_publication_date[$field_language][0]['value'];
 					$timestamp = _idsims_solr_drupal_field_date_to_solr_friendly_date($publication_date_raw);
-					$document->setField('publication_date', $timestamp);	
+					$document->setField('publication_date', $timestamp);
 					$publication_date_raw_arr = explode('-', $publication_date_raw);
-					$document->setField('publication_year', $publication_date_raw_arr[0]);	
-					
+					$document->setField('publication_year', $publication_date_raw_arr[0]);
+
 					/* Publisher ID publisher_id */
 					$publisher_org_country = FALSE;
 					foreach($node->field_publishers[$field_language] as $publisher_item){
@@ -336,13 +372,13 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 								if(!$publisher_org_country){
 									if(isset($publisher_node->field_location_country[LANGUAGE_NONE][0]['tid'])){
 										$country_term = taxonomy_term_load($publisher_node->field_location_country[LANGUAGE_NONE][0]['tid']);
-										$publisher_org_country = $country_term->name;	
+										$publisher_org_country = $country_term->name;
 									}
 								}
 							}
 						}
-					}	
-					
+					}
+
 					/* Publisher Country publisher_country */
 					$publisher_country = FALSE;
 					if(isset($node->field_country_of_publication[$field_language][0]['tid'])){
@@ -353,14 +389,14 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 						$publisher_country = $publisher_org_country;
 					}
 					if($publisher_country){
-						$document->setField('publisher_country', $publisher_country);	
+						$document->setField('publisher_country', $publisher_country);
 					}
-	
+
 					/* Document URLs */
 					$document_url_entity_id_arr = array();
 					foreach($node->field_document_urls[$field_language] as $document_url_item){
 						$document_url_entity_id_arr[] = $document_url_item['target_id'];
-					}	
+					}
 					if(count($document_url_entity_id_arr)){
 						$ids_document_url_entities = entity_load('ids_document_url', $document_url_entity_id_arr);
 						foreach($ids_document_url_entities as $entity_id => $ids_document_url_entity){
