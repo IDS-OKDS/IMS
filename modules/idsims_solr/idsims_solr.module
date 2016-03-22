@@ -89,11 +89,23 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					$alternative_name = $taxonomy_term->field_alternative_name[$field_language][0]['value'];
 					$document->setField('alternative_name', $alternative_name);
 					/* Category Region Array */
-					$category_region_array = '<regionList><Region><object_id>C30</object_id><object_type>region</object_type><object_name>South Asia</object_name><archived>false</archived><deleted>0</deleted></Region></regionList>';
-					$document->setField('category_region_array', $category_region_array);
-					$category_region_ids = array('C30');
-					foreach($category_region_ids as $category_region_id){
-						$document->addField('category_region_ids', $category_region_id);
+					$category_region_ids = array();
+					$category_region_objects = array();
+					if(isset($taxonomy_term->field_region_eldis[$field_language][0]['tid'])){
+						foreach($taxonomy_term->field_region_eldis[$field_language] as $region_tid_obj){
+							$region_tid = $region_tid_obj['tid'];
+							$region_term = taxonomy_term_load($region_tid);
+							$region_object_id = $region_term->field_object_id[LANGUAGE_NONE][0]['value'];
+							$document->addField('category_region_ids', $region_object_id);
+							$category_region_object = _idsims_solr_build_category_object_arr($region_tid, $term = FALSE, 'region');
+							if($category_region_object){
+								$category_region_objects[] = $category_region_object;
+							}
+						}
+					}
+					if(count($category_region_objects)){
+						$xmlString = _idsims_solr_build_list_object_array_field('region', $category_region_objects);
+						$document->setField('category_region_array', $xmlString);
 					}
 				} else {
 					/* Category ID (category_id) */
