@@ -337,3 +337,15 @@ fieldset.date-combo .container-inline-date .date-padding {
 .field-name-field-authors-collection thead {
 	display:none;
 }
+
+.node .field {
+	padding-bottom:0.25em;
+	border-bottom:1px dotted #ddd;
+	margin-bottom:1em;
+}
+
+.node .field .field {
+	padding-bottom:0;
+	border-bottom:none;
+	margin-bottom:0;
+}
