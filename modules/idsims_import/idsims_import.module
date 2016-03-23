@@ -38,6 +38,9 @@ define('IDSIMS_COLLECTION_UPDATES_2014_SID', 1998);
 define('IDSIMS_FUNDER_PARENT_SID', 1842);
 define('IDSIMS_CONTENT_PARTNER_PARENT_SID', 1957);
 
+
+define('IDSIMS_ORYX_EXTRAS_XML_URL', 'http://romeo.eldis.org/ORYX-extras/');
+
 /*
  * Site term ids
  */
@@ -138,7 +141,7 @@ function idsims_import_import_extras_form() {
     'enctype' => 'multipart/form-data'
     );
     $form['intro_text'] = array(
-    '#markup' => '<h2>Documents: Extra data pulled from the old system via a bespoke XML feed ('.l('e.g.','http://isudev.ids.ac.uk/devrob/oryx-extras/?xml=true&aid=56240').')</h2>'
+    '#markup' => '<h2>Documents: Extra data pulled from the old system via a bespoke XML feed ('.l('e.g.', IDSIMS_ORYX_EXTRAS_XML_URL . '?xml=true&aid=56240').')</h2>'
     . '<p>Process tasks:</p>'
     . '<ul>'
     . '<li>Publication uncertain date</li>'
@@ -203,7 +206,7 @@ function idsims_import_import_extras_orgs_form() {
     'enctype' => 'multipart/form-data'
     );
     $form['intro_text'] = array(
-    '#markup' => '<h2>Organisations: Extra data pulled from the old system via a bespoke XML feed ('.l('e.g.','http://isudev.ids.ac.uk/devrob/oryx-extras/?xml=true&aid=56240').')</h2>'
+    '#markup' => '<h2>Organisations: Extra data pulled from the old system via a bespoke XML feed ('.l('e.g.', IDSIMS_ORYX_EXTRAS_XML_URL . '?xml=true&aid=56240').')</h2>'
     . '<p>Process tasks:</p>'
     . '<ul>'
     . '<li>Has Hosting Permission</li>'
@@ -559,7 +562,7 @@ function _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($
  */
 function _idsims_import_process_import_extras($nid, &$context) {
 	$node = node_load($nid);
-	$xml_feed_path_root = 'http://isudev.ids.ac.uk/devrob/oryx-extras/?xml=true&aid=';
+	$xml_feed_path_root = IDSIMS_ORYX_EXTRAS_XML_URL . '?xml=true&aid=';
 	$assetid = $node->field_object_id[LANGUAGE_NONE][0]['value'];
 	$raw_assetid = substr($assetid, 1);/*remove 'A' at front of asset ID */
 	$xml_feed_path_full = $xml_feed_path_root . $raw_assetid;
@@ -614,7 +617,7 @@ function _idsims_import_idsapi_get_data($url) {
  */
 function _idsims_import_process_import_extras_orgs($nid, &$context) {
 	$node = node_load($nid);
-	$xml_feed_path_root = 'http://isudev.ids.ac.uk/devrob/oryx-extras/orgs.cfm?xml=true&aid=';
+	$xml_feed_path_root = IDSIMS_ORYX_EXTRAS_XML_URL . 'orgs.cfm?xml=true&aid=';
 	$assetid = $node->field_object_id[LANGUAGE_NONE][0]['value'];
 	$raw_assetid = substr($assetid, 1);/*remove 'A' at front of asset ID */
 	$xml_feed_path_full = $xml_feed_path_root . $raw_assetid;
