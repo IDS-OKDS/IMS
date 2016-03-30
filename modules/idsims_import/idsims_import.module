@@ -100,12 +100,19 @@ function idsims_import_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('idsims_import_import_amalgamate_orgs_form'),
 	);
-	$items['admin/config/ids-ims/import_countries-regions'] = array(
+	$items['admin/config/ids-ims/import-countries-regions'] = array(
     'title' => 'Import Countries to Regions data',
     'description' => 'Countries to Regions data',
     'access arguments' => array('administer site configuration'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('idsims_import_country_regions_form'),
+	);
+	$items['admin/config/ids-ims/import-term-descriptions'] = array(
+    'title' => 'Import Term Descriptions',
+    'description' => 'Get the desction data for terms from the API',
+    'access arguments' => array('administer site configuration'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('idsims_import_term_descriptions_form'),
 	);
 	return $items;
 }
@@ -300,6 +307,33 @@ function idsims_import_import_post_process_orgs_form() {
     return $form;
 }
 
+/**
+ * Build a form for Import of term descriptions
+ */
+function idsims_import_term_descriptions_form() {
+	$form['#attributes'] = array(
+    'enctype' => 'multipart/form-data'
+    );
+    $form['intro_text'] = array(
+    '#markup' => '<h2>Get more taxonomy data from API</h2>'
+    . '<p>Process tasks:</p>'
+    . '<ul>'
+    . '<li>Term descriptions</li>'
+    . '</ul>',
+    );
+    $form['import_limit'] = array(
+    '#title' => t('Import limit'),
+    '#type'  => 'textfield',
+    '#size' => 10,
+    '#description' => t('The number of items to import. If left blank then all'), 
+    '#default_value' => 5,   
+    );
+    $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Commence Term update'),
+    );
+    return $form;
+}
 
 /**
  * Build a form for Import post process amalgamation of Organisations
@@ -388,6 +422,44 @@ function idsims_import_import_post_process_orgs_form_submit(&$form, &$form_state
 function idsims_import_import_amalgamate_orgs_form_submit(&$form, &$form_state) {
 	_idsims_import_set_batch_jobs('Import data post process', 'import_amalgamate_orgs', $form, $form_state, 'ids_organisation');
 }
+
+function idsims_import_term_descriptions_form_submit(&$form, &$form_state) {
+	$batch_id = 'term_extras';
+	
+	$import_limit = $form_state['values']['import_limit'];
+
+	$batch = array(
+    'title' => t($batch_name . ' ...'),
+    'operations' => array(),
+    'init_message' => t('Commencing'),
+    'progress_message' => t('Processed @current out of @total.'),
+    'error_message' => t('An error occurred during processing'),
+    'finished' => 'idsims_import_' . $batch_id . '_finished',
+	);
+
+	$query = new EntityFieldQuery();
+
+	$query->entityCondition('entity_type', 'taxonomy_term')
+	->entityCondition('bundle', array('ids_bridge_regions', 'ids_bridge_subjects', 'ids_bridge_themes', 'ids_eldis_regions', 'ids_eldis_subjects', 'ids_eldis_themes', 'ids_countries'), 'IN')
+	->addMetaData('account', user_load(1)); // Run the query as user 1.
+
+	if($import_limit){
+		$query->range(0,$import_limit);
+	}
+
+	$result = $query->execute();
+
+	if (!empty($result['taxonomy_term'])) {
+		$tids = array_keys($result['taxonomy_term']);
+		foreach ($tids as $tid) {
+			$batch['operations'][] = array('_idsims_import_process_' . $batch_id, array($tid));
+		}
+	}
+
+	batch_set($batch);
+}
+
+
 
 function _idsims_import_sectors_to_doc_type(&$node, $cat_assetid, $cat_assetid_raw, $cat_name){
 	$oryx_doc_types_arr = array();
@@ -634,6 +706,26 @@ function _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($
 
 	return (isset($asset_id_matrix[$cat_assetid])) ? $asset_id_matrix[$cat_assetid] : FALSE;
 }
+
+/**
+ * Process an taxonomy_term asset
+ */
+function _idsims_import_process_term_extras($tid, &$context) {
+	$term = taxonomy_term_load($tid);
+/*	$siteid = $node->field_site[LANGUAGE_NONE][0]['value'];
+	$xml_feed_path_root = 'http://api.ids.ac.uk/openapi/'.$siteid.'/get/documents/';
+	$assetid = $node->field_object_id[LANGUAGE_NONE][0]['value'];
+	$idsapi_api_key = variable_get('idsapi_api_key', '');
+	if($idsapi_api_key){
+		$xml_feed_path_full = $xml_feed_path_root . $assetid . '/full?_token_guid=' . $idsapi_api_key;
+		$field_data = _idsims_import_idsapi_get_data($xml_feed_path_full);
+		if($field_data){
+			_idsims_import_process_import_extras_api_update_node($node, $field_data, $assetid);
+			$context['message'] = t('Updating node %title : Asset ID = %assetid', array('%title' => $node->title, '%assetid' => $assetid));
+		}
+	} else {
+		drupal_set_message('IDS API Key not set');
+	}}*/
 
 /**
  * Process an asset for extra fields import
@@ -1348,6 +1440,16 @@ function _idsims_import_simpleXML2array($xml)
 function idsims_import_import_extras_orgs_finished($success, $results, $operations) {
 	variable_set('idsims_import_batch_process_running', 0);
 	$message = t('The organisation import extras has completed.');
+	drupal_set_message($message);
+	return $message;
+}
+
+/**
+ * Handle batch completion.
+ */
+function idsims_import_import_term_extras_finished($success, $results, $operations) {
+	variable_set('idsims_import_batch_process_running', 0);
+	$message = t('The term extras import extras has completed.');
 	drupal_set_message($message);
 	return $message;
 }
