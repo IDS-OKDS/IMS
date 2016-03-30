@@ -54,7 +54,10 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				 * as it needs to be in this format for the API or it errors
 				 */
 				$timestamp_now = date("Y-m-d\Th:i:s\Z");
-				$document->setField('timestamp', $timestamp_now);				
+				$document->setField('timestamp', $timestamp_now);	
+
+				/* Description/Abstract */
+				$document->setField('description', $taxonomy_term->description);
 				
 				if($site_machine_name == 'countries'){
 					/* 
