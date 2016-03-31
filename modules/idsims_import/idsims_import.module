@@ -437,24 +437,30 @@ function idsims_import_term_descriptions_form_submit(&$form, &$form_state) {
     'finished' => 'idsims_import_' . $batch_id . '_finished',
 	);
 
-	$query = new EntityFieldQuery();
+        $taxonomies = array('ids_bridge_regions', 'ids_bridge_subjects', 'ids_bridge_themes', 'ids_eldis_regions', 'ids_eldis_subjects', 'ids_eldis_themes', 'ids_countries');
+        
+        foreach($taxonomies as $taxonomy_id){
+        
+            $query = new EntityFieldQuery();
 
-	$query->entityCondition('entity_type', 'taxonomy_term')
-	->entityCondition('bundle', array('ids_bridge_regions', 'ids_bridge_subjects', 'ids_bridge_themes', 'ids_eldis_regions', 'ids_eldis_subjects', 'ids_eldis_themes', 'ids_countries'), 'IN')
-	->addMetaData('account', user_load(1)); // Run the query as user 1.
+            $query->entityCondition('entity_type', 'taxonomy_term')
+            ->entityCondition('bundle', $taxonomy_id, '=')
+            ->addMetaData('account', user_load(1)); // Run the query as user 1.
 
-	if($import_limit){
-		$query->range(0,$import_limit);
-	}
+            if($import_limit){
+                    $query->range(0,$import_limit);
+            }
 
-	$result = $query->execute();
+            $result = $query->execute();
 
-	if (!empty($result['taxonomy_term'])) {
-		$tids = array_keys($result['taxonomy_term']);
-		foreach ($tids as $tid) {
-			$batch['operations'][] = array('_idsims_import_process_' . $batch_id, array($tid));
-		}
-	}
+            if (!empty($result['taxonomy_term'])) {
+                    $tids = array_keys($result['taxonomy_term']);
+                    foreach ($tids as $tid) {
+                            $batch['operations'][] = array('_idsims_import_process_' . $batch_id, array($tid, $taxonomy_id));
+                    }
+            }
+            
+        }
 
 	batch_set($batch);
 }
@@ -710,22 +716,29 @@ function _idsims_import_category_asset_id_to_organisation_asset_id_from_matrix($
 /**
  * Process an taxonomy_term asset
  */
-function _idsims_import_process_term_extras($tid, &$context) {
-	$term = taxonomy_term_load($tid);
-/*	$siteid = $node->field_site[LANGUAGE_NONE][0]['value'];
-	$xml_feed_path_root = 'http://api.ids.ac.uk/openapi/'.$siteid.'/get/documents/';
-	$assetid = $node->field_object_id[LANGUAGE_NONE][0]['value'];
+function _idsims_import_process_term_extras($tid, $taxonomy_id, &$context) {
+        $taxonomy_id_arr = explode('_', $taxonomy_id);
+        $category_id = $taxonomy_id_arr[count($taxonomy_id_arr) - 1];
+        $term = taxonomy_term_load($tid);
+        if(isset($term->field_site[LANGUAGE_NONE][0]['value'])){
+            $siteid = $term->field_site[LANGUAGE_NONE][0]['value'];
+        } else {
+            $siteid = 'eldis';
+        }	
+	$xml_feed_path_root = 'http://api.ids.ac.uk/openapi/'.$siteid.'/get/' . $category_id . '/';
+	$assetid = $term->field_object_id[LANGUAGE_NONE][0]['value'];
 	$idsapi_api_key = variable_get('idsapi_api_key', '');
 	if($idsapi_api_key){
 		$xml_feed_path_full = $xml_feed_path_root . $assetid . '/full?_token_guid=' . $idsapi_api_key;
 		$field_data = _idsims_import_idsapi_get_data($xml_feed_path_full);
 		if($field_data){
-			_idsims_import_process_import_extras_api_update_node($node, $field_data, $assetid);
-			$context['message'] = t('Updating node %title : Asset ID = %assetid', array('%title' => $node->title, '%assetid' => $assetid));
+			_idsims_import_process_import_extras_api_update_term($term, $field_data, $assetid);
+			$context['message'] = t('Updating term %title : Asset ID = %assetid', array('%title' => $term->name, '%assetid' => $assetid));
 		}
 	} else {
 		drupal_set_message('IDS API Key not set');
-	}}*/
+	}        
+}
 
 /**
  * Process an asset for extra fields import
@@ -975,6 +988,26 @@ function _idsims_import_ids_api_lang_id_to_iso_code_for_drupal($api_lang_id){
 		return $lang_code_arr[$api_lang_id];
 	}
 	return FALSE;
+}
+
+function _idsims_import_process_import_extras_api_update_term(&$term, &$field_data, $assetid) {
+	$term_updated = FALSE;
+
+	/*
+	 * Description field
+	 */
+	if(isset($field_data['results']['description'])){
+                drupal_set_message('NAME=' . $term->name . ' DESCRIPTION=' . $field_data['results']['description']);
+		$term->description[LANGUAGE_NONE][0]['value'] = $field_data['results']['description'];
+		$term->field_et_al[LANGUAGE_NONE][0]['safe_value'] = $field_data['results']['description'];
+		$term_updated = TRUE;
+	}
+
+	//drupal_set_message(print_r($field_data, TRUE));
+
+	if($term_updated){
+            //taxonomy_term_save($term);
+	}
 }
 
 function _idsims_import_process_import_extras_api_update_node(&$node, &$field_data, $assetid) {
