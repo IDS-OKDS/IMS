@@ -429,7 +429,7 @@ function idsims_import_term_descriptions_form_submit(&$form, &$form_state) {
 	$import_limit = $form_state['values']['import_limit'];
 
 	$batch = array(
-    'title' => t($batch_name . ' ...'),
+    'title' => t('Term Extras ...'),
     'operations' => array(),
     'init_message' => t('Commencing'),
     'progress_message' => t('Processed @current out of @total.'),
@@ -448,7 +448,8 @@ function idsims_import_term_descriptions_form_submit(&$form, &$form_state) {
             ->addMetaData('account', user_load(1)); // Run the query as user 1.
 
             if($import_limit){
-                    $query->range(0,$import_limit);
+                    $limit = (int) ($import_limit/count($taxonomies));
+                    $query->range(0, $limit);
             }
 
             $result = $query->execute();
@@ -998,8 +999,7 @@ function _idsims_import_process_import_extras_api_update_term(&$term, &$field_da
 	 */
 	if(isset($field_data['results']['description'])){
                 drupal_set_message('NAME=' . $term->name . ' DESCRIPTION=' . $field_data['results']['description']);
-		$term->description[LANGUAGE_NONE][0]['value'] = $field_data['results']['description'];
-		$term->field_et_al[LANGUAGE_NONE][0]['safe_value'] = $field_data['results']['description'];
+		$term->description = $field_data['results']['description'];
 		$term_updated = TRUE;
 	}
 
