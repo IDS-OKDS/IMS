@@ -1355,6 +1355,13 @@ function _idsims_import_process_import_amalgamate_orgs($nid, &$context) {
 }
 
 
+/*
+ * When taxonomy terms are moved using Taxonomy Manager to another Vocab we need to update the term reference fields (this is for IDS Collections)
+ */
+function _idsims_import_process_import_post_process_update_node_taxonomy_references(&$node, &$node_updated) {
+	//drupal_set_message(print_r($node, true));
+}
+
 
 function _idsims_import_process_import_post_process_update_node(&$node, &$context) {
 	/*
@@ -1442,6 +1449,8 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 			$cnt++;
 		}
 	}
+	
+	_idsims_import_process_import_post_process_update_node_taxonomy_references($node, $node_updated);
 
 	if($node_updated){
 		node_save($node);
