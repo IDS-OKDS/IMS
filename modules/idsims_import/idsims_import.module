@@ -998,15 +998,19 @@ function _idsims_import_process_import_extras_api_update_term(&$term, &$field_da
 	 * Description field
 	 */
 	if(isset($field_data['results']['description'])){
-                drupal_set_message('NAME=' . $term->name . ' DESCRIPTION=' . $field_data['results']['description']);
+        drupal_set_message('NAME=' . $term->name . ' DESCRIPTION=' . $field_data['results']['description']);
 		$term->description = $field_data['results']['description'];
 		$term_updated = TRUE;
+	} else {
+		if($term->description == $term->name){
+			/* the IDS IMS importer Drupal module just copied the name into the description for some reason, so let's just remove that */
+			$term->description = '';
+			$term_updated = TRUE;
+		}
 	}
 
-	//drupal_set_message(print_r($field_data, TRUE));
-
 	if($term_updated){
-            //taxonomy_term_save($term);
+    	taxonomy_term_save($term);
 	}
 }
 
