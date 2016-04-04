@@ -304,12 +304,6 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 						$document->addField('keyword', $keyword_term->name);
 					}
 
-					/* Collections */
-				/*	foreach($node->field_collections[$field_language] as $collection_item){
-						$collection_term = taxonomy_term_load($collection_item['tid']);
-						$document->addField('collection', $collection_term->name);
-					}*/
-
 					/* Translations */
 					/* Language ID */
 					if(isset($node->translations->data)){
