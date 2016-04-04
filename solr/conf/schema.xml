@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.
+ The ASF licenses this file to You under the Apache License, Version 2.0
+ (the "License"); you may not use this file except in compliance with
+ the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<!--  
+ This is the Solr schema file. This file should be named "schema.xml" and
+ should be in the conf directory under the solr home
+ (i.e. ./solr/conf/schema.xml by default) 
+ or located where the classloader for the Solr webapp can find it.
+
+ This example schema is the recommended starting point for users.
+ It should be kept correct and concise, usable out-of-the-box.
+
+ For more information, on how to customize this file, please see
+ http://wiki.apache.org/solr/SchemaXml
+-->
+
+<schema name="db" version="1.1">
+  <!-- attribute "name" is the name of this schema and is only used for display purposes.
+       Applications should change this to reflect the nature of the search collection.
+       version="1.1" is Solr's version number for the schema syntax and semantics.  It should
+       not normally be changed by applications.
+       1.0: multiValued attribute did not exist, all fields are multiValued by nature
+       1.1: multiValued attribute introduced, false by default -->
+
+  <types>
+    <!-- field type definitions. The "name" attribute is
+       just a label to be used by field definitions.  The "class"
+       attribute and any other attributes determine the real
+       behavior of the fieldType.
+         Class names starting with "solr" refer to java classes in the
+       org.apache.solr.analysis package.
+    -->
+
+    <!-- The StrField type is not analyzed, but indexed/stored verbatim.  
+       - StrField and TextField support an optional compressThreshold which
+       limits compression (if enabled in the derived fields) to values which
+       exceed a certain size (in characters).
+    -->
+    <fieldType name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
+
+    <!-- boolean type: "true" or "false" -->
+    <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true" omitNorms="true"/>
+
+    <!-- The optional sortMissingLast and sortMissingFirst attributes are
+         currently supported on types that are sorted internally as strings.
+       - If sortMissingLast="true", then a sort on this field will cause documents
+         without the field to come after documents with the field,
+         regardless of the requested sort order (asc or desc).
+       - If sortMissingFirst="true", then a sort on this field will cause documents
+         without the field to come before documents with the field,
+         regardless of the requested sort order.
+       - If sortMissingLast="false" and sortMissingFirst="false" (the default),
+         then default lucene sorting will be used which places docs without the
+         field first in an ascending sort and last in a descending sort.
+    -->    
+
+
+    <!-- numeric field types that store and index the text
+         value verbatim (and hence don't support range queries, since the
+         lexicographic ordering isn't equal to the numeric ordering) -->
+    <fieldType name="integer" class="solr.IntField" omitNorms="true"/>
+    <fieldType name="long" class="solr.LongField" omitNorms="true"/>
+    <fieldType name="float" class="solr.FloatField" omitNorms="true"/>
+    <fieldType name="double" class="solr.DoubleField" omitNorms="true"/>
+
+
+    <!-- Numeric field types that manipulate the value into
+         a string value that isn't human-readable in its internal form,
+         but with a lexicographic ordering the same as the numeric ordering,
+         so that range queries work correctly. -->
+    <fieldType name="sint" class="solr.SortableIntField" sortMissingLast="true" omitNorms="true"/>
+    <fieldType name="slong" class="solr.SortableLongField" sortMissingLast="true" omitNorms="true"/>
+    <fieldType name="sfloat" class="solr.SortableFloatField" sortMissingLast="true" omitNorms="true"/>
+    <fieldType name="sdouble" class="solr.SortableDoubleField" sortMissingLast="true" omitNorms="true"/>
+
+
+    <!-- The format for this date field is of the form 1995-12-31T23:59:59Z, and
+         is a more restricted form of the canonical representation of dateTime
+         http://www.w3.org/TR/xmlschema-2/#dateTime    
+         The trailing "Z" designates UTC time and is mandatory.
+         Optional fractional seconds are allowed: 1995-12-31T23:59:59.999Z
+         All other components are mandatory.
+
+         Expressions can also be used to denote calculations that should be
+         performed relative to "NOW" to determine the value, ie...
+
+               NOW/HOUR
+                  ... Round to the start of the current hour
+               NOW-1DAY
+                  ... Exactly 1 day prior to now
+               NOW/DAY+6MONTHS+3DAYS
+                  ... 6 months and 3 days in the future from the start of
+                      the current day
+                      
+         Consult the DateField javadocs for more information.
+      -->
+    <fieldType name="date" class="solr.DateField" sortMissingLast="true" omitNorms="true"/>
+
+
+    <!-- The "RandomSortField" is not used to store or search any
+         data.  You can declare fields of this type it in your schema
+         to generate psuedo-random orderings of your docs for sorting 
+         purposes.  The ordering is generated based on the field name 
+         and the version of the index, As long as the index version
+         remains unchanged, and the same field name is reused,
+         the ordering of the docs will be consistent.  
+         If you want differend psuedo-random orderings of documents,
+         for the same version of the index, use a dynamicField and
+         change the name
+     -->
+    <fieldType name="random" class="solr.RandomSortField" indexed="true" />
+
+    <!-- solr.TextField allows the specification of custom text analyzers
+         specified as a tokenizer and a list of token filters. Different
+         analyzers may be specified for indexing and querying.
+
+         The optional positionIncrementGap puts space between multiple fields of
+         this type on the same document, with the purpose of preventing false phrase
+         matching across fields.
+
+         For more info on customizing your analyzer chain, please see
+         http://wiki.apache.org/solr/AnalyzersTokenizersTokenFilters
+     -->
+
+    <!-- One can also specify an existing Analyzer class that has a
+         default constructor via the class attribute on the analyzer element
+    <fieldType name="text_greek" class="solr.TextField">
+      <analyzer class="org.apache.lucene.analysis.el.GreekAnalyzer"/>
+    </fieldType>
+    -->
+
+    <!-- A text field that only splits on whitespace for exact matching of words -->
+    <fieldType name="text_ws" class="solr.TextField" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+      </analyzer>
+    </fieldType>
+
+    <!-- A text field that uses WordDelimiterFilter to enable splitting and matching of
+        words on case-change, alpha numeric boundaries, and non-alphanumeric chars,
+        so that a query of "wifi" or "wi fi" could match a document containing "Wi-Fi".
+        Synonyms and stopwords are customized by external files, and stemming is enabled.
+        Duplicate tokens at the same position (which may result from Stemmed Synonyms or
+        WordDelim parts) are removed.
+        -->
+    <fieldType name="text" class="solr.TextField" positionIncrementGap="100">
+      <analyzer type="index">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <!-- in this example, we will only use synonyms at query time
+        <filter class="solr.SynonymFilterFactory" synonyms="index_synonyms.txt" ignoreCase="true" expand="false"/>
+        -->
+        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+        <filter class="solr.WordDelimiterFilterFactory" generateWordParts="1" generateNumberParts="1" catenateWords="1" catenateNumbers="1" catenateAll="0" splitOnCaseChange="1"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.EnglishPorterFilterFactory" protected="protwords.txt"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter class="solr.SynonymFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
+        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+        <filter class="solr.WordDelimiterFilterFactory" generateWordParts="1" generateNumberParts="1" catenateWords="0" catenateNumbers="0" catenateAll="0" splitOnCaseChange="1"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.EnglishPorterFilterFactory" protected="protwords.txt"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>
+    </fieldType>
+	<fieldType name="string_keyword_facet" class="solr.TextField"
+        sortMissingLast="true" omitNorms="true">
+        <analyzer>
+            <tokenizer class="solr.KeywordTokenizerFactory"/>           
+            <filter class="solr.LowerCaseFilterFactory" />
+        </analyzer>
+    </fieldType> 
+
+    <!-- Less flexible matching, but less false matches.  Probably not ideal for product names,
+         but may be good for SKUs.  Can insert dashes in the wrong place and still match. -->
+    <fieldType name="textTight" class="solr.TextField" positionIncrementGap="100" >
+      <analyzer>
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter class="solr.SynonymFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="false"/>
+        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+        <filter class="solr.WordDelimiterFilterFactory" generateWordParts="0" generateNumberParts="0" catenateWords="1" catenateNumbers="1" catenateAll="0"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.EnglishPorterFilterFactory" protected="protwords.txt"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>
+    </fieldType>
+
+    <!-- This is an example of using the KeywordTokenizer along
+         With various TokenFilterFactories to produce a sortable field
+         that does not include some properties of the source text
+      -->
+    <fieldType name="alphaOnlySort" class="solr.TextField" sortMissingLast="true" omitNorms="true">
+      <analyzer>
+        <!-- KeywordTokenizer does no actual tokenizing, so the entire
+             input string is preserved as a single token
+          -->
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <!-- The LowerCase TokenFilter does what you expect, which can be
+             when you want your sorting to be case insensitive
+          -->
+        <filter class="solr.LowerCaseFilterFactory" />
+        <!-- The TrimFilter removes any leading or trailing whitespace -->
+        <filter class="solr.TrimFilterFactory" />
+        <!-- The PatternReplaceFilter gives you the flexibility to use
+             Java Regular expression to replace any sequence of characters
+             matching a pattern with an arbitrary replacement string, 
+             which may include back refrences to portions of the orriginal
+             string matched by the pattern.
+             
+             See the Java Regular Expression documentation for more
+             infomation on pattern and replacement string syntax.
+             
+             http://java.sun.com/j2se/1.5.0/docs/api/java/util/regex/package-summary.html
+          -->
+        <filter class="solr.PatternReplaceFilterFactory"
+                pattern="([^a-z])" replacement="" replace="all"
+        />
+      </analyzer>
+    </fieldType>
+	
+	<!-- A Basic sort, used for sorting by text field where we want to preserve the whole content. e.g. Title 
+    -->
+	<fieldType name="BasicSort" class="solr.TextField" sortMissingLast="true" omitNorms="false">
+      <analyzer>
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory" />
+        <filter class="solr.TrimFilterFactory" />
+      </analyzer>
+    </fieldType>
+	
+	
+	<!-- Field type for Autocompletes: See http://searchhub.org/2009/09/08/auto-suggest-from-popular-queries-using-edgengrams/
+		But change the Keyword to Letter: See http://searchhub.org/2009/09/08/auto-suggest-from-popular-queries-using-edgengrams/  
+		See also http://lucene.472066.n3.nabble.com/Autocomplete-terms-middle-of-words-td2878694.html
+	-->
+	<fieldType name="edgytext" class="solr.TextField" positionIncrementGap="100">
+	 <analyzer type="index">
+	   <tokenizer class="solr.KeywordTokenizerFactory"/>
+	   <filter class="solr.LowerCaseFilterFactory"/>
+	   <filter class="solr.NGramFilterFactory" minGramSize="2" maxGramSize="25" />
+	 </analyzer>
+	 <analyzer type="query">
+	   <tokenizer class="solr.KeywordTokenizerFactory"/>
+	   <filter class="solr.LowerCaseFilterFactory"/>
+	 </analyzer>
+	</fieldType>
+
+    <!-- since fields of this type are by default not stored or indexed, any data added to 
+         them will be ignored outright 
+     --> 
+    <fieldtype name="ignored" stored="false" indexed="false" class="solr.StrField" /> 
+
+ </types>
+
+
+ <fields>
+   <!-- Valid attributes for fields:
+     name: mandatory - the name for the field
+     type: mandatory - the name of a previously defined type from the <types> section
+     indexed: true if this field should be indexed (searchable or sortable)
+     stored: true if this field should be retrievable
+     compressed: [false] if this field should be stored using gzip compression
+       (this will only apply if the field type is compressable; among
+       the standard field types, only TextField and StrField are)
+     multiValued: true if this field may contain multiple values per document
+     omitNorms: (expert) set to true to omit the norms associated with
+       this field (this disables length normalization and index-time
+       boosting for the field, and saves some memory).  Only full-text
+       fields or fields that need an index-time boost need norms.
+     termVectors: [false] set to true to store the term vector for a given field.
+       When using MoreLikeThis, fields used for similarity should be stored for 
+       best performance.
+   -->
+
+    <field name="id" type="string" indexed="true" stored="true" required="true" />
+
+    <!-- Search Api specific fields -->
+    <!-- item_id contains the entity ID, e.g. a node's nid. -->
+    <field name="item_id"  type="string" indexed="true" stored="true" />
+    <!-- index_id is the machine name of the search index this entry belongs to. -->
+    <field name="index_id" type="string" indexed="true" stored="true" />
+    <!-- Since sorting by ID is explicitly allowed, store item_id also in a sortable way. -->
+
+    <!-- Apache Solr Search Integration specific fields -->
+    <!-- entity_id is the numeric object ID, e.g. Node ID, File ID -->
+    <field name="entity_id"  type="long" indexed="true" stored="true" />
+    <!-- entity_type is 'node', 'file', 'user', or some other Drupal object type -->
+    <field name="entity_type" type="string" indexed="true" stored="true" />
+    <!-- bundle is a node type, or as appropriate for other entity types -->
+    <field name="bundle" type="string" indexed="true" stored="true"/>
+    <field name="bundle_name" type="string" indexed="true" stored="true"/>
+    <field name="site" type="string" indexed="true" stored="true"/>
+    <field name="hash" type="string" indexed="true" stored="true"/>
+    <field name="url" type="string" indexed="true" stored="true"/>
+    <!-- label is the default field for a human-readable string for this entity (e.g. the title of a node) -->
+    <!--field name="label" type="text" indexed="true" stored="true" termVectors="true" omitNorms="true"/-->
+
+    <!-- content is the default field for full text search - dump crap here -->
+    <field name="content" type="text" indexed="true" stored="true" termVectors="true"/>
+    <field name="teaser" type="text" indexed="false" stored="true"/>
+    <field name="path" type="string" indexed="true" stored="true"/>
+    <field name="path_alias" type="text" indexed="true" stored="true" termVectors="true" omitNorms="true"/>
+
+<dynamicField name="is_*"  type="long"    indexed="true"  stored="true" multiValued="false"/>
+    <dynamicField name="im_*"  type="long"    indexed="true"  stored="true" multiValued="true"/>
+     <dynamicField name="ss_*"  type="string"  indexed="true"  stored="true" multiValued="false"/>
+    <dynamicField name="sm_*"  type="string"  indexed="true"  stored="true" multiValued="true"/>
+
+       <field name="spell" type="text" indexed="true" stored="true" multiValued="true"/>
+
+ 		
+ 		<!--field name="site" type="string" indexed="true" stored="true" required="true" /-->
+ 		<field name="site_facet" type="string" indexed="true" stored="true" required="false" />
+		
+		<field name="title" type="text" indexed="true" stored="true" required="false" />
+		<field name="language_array" type="text" indexed="false" stored="true" required="false" />
+		<field name="metadata_languages" type="string" indexed="true" stored="true" required="false" multiValued="true" />
+
+		<field name="title_sort" type="BasicSort" indexed="true" stored="true" required="false" />
+		<field name="title_autocomplete" type="edgytext" indexed="true" stored="true" required="false" multiValued="true" />
+		
+		<field name="name" type="text" indexed="true" stored="true" required="false" />
+		<field name="author" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="author_array" type="text" indexed="false" stored="true" required="false" />
+		<field name="publication_year" type="integer" indexed="true" stored="true" />
+		<field name="publication_year_facet" type="integer" indexed="true" stored="true" />
+		<field name="publication_date" type="date" indexed="true" stored="true" />
+		<field name="asset_publication_date" type="date" indexed="true" stored="true" />
+		<field name="publisher" type="text" indexed="true" stored="true" />
+		<field name="corporate_author" type="text" indexed="true" stored="true" />
+		<field name="publisher_facet" type="string" indexed="true" stored="true" />
+		
+		<field name="headline" type="text" indexed="true" stored="true" />
+		<field name="description" type="text" indexed="true" stored="true" />
+		<field name="keyword" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="keyword_facet" type="string_keyword_facet" indexed="true" stored="true" multiValued="true" />
+
+		<field name="document_medium" type="text" indexed="true" stored="true" />
+				
+		<field name="country_focus_array" type="text" indexed="false" stored="true" />
+		<field name="country_focus_ids" type="string" indexed="true" stored="true" multiValued="true" />
+		<field name="country_focus_objects" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="country_focus" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="country_focus_facet" type="string_keyword_facet" indexed="true" stored="true" multiValued="true" />
+		<field name="country_focus_objects_facet" type="string" indexed="true" stored="true" multiValued="true" />
+
+		<field name="category_region_array" type="text" indexed="true" stored="true" />
+		<field name="category_region_ids" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="category_region_objects" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="category_region_path" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="category_region_facet" type="string_keyword_facet" indexed="true" stored="true" multiValued="true" />
+		<field name="category_region_objects_facet" type="string" indexed="true" stored="true" multiValued="true" />
+
+		<field name="category_sector_array" type="text" indexed="false" stored="true" />
+		<field name="category_sector_ids" type="string" indexed="true" stored="true" multiValued="true" />
+		<field name="category_sector_objects" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="category_sector_path" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="category_sector_facet" type="string_keyword_facet" indexed="true" stored="true" multiValued="true" />
+		<field name="category_sector_objects_facet" type="string" indexed="true" stored="true" multiValued="true" />
+		<field name="category_sector" type="text" indexed="true" stored="true" multiValued="true" />
+	
+
+		<field name="category_subject_array" type="text" indexed="false" stored="true" />
+		<field name="category_subject_ids" type="string" indexed="true" stored="true" multiValued="true" />
+		<field name="category_subject_objects" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="category_subject_path" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="category_subject_facet" type="string_keyword_facet" indexed="true" stored="true" multiValued="true" />
+		<field name="category_subject_objects_facet" type="string" indexed="true" stored="true" multiValued="true" />
+		<field name="category_subject" type="text" indexed="true" stored="true" multiValued="true" />		
+		
+		<field name="category_collection_array" type="text" indexed="false" stored="true" />
+		<field name="category_collection_ids" type="string" indexed="true" stored="true" multiValued="true" />
+		<field name="category_collection_objects" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="category_collection_path" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="category_collection_facet" type="string_keyword_facet" indexed="true" stored="true" multiValued="true" />
+		<field name="category_collection_objects_facet" type="string" indexed="true" stored="true" multiValued="true" />
+		<field name="category_collection" type="text" indexed="true" stored="true" multiValued="true" />	
+
+		<field name="category_theme_array" type="text" indexed="false" stored="true" />
+		<field name="category_theme_ids" type="string" indexed="true" stored="true" multiValued="true" />
+		<field name="category_theme_objects" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="category_theme_path" type="text" indexed="true" stored="true" multiValued="true" />
+		<field name="category_theme_facet" type="string_keyword_facet" indexed="true" stored="true" multiValued="true" />
+		<field name="category_theme_objects_facet" type="string" indexed="true" stored="true" multiValued="true" />
+
+		<field name="publisher_array" type="string" indexed="false" stored="true" />
+		<field name="publisher_id" type="string" indexed="true" stored="true" multiValued="true" />
+		
+		<field name="legacy_id" type="string" indexed="true" stored="true" />
+		<field name="object_type" type="string" indexed="true" stored="true" />
+		<field name="object_id" type="string" indexed="true" stored="true" required="true" />
+		<field name="asset_id" type="integer" indexed="true" stored="true" required="false" />
+		<field name="category_id" type="integer" indexed="true" stored="true" required="false" />
+		<field name="send_email_alerts" type="string" indexed="true" stored="true" />
+		<field name="notification_email" type="string" indexed="true" stored="true" />
+		<field name="copyright_clearance" type="string" indexed="true" stored="true" />
+		<field name="redistribute_clearance" type="string" indexed="true" stored="true" />
+		<field name="licence_type" type="string" indexed="true" stored="true" />
+		<field name="et_al" type="string" indexed="true" stored="true" />
+		<field name="permission_to_host_info" type="text" indexed="true" stored="true" />
+		<field name="related information_links" type="string" indexed="true" stored="true" multiValued="true" />
+
+		<field name="language_name" type="string" indexed="true" stored="true" />
+		<field name="language_id" type="string" indexed="true" stored="true" multiValued="true" />
+		<field name="urls" type="string" indexed="true" stored="true" multiValued="true" />
+		<field name="urls_array" type="text" indexed="false" stored="true" required="false" />
+		<field name="website_url" type="string" indexed="true" stored="true" />
+		<field name="publisher_country" type="string" indexed="true" stored="true" />
+		<field name="publisher_country_facet" type="string" indexed="true" stored="true" />
+		
+		<field name="date_updated" type="date" indexed="true" stored="true" />
+		<field name="date_created" type="date" indexed="true" stored="true" />
+
+	
+		<!-- Item specific fields -->
+		<field name="item_type" type="string" indexed="true" stored="true" />
+		<field name="item_type_id" type="string" indexed="true" stored="true" />
+		<field name="start_date" type="date" indexed="true" stored="true" />
+		<field name="end_date" type="date" indexed="true" stored="true" />
+		<field name="expiry_date" type="date" indexed="true" stored="true" />
+		<field name="contact_name" type="string" indexed="true" stored="true" />
+		<field name="contact_position" type="string" indexed="true" stored="true" />
+		<field name="contact_organisation" type="string" indexed="true" stored="true" />
+		<field name="telephone" type="string" indexed="true" stored="true" />
+		<field name="contact_email" type="string" indexed="true" stored="true" />
+
+		<!-- Country specific fields -->
+		<field name="country_name" type="text" indexed="true" stored="true" />
+		<field name="country_name_facet" type="string" indexed="true" stored="true" />
+		<field name="iso_two_letter_code" type="string" indexed="true" stored="true" />
+		<field name="iso_three_letter_code" type="string" indexed="true" stored="true" />
+		<field name="iso_number" type="string" indexed="true" stored="true" />
+		<field name="alternative_name" type="text" indexed="true" stored="true" />
+		
+		
+		<!-- Category specific fields -->
+		<field name="category_path" type="text" indexed="true" stored="true" />
+		<field name="category_path_sort" type="BasicSort" indexed="true" stored="true" required="false" />		
+		<field name="category_path_facet" type="string" indexed="true" stored="true" />
+		<field name="level" type="string" indexed="true" stored="true" />
+		<field name="cat_level" type="string" indexed="true" stored="true" />
+		<field name="cat_superparent" type="string" indexed="true" stored="true" />
+		<field name="cat_first_parent" type="string" indexed="true" stored="true" />
+		<field name="cat_parent" type="string" indexed="true" stored="true" />		
+		<field name="deleted" type="string" indexed="true" stored="true" />	
+		<field name="archived" type="string" indexed="true" stored="true" />		
+
+		<field name="category_path_autocomplete" type="edgytext" indexed="true" stored="true" omitNorms="true" omitTermFreqAndPositions="true" />
+		<field name="category_theme_path_autocomplete" type="edgytext" indexed="true" stored="true" omitNorms="true" omitTermFreqAndPositions="true" />
+				
+		<field name="superparent_object_id" type="string" indexed="true" stored="true" />
+		<field name="toplevel_object_id" type="string" indexed="true" stored="true" />
+		<field name="parent_object_id" type="string" indexed="true" stored="true" />
+		<field name="children_object_array" type="string" indexed="false" stored="true" />		
+		<field name="parent_object_array" type="string" indexed="false" stored="true" />
+
+   <!-- Some sample docs exists solely to demonstrate the spellchecker
+        functionality, this is the only field they container.
+        Typically you might build the spellchecker of "catchall" type field
+        containing all of the text in each document
+     -->
+   <field name="word" type="string" indexed="true" stored="true"/>
+
+   
+   <!-- catchall field, containing all other searchable text fields (implemented
+        via copyField further on in this schema  -->
+   <field name="text" type="text" indexed="true" stored="false" multiValued="true"/>
+
+   <!-- Here, default is used to create a "timestamp" field indicating
+        When each document was indexed.
+     -->
+   <field name="timestamp" type="date" indexed="true" stored="true" default="NOW" multiValued="false"/>
+   
+
+   <!-- Dynamic field definitions.  If a field name is not found, dynamicFields
+        will be used if the name matches any of the patterns.
+        RESTRICTION: the glob-like pattern in the name attribute must have
+        a "*" only at the start or the end.
+        EXAMPLE:  name="*_i" will match any field ending in _i (like myid_i, z_i)
+        Longer patterns will be matched first.  if equal size patterns
+        both match, the first appearing in the schema will be used.  -->
+   <dynamicField name="*_i"  type="sint"    indexed="true"  stored="true"/>
+   <dynamicField name="*_s"  type="string"  indexed="true"  stored="true"/>
+   <dynamicField name="*_l"  type="slong"   indexed="true"  stored="true"/>
+   <dynamicField name="*_t"  type="text"    indexed="true"  stored="true"/>
+   <dynamicField name="*_b"  type="boolean" indexed="true"  stored="true"/>
+   <dynamicField name="*_f"  type="sfloat"  indexed="true"  stored="true"/>
+   <dynamicField name="*_d"  type="sdouble" indexed="true"  stored="true"/>
+   <dynamicField name="*_dt" type="date"    indexed="true"  stored="true"/>
+
+   <dynamicField name="random*" type="random" />
+
+   <!-- uncomment the following to ignore any fields that don't already match an existing 
+        field name or dynamic field, rather than reporting them as an error. 
+        alternately, change the type="ignored" to some other type e.g. "text" if you want 
+        unknown fields indexed and/or stored by default --> 
+   <!--dynamicField name="*" type="ignored" multiValued="true" /-->
+   
+ </fields>
+
+ <!-- Field to use to determine and enforce document uniqueness. 
+      Unless this field is marked with required="false", it will be a required field
+   -->
+ <uniqueKey>object_id</uniqueKey>
+
+ <!-- field for the QueryParser to use when an explicit fieldname is absent -->
+ <defaultSearchField>text</defaultSearchField>
+
+ <!-- SolrQueryParser configuration: defaultOperator="AND|OR" -->
+ <solrQueryParser defaultOperator="OR"/>
+
+
+  <!-- copyField commands copy one field to another at the time a document
+        is added to the index.  It's used either to index the same field differently,
+        or to add multiple fields to the same field for easier/faster searching.  -->
+
+		<copyField source="asset_id" dest="text" />
+		<copyField source="object_id" dest="text" />
+		
+		<copyField source="title" dest="text" />
+		<copyField source="language_array" dest="text" />
+		<copyField source="name" dest="text" />
+		
+		<copyField source="title" dest="name" />
+		<copyField source="title" dest="title_sort" />
+		
+		<copyField source="title" dest="title_autocomplete" />
+		<copyField source="alternative_name" dest="title_autocomplete" />
+
+		<copyField source="author" dest="text" />
+		<copyField source="author_array" dest="text" />
+		<copyField source="publisher" dest="text" />
+		<copyField source="publisher" dest="publisher_facet" />
+		<copyField source="publisher_country" dest="publisher_country_facet" />
+		<copyField source="publication_year" dest="publication_year_facet" />
+		
+		<copyField source="headline" dest="text" />
+		<copyField source="description" dest="text" />
+		<copyField source="keyword" dest="text" />
+		<copyField source="site" dest="text" />
+		
+		<copyField source="country_focus" dest="text" />
+		<copyField source="country_focus_objects" dest="text" />
+
+		<copyField source="category_region_objects" dest="text" />
+		<copyField source="category_subject_objects" dest="text" />
+		<copyField source="category_collection_objects" dest="text" />
+		<copyField source="category_theme_objects" dest="text" />
+		
+		<copyField source="item_type" dest="text" />
+		<copyField source="start_date" dest="text" />
+		<copyField source="end_date" dest="text" />
+		
+		<copyField source="category_theme_objects" dest="category_theme_objects_facet" />
+		<!--<copyField source="category_theme_objects" dest="category_theme_facet" />-->
+		<copyField source="category_theme_ids" dest="category_theme_facet" />
+		<copyField source="category_theme_path" dest="category_theme_facet" />
+
+		<copyField source="category_subject_objects" dest="category_subject_objects_facet" />
+		<copyField source="category_subject_ids" dest="category_subject_facet" />
+		<copyField source="category_subject_path" dest="category_subject_facet" />
+
+		<copyField source="category_subject_objects" dest="category_subject_objects_facet" />
+		<copyField source="category_subject_ids" dest="category_subject_facet" />
+		<copyField source="category_subject_path" dest="category_subject_facet" />
+
+		<copyField source="category_region_objects" dest="category_region_objects_facet" />
+		<copyField source="category_region_objects" dest="category_region_facet" />
+		<copyField source="category_region_ids" dest="category_region_facet" />
+		<copyField source="category_region_path" dest="category_region_facet" />
+
+		<copyField source="category_sector" dest="category_sector_facet" />
+
+		<copyField source="country_focus_objects" dest="country_focus_objects_facet" />
+		<copyField source="country_focus" dest="country_focus_facet" />
+		<!--<copyField source="country_focus_objects" dest="country_focus_facet" />-->
+		<copyField source="country_focus_ids" dest="country_focus_facet" />
+		
+		<copyField source="keyword" dest="keyword_facet" />
+		<copyField source="site" dest="site_facet" />
+		<copyField source="country_name" dest="country_name_facet" />
+		
+		<copyfield source="name" dest="category_path_autocomplete" />
+		<copyField source="category_path" dest="category_path_autocomplete" />
+
+		<copyField source="category_path" dest="category_path_facet" />
+		<copyField source="category_path" dest="category_path_sort" />
+		<copyField source="level" dest="cat_level" />
+
+
+
+ <!-- Similarity is the scoring routine for each document vs. a query.
+      A custom similarity may be specified here, but the default is fine
+      for most applications.  -->
+ <!-- <similarity class="org.apache.lucene.search.DefaultSimilarity"/> -->
+
+</schema>
