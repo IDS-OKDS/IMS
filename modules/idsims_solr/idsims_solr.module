@@ -402,11 +402,47 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					foreach($node->field_document_urls[$field_language] as $document_url_item){
 						$document_url_entity_id_arr[] = $document_url_item['target_id'];
 					}
+					$document_url_objects = array();
 					if(count($document_url_entity_id_arr)){
 						$ids_document_url_entities = entity_load('ids_document_url', $document_url_entity_id_arr);
 						foreach($ids_document_url_entities as $entity_id => $ids_document_url_entity){
-							$document->addField('urls', $ids_document_url_entity->field_document_url[LANGUAGE_NONE][0]['value']);
+							/* URL is either an uploaded file (Drupal file path) or a remote URL (text) */
+							if(isset($ids_document_url_entity->field_upload_document[LANGUAGE_NONE][0]['uri'])){
+								$uri = $ids_document_url_entity->field_upload_document[LANGUAGE_NONE][0]['uri'];
+								$full_uri = file_create_url($uri);
+								$the_url = $full_uri;
+							} else {
+								$the_url = $ids_document_url_entity->field_document_url[LANGUAGE_NONE][0]['value'];
+							}
+							$document->addField('urls', $the_url);
+							/* document url array */
+							$document_url_object = array();
+							$document_url_object['url'] = $the_url;
+							if(isset($ids_document_url_entity->field_cover_image[LANGUAGE_NONE][0]['uri'])){
+								$uri = $ids_document_url_entity->field_cover_image[LANGUAGE_NONE][0]['uri'];
+								$full_uri = file_create_url($uri);
+								$document_url_object['cover_image_url'] = $full_uri;
+							}
+							if(isset($ids_document_url_entity->field_language_ref[LANGUAGE_NONE][0]['tid'])){
+								$term = taxonomy_term_load($ids_document_url_entity->field_language_ref[LANGUAGE_NONE][0]['tid']);
+								$document_url_object['language_name']  = $term->name;
+								$document_url_object['language']  = $term->field_iso_two_code[LANGUAGE_NONE][0]['value'];
+							}
+							if(isset($ids_document_url_entity->field_mime_type[LANGUAGE_NONE][0]['tid'])){
+								$term = taxonomy_term_load($ids_document_url_entity->field_mime_type[LANGUAGE_NONE][0]['tid']);
+								$document_url_object['mime_type']  = $term->name;
+							}	
+							if(isset($ids_document_url_entity->field_format[LANGUAGE_NONE][0]['tid'])){
+								$term = taxonomy_term_load($ids_document_url_entity->field_format[LANGUAGE_NONE][0]['tid']);
+								$document_url_object['format']  = $term->name;
+							}
+							$document_url_objects[] = $document_url_object;
 						}
+					}
+					/* ULRs Array -- (NEW) */
+					if(count($document_url_objects)){
+						$xmlString = _idsims_solr_build_list_object_array_field('url', $document_url_objects);
+						$document->setField('urls_array', $xmlString);
 					}
 				}
 			}
