@@ -38,6 +38,10 @@ define('IDSIMS_COLLECTION_UPDATES_2014_SID', 1998);
 define('IDSIMS_FUNDER_PARENT_SID', 1842);
 define('IDSIMS_CONTENT_PARTNER_PARENT_SID', 1957);
 
+define('IDSIMS_IDS_ELDIS_SUBJECTS_VOC_ID', 15);
+define('IDSIMS_IDS_BRIDGE_SUBJECTS_VOC_ID', 16);
+define('IDSIMS_IDS_COLLECTIONS_VOC_ID', 24);
+
 
 define('IDSIMS_ORYX_EXTRAS_XML_URL', 'http://romeo.eldis.org/ORYX-extras/');
 
@@ -85,6 +89,13 @@ function idsims_import_menu() {
     'access arguments' => array('administer site configuration'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('idsims_import_import_post_process_form'),
+	);
+	$items['admin/config/ids-ims/post-process-taxonomy'] = array(
+    'title' => 'Documents: Post proccessing on taxonomy reference fields.',
+    'description' => 'Updating taxonomy reference fields where Terms have been moved to another vocabulary (IDS Collections) in Taxonomy Manager',
+    'access arguments' => array('administer site configuration'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('idsims_import_import_post_process_taxonomy_reference_form'),
 	);
 	$items['admin/config/ids-ims/post-process-orgs'] = array(
     'title' => 'Organisations: Post proccessing on imported Oryx data',
@@ -278,6 +289,33 @@ function idsims_import_import_post_process_form() {
     return $form;
 }
 
+/**
+ * Build a form for Taxonomy Reference update
+ */
+function idsims_import_import_post_process_taxonomy_reference_form() {
+	$form['#attributes'] = array(
+    'enctype' => 'multipart/form-data'
+    );
+    $form['intro_text'] = array(
+    '#markup' => '<h2>Updating taxonomy reference fields</h2>'
+    . '<p>Process tasks:</p>'
+    . '<ul>'
+    . '<li>Updating taxonomy reference fields where they have been moved using Taxonomy Manager</li>'
+    . '</ul>',
+    );
+    $form['import_limit'] = array(
+    '#title' => t('Import limit'),
+    '#type'  => 'textfield',
+    '#size' => 10,
+    '#description' => t('The number of items to import. If left blank then all'), 
+    '#default_value' => 5,   
+    );
+    $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Commence Taxonomy Reference update'),
+    );
+    return $form;
+}
 
 /**
  * Build a form for Import post process (Organisations)
@@ -378,8 +416,13 @@ function _idsims_import_set_batch_jobs($batch_name, $batch_id, &$form, &$form_st
 
 	$query = new EntityFieldQuery();
 
+	if(is_array($asset_type_id)){
+		$asset_type_operator = 'IN';
+	} else {
+		$asset_type_operator = '=';
+	}
 	$query->entityCondition('entity_type', 'node')
-	->entityCondition('bundle', $asset_type_id)
+	->entityCondition('bundle', $asset_type_id, $asset_type_operator)
 	->propertyCondition('status', NODE_PUBLISHED)
 	->addMetaData('account', user_load(1)); // Run the query as user 1.
 
@@ -413,6 +456,10 @@ function idsims_import_import_extras_orgs_form_submit(&$form, &$form_state) {
 
 function idsims_import_import_post_process_form_submit(&$form, &$form_state) {
 	_idsims_import_set_batch_jobs('Import data post process', 'import_post_process', $form, $form_state);
+}
+
+function idsims_import_import_post_process_taxonomy_reference_form_submit(&$form, &$form_state) {
+	_idsims_import_set_batch_jobs('Import data post process', 'import_post_process_taxonomy_reference', $form, $form_state, array('ids_document', 'ids_organisation'));
 }
 
 function idsims_import_import_post_process_orgs_form_submit(&$form, &$form_state) {
@@ -1284,6 +1331,16 @@ function _idsims_import_process_import_post_process($nid, &$context) {
 }
 
 /**
+ * Process the gterm reference fields of terms that have been moved to another vobaulary in Taxonomy Manager
+ */
+function _idsims_import_process_import_post_process_taxonomy_reference($nid, &$context) {
+	$node = node_load($nid);
+	$assetid = $node->field_object_id[LANGUAGE_NONE][0]['value'];
+	_idsims_import_process_import_post_process_update_node_taxonomy_reference($node, $context);
+	$context['message'] = t('Updating node %title : Asset ID = %assetid', array('%title' => $node->title, '%assetid' => $assetid));
+}
+
+/**
  * Process an asset for amalgamation of organisations
  */
 function _idsims_import_process_import_amalgamate_orgs($nid, &$context) {
@@ -1358,8 +1415,55 @@ function _idsims_import_process_import_amalgamate_orgs($nid, &$context) {
 /*
  * When taxonomy terms are moved using Taxonomy Manager to another Vocab we need to update the term reference fields (this is for IDS Collections)
  */
-function _idsims_import_process_import_post_process_update_node_taxonomy_references(&$node, &$node_updated) {
-	//drupal_set_message(print_r($node, true));
+function _idsims_import_process_import_post_process_update_node_taxonomy_reference(&$node, &$context) {
+	/* Note just dealing with Subjects -> Collections, if you want to do other Vocabs have to add those */
+	
+	$node_updated = FALSE;
+	
+	$collection_terms = array();
+	
+	if(isset($node->field_eldis_subjects[LANGUAGE_NONE])){
+		$new_order_refs = array();
+		foreach($node->field_eldis_subjects[LANGUAGE_NONE] as $term_ref_id_obj) {
+			$term_ref_tid = $term_ref_id_obj['tid'];
+			$term_ref_term = taxonomy_term_load($term_ref_tid);
+			$vid = $term_ref_term->vid;
+			if($vid == IDSIMS_IDS_COLLECTIONS_VOC_ID){
+				$collection_terms[] = $term_ref_tid;
+			} else {
+				$new_order_refs[] = $term_ref_id_obj;
+			}
+		}
+		$node->field_eldis_subjects[LANGUAGE_NONE] = $new_order_refs;
+	}	
+	
+	if(isset($node->field_bridge_subjects[LANGUAGE_NONE])){
+		$new_order_refs = array();
+		foreach($node->field_bridge_subjects[LANGUAGE_NONE] as $term_ref_id_obj) {
+			$term_ref_tid = $term_ref_id_obj['tid'];
+			$term_ref_term = taxonomy_term_load($term_ref_tid);
+			$vid = $term_ref_term->vid;
+			if($vid == IDSIMS_IDS_COLLECTIONS_VOC_ID){
+				$collection_terms[] = $term_ref_tid;
+			} else {
+				$new_order_refs[] = $term_ref_id_obj;
+			}
+		}
+		$node->field_bridge_subjects[LANGUAGE_NONE] = $new_order_refs;
+	}
+	
+	if(count($collection_terms)){
+		foreach($collection_terms as $collection_term) {
+			$node->field_collections[LANGUAGE_NONE][] = array('tid' => $collection_term);
+		}
+		$node_updated = TRUE;
+	}
+	
+	if($node_updated){
+		drupal_set_message('Taxonomy reference moved to IDS Collections in node: ' . $node->title);
+		node_save($node);
+		_idsims_set_created_updated_date($node);
+	}
 }
 
 
@@ -1450,8 +1554,6 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 		}
 	}
 	
-	_idsims_import_process_import_post_process_update_node_taxonomy_references($node, $node_updated);
-
 	if($node_updated){
 		node_save($node);
 		_idsims_set_created_updated_date($node);
@@ -1526,6 +1628,16 @@ function idsims_import_import_extras_finished($success, $results, $operations) {
 function idsims_import_import_post_process_finished($success, $results, $operations) {
 	variable_set('idsims_import_batch_process_running', 0);
 	$message = t('The import post process has completed.');
+	drupal_set_message($message);
+	return $message;
+}
+
+/**
+ * Handle batch completion.
+ */
+function idsims_import_import_post_process_taxonomy_reference_finished($success, $results, $operations) {
+	variable_set('idsims_import_batch_process_running', 0);
+	$message = t('The taxonomy reference update has completed.');
 	drupal_set_message($message);
 	return $message;
 }
