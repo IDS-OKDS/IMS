@@ -325,8 +325,6 @@
 
        <field name="spell" type="text" indexed="true" stored="true" multiValued="true"/>
 
- 		
- 		<!--field name="site" type="string" indexed="true" stored="true" required="true" /-->
  		<field name="site_facet" type="string" indexed="true" stored="true" required="false" />
 		
 		<field name="title" type="text" indexed="true" stored="true" required="false" />
@@ -425,10 +423,16 @@
 		<field name="publisher_country" type="string" indexed="true" stored="true" />
 		<field name="publisher_country_facet" type="string" indexed="true" stored="true" />
 		
-		<field name="logo_url" type="string" indexed="false" stored="true" />
-		
 		<field name="date_updated" type="date" indexed="true" stored="true" />
 		<field name="date_created" type="date" indexed="true" stored="true" />
+		
+		<!-- Organisation specific fields -->
+		
+		<field name="logo_url" type="string" indexed="false" stored="true" />
+		<field name="acronym" type="string" indexed="true" stored="true" />
+		<field name="alternative_acronym" type="string" indexed="true" stored="true" />
+		<field name="organisation_type" type="string" indexed="true" stored="true" />
+		<field name="organisation_url" type="string" indexed="true" stored="true" />
 
 	
 		<!-- Item specific fields -->
