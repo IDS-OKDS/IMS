@@ -1,0 +1,106 @@
+<?php
+/**
+ * @file
+ * Code for the IDS IMS My Basket module
+ */
+
+define('MY_BASKET_FLAG_ID', 1);
+
+/*
+* Implements hook_menu().
+*/
+function idsims_mybasket_menu() {
+  // Remove all flagged content for user (per flag)
+  $items['empty-my-basket/%'] = array(
+    'title' => 'Unflag this content completely',
+    'page arguments' => array(1),
+    'page callback' => '_idsims_mybasket_empty_my_basket',
+    'access callback' => 'user_access',
+    'access arguments' => array('idsims empty my basket'),
+    'description' => '',
+    'type' => MENU_CALLBACK,
+  );
+  $items['my-basket/%'] = array(
+    'title' => 'My Basket',
+    'page arguments' => array(1),
+    'page callback' => '_idsims_mybasket_view_my_basket',
+    'access callback' => 'user_access',
+    'access arguments' => array('idsims view my basket'),
+    'description' => '',
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/*
+* Implements hook_permission().
+*/
+function idsims_mybasket_permission() {
+  return array(
+    'idsims empty my basket' => array(
+      'title' => t('Empty my basket'),
+      'description' => t('Empty my basket'),
+    ),
+    'idsims view my basket' => array(
+      'title' => t('View my basket'),
+      'description' => t('View my basket of selected content'),
+    ),
+  );
+}
+
+
+/*
+* Menu callback for completely unflagging a piece of content for all users for a given flag
+* in this case hard coded to the my_basket flag
+*/
+function _idsims_mybasket_empty_my_basket($uid = NULL){
+	global $user;
+	if(!$uid){
+		$uid = $user->uid;
+	}
+	if($uid){
+		/* only allow the user to delete their own flags */
+		if($user->uid == $uid){
+		    db_delete('flagging')
+		      ->condition('uid', $uid)
+		      ->condition('fid', MY_BASKET_FLAG_ID)
+		      ->execute();
+		    drupal_set_message('Your basket is empty');
+	  		$destination = '<front>';
+	  		drupal_goto($destination);		
+		}
+	}
+	return "<p>You don't have permission for this action</p>";
+}
+
+
+/*
+* Menu callback to view basket contents
+* Items flagged by user
+*/
+function _idsims_mybasket_view_my_basket($uid = NULL){
+	global $user;
+	if($user->uid){
+		$uid = $user->uid;
+		/* only allow the user to delete their own flags */
+		if($user->uid == $uid){
+    	$result = db_select('flagging', 'fc')
+	      ->fields('fc', array('entity_id'))
+	      ->condition('fid', MY_BASKET_FLAG_ID)
+	      ->condition('uid', $uid)
+	      ->execute();	
+		}
+		$output = '';
+	    while($record = $result->fetchAssoc()) {
+			$node = node_load($record['entity_id']);
+			$output .= '<div class"my-basket-item">' . l($node->title, 'node/'.$node->nid) . '</div>';
+    	}
+    	if(!$output){
+    		$output = '<p>Your basket is empty!</p>';
+    	}
+		return $output;
+	}
+	return "<p>You don't have permission for this action</p>";
+}
+
+

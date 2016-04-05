@@ -1,0 +1,12 @@
+name = IDS IMS My Basket
+description = Allowing the user to have a "basket" of items that they can perform actions on
+core = 7.x
+package = IDS
+dependencies[] = flag
+dependencies[] = idsims_main
+
+version = "7.x-1.0"
+core = "7.x"
+project = "idsims_mybasket"
+
+
