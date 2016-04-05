@@ -233,7 +233,22 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					$keyword_term = taxonomy_term_load($keyword_item['tid']);
 					$document->addField('keyword', $keyword_term->name);
 				}
-
+				
+				/* Website URL */
+				$website_url = '';
+				if($site_machine_name == 'bridge'){
+					$website_url = 'http://www.bridge.ids.ac.uk/go/display&amp;type=' . $object_type . '&amp;id=' . $assetid;
+				}
+				if($site_machine_name == 'eldis'){
+					$website_url = 'http://www.eldis.org/go/display&type=' . $object_type . '&id=' . $assetid;
+				}
+				if($website_url){
+					$document->setField('website_url', $website_url);
+				}
+				
+				/*
+				 * DOCUMENT NODES
+				 */
 				if($node->type == 'ids_document'){
 
 					$author_collection_ids = array();
@@ -331,18 +346,6 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 						$document->setField('language_name', $language_terms[$node->language]->name);
 					} else {
 						drupal_set_message('Language not set for node(' . $node->nid . ') asset ID:' . $assetid);
-					}
-
-					/* Website URL */
-					$website_url = '';
-					if($site_machine_name == 'bridge'){
-						$website_url = 'http://www.bridge.ids.ac.uk/go/display&amp;type=' . $object_type . '&amp;id=' . $assetid;
-					}
-					if($site_machine_name == 'eldis'){
-						$website_url = 'http://www.eldis.org/go/display&type=' . $object_type . '&id=' . $assetid;
-					}
-					if($website_url){
-						$document->setField('website_url', $website_url);
 					}
 
 					/* Licence Type */
@@ -444,6 +447,77 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 						$xmlString = _idsims_solr_build_list_object_array_field('url', $document_url_objects);
 						$document->setField('urls_array', $xmlString);
 					}
+				}
+				/*
+				 * ORGANISTION NODES
+				 */
+				if($node->type == 'ids_organisation'){
+					
+					/* Alternative name */
+					if(isset($node->field_alternative_name[$field_language][0]['value'])){
+						$document->setField('alternative_name', $node->field_alternative_name[$field_language][0]['value']);
+					}
+
+					/* Acronym */
+					if(isset($node->field_acronym[$field_language][0]['value'])){
+						$document->setField('acronym', $node->field_acronym[$field_language][0]['value']);
+					}
+					
+					/* Alternative acronym */
+					if(isset($node->field_alternative_acronym[$field_language][0]['value'])){
+						$document->setField('alternative_acronym', $node->field_alternative_acronym[$field_language][0]['value']);
+					}
+					
+					/* Organisation type */
+					if(isset($node->field_organisation_type[$field_language][0]['value'])){
+						$document->setField('organisation_type', $node->field_organisation_type[$field_language][0]['value']);
+					}
+					
+					/* Organisation URL */
+					if(isset($node->field_organisation_url[$field_language][0]['value'])){
+						$document->setField('organisation_url', $node->field_organisation_url[$field_language][0]['value']);
+					}
+					
+					/* Location country */
+					if(isset($node->field_location_country[$field_language][0]['tid'])){
+						$country_term = taxonomy_term_load($node->field_location_country[$field_language][0]['tid']);
+						$document->setField('location_country', $country_term->name);
+					}	
+
+					/* Licence type */
+					if(isset($node->field_licence_type_term[$field_language][0]['tid'])){
+						$term = taxonomy_term_load($node->field_licence_type_term[$field_language][0]['tid']);
+						$document->setField('licence_type', $term->name);
+					}	
+									
+					/* Has hosting copyright clearance */
+					if(isset($node->field_has_hosting_copyright[$field_language][0]['value'])){
+						$document->setField('copyright_clearance', $node->field_has_hosting_copyright[$field_language][0]['value']);
+					}
+					
+					/* Has redistribute copyright clearance */
+					if(isset($node->field_has_redistribute_copyright[$field_language][0]['value'])){
+						$document->setField('redistribute_clearance', $node->field_has_redistribute_copyright[$field_language][0]['value']);
+					}
+					
+					/* Permission to host information */
+					if(isset($node->field_permission_to_host_info[$field_language][0]['value'])){
+						$document->setField('permission_to_host_info', $node->field_permission_to_host_info[$field_language][0]['value']);
+					}
+										
+					/* Logo is either an uploaded file (Drupal file path) or a remote URL (text) (NEW)*/
+					$the_url = '';
+					if(isset($node->field_logo_image[LANGUAGE_NONE][0]['uri'])){
+						$uri = $node->field_logo_image[LANGUAGE_NONE][0]['uri'];
+						$full_uri = file_create_url($uri);
+						$the_url = $full_uri;
+					} else {
+						$the_url = $node->field_logo_url[LANGUAGE_NONE][0]['value'];
+					}
+					if($the_url){
+						$document->setField('logo_url', $the_url);
+					}
+							
 				}
 			}
 		}

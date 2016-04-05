@@ -425,6 +425,8 @@
 		<field name="publisher_country" type="string" indexed="true" stored="true" />
 		<field name="publisher_country_facet" type="string" indexed="true" stored="true" />
 		
+		<field name="logo_url" type="string" indexed="false" stored="true" />
+		
 		<field name="date_updated" type="date" indexed="true" stored="true" />
 		<field name="date_created" type="date" indexed="true" stored="true" />
 

@@ -1605,7 +1605,7 @@ function idsims_import_import_term_extras_finished($success, $results, $operatio
 /**
  * Handle batch completion.
  */
-function idsims_import_import_extras_api_orgs_finished($success, $results, $operations) {
+function idsims_import_import_extras_api_finished($success, $results, $operations) {
 	variable_set('idsims_import_batch_process_running', 0);
 	$message = t('The organisation import extras from API has completed.');
 	drupal_set_message($message);
