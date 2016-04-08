@@ -349,3 +349,88 @@ fieldset.date-combo .container-inline-date .date-padding {
 	border-bottom:none;
 	margin-bottom:0;
 }
+
+.flag-wrapper {
+	float:left;
+	display: inline-block;
+    padding: 0;
+    padding-left: 0.35em;
+    line-height: 0;
+    margin-top: -0.2em;
+}
+
+.flag-wrapper a.flag {
+	display:inline-block;
+	height:15px; 
+	width:15px;
+	font-size:0;
+	line-height:0;
+	text-indent:-5000px; 
+}
+
+.flag-wrapper a.flag-action {
+	background:url('../images/add-icon.png') no-repeat top left; 	
+}
+.flag-wrapper a.unflag-action {
+	background:url('../images/minus-icon.png') no-repeat top left; 	
+}
+
+.my-basket-actions,
+.my-basket-item {
+	clear:both;
+}
+
+.my-basket-item .item-link {
+	float:left;
+	display:inline-block;
+}
+
+.my-basket-actions {
+	margin-top:4em;
+}
+
+.my-basket-actions a {
+    cursor: pointer;
+    border-radius: 0;
+    border: none;
+    padding: 6px 10px;
+    margin-bottom: 1em;
+    margin-right: 1em;
+    color: #fff;
+    text-align: center;
+    font-weight: normal;
+    font-size: 1.077em;
+    font-family: "Lucida Grande",Verdana,sans-serif;
+    background: #4d8f46;
+    transition: all, 0.3s;	
+}
+
+.my-basket-actions a:hover {
+  background: #0a6700;
+  border-radius: 0;
+  border: none;
+  color: #fff;
+  text-decoration:none;
+}
+
+#block-idsims-mybasket-block-my-basket-link .content a {
+	display:inline-block;
+	height:20px; 
+	width:20px;
+	font-size:0;
+	line-height:0;
+	text-indent:-5000px; 
+	background:url('../images/basket-icon.png') no-repeat top left; 	
+}
+
+.region-branding-right {
+	overflow:hidden;
+}
+
+#branding #block-views-site-toggle-block {
+    float: right;
+    width: 50%;
+    margin-top: -30px;	
+}
+
+

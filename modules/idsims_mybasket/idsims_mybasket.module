@@ -5,13 +5,14 @@
  */
 
 define('MY_BASKET_FLAG_ID', 1);
+define('MY_BASKET_FLAG_MACHINE_NAME', 'my_basket');
 
 /*
 * Implements hook_menu().
 */
 function idsims_mybasket_menu() {
   // Remove all flagged content for user (per flag)
-  $items['empty-my-basket/%'] = array(
+  $items['empty-my-basket'] = array(
     'title' => 'Unflag this content completely',
     'page arguments' => array(1),
     'page callback' => '_idsims_mybasket_empty_my_basket',
@@ -20,7 +21,7 @@ function idsims_mybasket_menu() {
     'description' => '',
     'type' => MENU_CALLBACK,
   );
-  $items['my-basket/%'] = array(
+  $items['my-basket'] = array(
     'title' => 'My Basket',
     'page arguments' => array(1),
     'page callback' => '_idsims_mybasket_view_my_basket',
@@ -29,6 +30,14 @@ function idsims_mybasket_menu() {
     'description' => '',
     'type' => MENU_CALLBACK,
   );
+   // Mailer popup page.
+   $items['mailer-popup/%ctools_js'] = array(
+       'title' => 'My first popup',
+       'page arguments' => array(1),
+       'access callback' => TRUE,
+       'page callback' => '_idsims_mybasket_mailer_popup_callback',
+       'type' => MENU_CALLBACK,
+   );
   return $items;
 }
 
@@ -53,19 +62,17 @@ function idsims_mybasket_permission() {
 * Menu callback for completely unflagging a piece of content for all users for a given flag
 * in this case hard coded to the my_basket flag
 */
-function _idsims_mybasket_empty_my_basket($uid = NULL){
+function _idsims_mybasket_empty_my_basket(){
 	global $user;
-	if(!$uid){
+	if($user->uid){
 		$uid = $user->uid;
-	}
-	if($uid){
 		/* only allow the user to delete their own flags */
 		if($user->uid == $uid){
 		    db_delete('flagging')
 		      ->condition('uid', $uid)
 		      ->condition('fid', MY_BASKET_FLAG_ID)
 		      ->execute();
-		    drupal_set_message('Your basket is empty');
+		    drupal_set_message('Your basket is now empty');
 	  		$destination = '<front>';
 	  		drupal_goto($destination);		
 		}
@@ -76,31 +83,180 @@ function _idsims_mybasket_empty_my_basket($uid = NULL){
 
 /*
 * Menu callback to view basket contents
-* Items flagged by user
+* Items flagged by current user
 */
-function _idsims_mybasket_view_my_basket($uid = NULL){
+function _idsims_mybasket_view_my_basket(){
 	global $user;
 	if($user->uid){
-		$uid = $user->uid;
-		/* only allow the user to delete their own flags */
-		if($user->uid == $uid){
-    	$result = db_select('flagging', 'fc')
-	      ->fields('fc', array('entity_id'))
-	      ->condition('fid', MY_BASKET_FLAG_ID)
-	      ->condition('uid', $uid)
-	      ->execute();	
-		}
+    	$result = _idsims_mybasket_get_flagged_records($user->uid);
 		$output = '';
 	    while($record = $result->fetchAssoc()) {
 			$node = node_load($record['entity_id']);
-			$output .= '<div class"my-basket-item">' . l($node->title, 'node/'.$node->nid) . '</div>';
+			$output .= '<div class="my-basket-item"><span class="item-link">' . l($node->title, 'node/'.$node->nid) . '</span> ' .  flag_create_link(MY_BASKET_FLAG_MACHINE_NAME, $node->nid) . '</div>';
     	}
-    	if(!$output){
+    	if($output){
+    		ctools_include('modal');
+			ctools_include('ajax');
+			ctools_modal_add_js();
+			$output .= '<div class="my-basket-actions">';
+			$output .= ctools_modal_text_button(t('Create mailer HTML'), 'mailer-popup/nojs', t('Mailer HTML'), 'ctools-modal-mailer-popup-style');
+			$output .= '<span class="empty-basket-button">' . l('Empty my basket', 'empty-my-basket') . '</span>';
+			$output .= '</div>';
+    	} else {
     		$output = '<p>Your basket is empty!</p>';
     	}
 		return $output;
 	}
 	return "<p>You don't have permission for this action</p>";
+}
+
+function _idsims_mybasket_get_flagged_records($uid){
+    $result = db_select('flagging', 'fc')
+      ->fields('fc', array('entity_id'))
+      ->condition('fid', MY_BASKET_FLAG_ID)
+      ->condition('uid', $uid)
+      ->execute();		
+   return $result;
+}
+
+
+/**
+* Implements hook_block_info().
+*/
+function idsims_mybasket_block_info() {
+  $blocks = array();
+  $blocks['block_my_basket_link'] = array(
+    'info' => t('My basket link'),
+  );
+  return $blocks;
+}
+/**
+* Implements hook_block_view().
+*/
+function idsims_mybasket_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'block_my_basket_link':
+      $block['subject'] = '';
+      $block['content'] = _idsims_mybasket_block_my_basket_link();
+      break;
+  }
+  return $block;
+}
+function _idsims_mybasket_block_my_basket_link() {
+  $output = l(t('View my basket'),'my-basket');
+  return $output;
+}
+
+/**
+* Mailer popup’s callback function.
+ */
+function _idsims_mybasket_mailer_popup_callback ($js = NULL) {
+  // Content that we place in the popup.
+  $popup_content =  _idsims_mybasket_get_mailer_html();
+  // Checking JavaScript is enabled.
+  if (!$js) {
+    // If JavaScript is disabled — outputting content without the popup.
+    return $popup_content;
+  }
+  // If everything is ok and JavaScript is enabled — adding the necessary libraries to work with modal windows.
+  ctools_include('modal');
+  ctools_include('ajax');
+  // Forming a modal window.
+  $output = array();
+  $output[] = ctools_modal_command_display(t('Mailer HTML'), $popup_content);
+  // Outputting the formed window in the browser.
+  print ajax_render($output);
+  drupal_exit();
+}
+
+/*
+ * build the html for the mailer
+ */
+function _idsims_mybasket_get_mailer_html(){
+	$output = '';
+	global $user;
+	if($user->uid){
+    	$result = _idsims_mybasket_get_flagged_records($user->uid);
+		$output = '';
+		$cnt = 0;
+	    while($record = $result->fetchAssoc()) {
+	    	
+			$assetid = substr($node->field_object_id[LANGUAGE_NONE][0]['value'], 1);/*remove 'A' at front of asset ID */
+			$track_link_url = 'http://www.eldis.org/cf/rdr/?doc=' . $assetid;
+			
+			/* Publication year */
+			$publication_date_raw = $node->field_publication_date[LANGUAGE_NONE][0]['value'];
+			$timestamp = _idsims_solr_drupal_field_date_to_solr_friendly_date($publication_date_raw);
+			$publication_date_raw_arr = explode('-', $publication_date_raw);
+			$publication_year = $publication_date_raw_arr[0];
+	    	
+			$field_language = _idsims_main_field_language('ids_document', $node, 'title_field');
+			
+	    	$cnt++;
+			$node = node_load($record['entity_id']);
+			$output .= '<div>' . l($node->title_field[$field_language][0]['value'], 'node/'.$node->nid) . '</div>#BR#';
+     	  	$output .= '<div>#BR#';
+          	$output .= '<a name="' . $cnt . '"><b>' . $node->title . '</b></a><br />#BR#';
+          	$output .= '<br />#BR#';
+          	$output .= 'Authors: ' . _idsims_mybasket_get_authors_details($node) . '<br />#BR#';
+          	$output .= 'Produced by: ' . _idsims_mybasket_get_produced_by_details($node) . ' (' . $publication_year . ')<br /><br />#BR#';
+          	$output .= '<div>' .$node->body[$field_language][0]['value'] . '</div> ';
+          	$output .= '<br />#BR#';
+          	$output .= 'Available online at: <a href="' . $track_link_url . '">' . $track_link_url . '</a><br />#BR#';
+          	$output .= '<br />#BR#';          
+          	$output .= '<font size="1"><a href="#list">Back to list</a></font><br />#BR#';
+          	$output .= '<hr /><br />#BR#';
+     		$output .= '</div>#BR#';
+    	}
+	}
+	if($output){
+		$output = '<html>#BR#<body>#BR#' . $output . '</body>#BR#</html>';
+	}
+	$output = htmlentities($output);
+	$output = str_replace('#BR#', "<BR/>", $output);
+	return $output;
+}
+
+function _idsims_mybasket_get_authors_details($node){
+	$author_collection_ids = array();
+	foreach($node->field_authors_collection[LANGUAGE_NONE] as $author_collection_item){
+		$author_collection_id = $author_collection_item['value'];
+		$author_collection_ids[] = $author_collection_id;
+	}
+
+	if(count($author_collection_ids)){
+		$author_collection_entities = entity_load('field_collection_item', $author_collection_ids);
+		$author_list_objects = array();
+		foreach($author_collection_entities as $collection_entity_id => $author_collection_entity){
+			if(isset($author_collection_entity->field_author_ref[LANGUAGE_NONE][0]['target_id'])){
+				$author_term = taxonomy_term_load($author_collection_entity->field_author_ref[LANGUAGE_NONE][0]['target_id']);
+				$author_name = $author_term->name;
+				$is_editor = ($author_collection_entity->field_is_editor[LANGUAGE_NONE][0]['value']) ? 1:0;
+				if($author_output){
+					$author_output .= ';';
+				}
+				$author_output .= $author_name;
+				if($is_editor){
+					$author_output .= ' (ed)';
+				}
+			}
+		}
+	}
+}
+
+function _idsims_mybasket_get_produced_by_details($node){
+	$produced_by = '';
+	foreach($node->field_publishers[LANGUAGE_NONE] as $publisher_item){
+		$publisher_entity_id =  $publisher_item['target_id'];
+		$publisher_node = node_load($publisher_entity_id);
+		$field_language = _idsims_main_field_language('ids_organisation', $publisher_node, 'title_field');
+		if($produced_by){
+			$produced_by .= ';';
+		}
+		$produced_by .= $publisher_node->title_field[$field_language][0]['value'];
+	}
+	return $produced_by;
 }
 
 
