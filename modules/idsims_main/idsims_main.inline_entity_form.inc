@@ -79,7 +79,7 @@ function _idsims_main_entity_translate_ids_document_node_form_alter(&$form, &$fo
       $form["language"]["#multiple"] = FALSE;
     } 
     else {
-    	$form["language"]["#title"] = t('Title & Abstract language');
+    	$form["language"]["#title"] = t('Metadata language');
     }   
     /*
      * change text for Create/Add entity (submit) button
