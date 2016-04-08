@@ -184,6 +184,13 @@ function idsims_import_import_extras_form() {
     . '<li>USERS: Apply User ID for document creator</li>'
     . '</ul>',
     );
+    $form['start_offset'] = array(
+    '#title' => t('Start offset'),
+    '#type'  => 'textfield',
+    '#size' => 10,
+    '#description' => t('Grab nodes from...'), 
+    '#default_value' => 0,   
+    );
     $form['import_limit'] = array(
     '#title' => t('Import limit'),
     '#type'  => 'textfield',
@@ -213,6 +220,13 @@ function idsims_import_import_extras_api_form() {
     . '<ul>'
     . '<li>Translations from language_array: Title, Description (abstract), headline</li>'
     . '</ul>',
+    );
+    $form['start_offset'] = array(
+    '#title' => t('Start offset'),
+    '#type'  => 'textfield',
+    '#size' => 10,
+    '#description' => t('Grab nodes from...'), 
+    '#default_value' => 0,   
     );
     $form['import_limit'] = array(
     '#title' => t('Import limit'),
@@ -245,6 +259,13 @@ function idsims_import_import_extras_orgs_form() {
     . '<li>Licence Type</li>'
     . '</ul>',
     );
+    $form['start_offset'] = array(
+    '#title' => t('Start offset'),
+    '#type'  => 'textfield',
+    '#size' => 10,
+    '#description' => t('Grab nodes from...'), 
+    '#default_value' => 0,   
+    );
     $form['import_limit'] = array(
     '#title' => t('Import limit'),
     '#type'  => 'textfield',
@@ -274,6 +295,13 @@ function idsims_import_import_post_process_form() {
     . '<li>Update Site taxonomy reference from field_site</li>'
     . '<li>Move external url field into new Document URL entity</li>'
     . '</ul>',
+    );
+    $form['start_offset'] = array(
+    '#title' => t('Start offset'),
+    '#type'  => 'textfield',
+    '#size' => 10,
+    '#description' => t('Grab nodes from...'), 
+    '#default_value' => 0,   
     );
     $form['import_limit'] = array(
     '#title' => t('Import limit'),
@@ -330,6 +358,13 @@ function idsims_import_import_post_process_orgs_form() {
     . '<ul>'
     . '<li>Update Site taxonomy reference from field_site</li>'
     . '</ul>',
+    );
+    $form['start_offset'] = array(
+    '#title' => t('Start offset'),
+    '#type'  => 'textfield',
+    '#size' => 10,
+    '#description' => t('Grab nodes from...'), 
+    '#default_value' => 0,   
     );
     $form['import_limit'] = array(
     '#title' => t('Import limit'),
@@ -404,6 +439,7 @@ function idsims_import_import_amalgamate_orgs_form() {
 function _idsims_import_set_batch_jobs($batch_name, $batch_id, &$form, &$form_state, $asset_type_id = 'ids_document'){
 	variable_set('idsims_import_batch_process_running', 1);
 	$import_limit = $form_state['values']['import_limit'];
+        $start_offset = (isset($form_state['values']['start_offset'])) ? $form_state['values']['start_offset']:0;
 
 	$batch = array(
     'title' => t($batch_name . ' ...'),
@@ -427,7 +463,7 @@ function _idsims_import_set_batch_jobs($batch_name, $batch_id, &$form, &$form_st
 	->addMetaData('account', user_load(1)); // Run the query as user 1.
 
 	if($import_limit){
-		$query->range(0,$import_limit);
+		$query->range($start_offset,$import_limit);
 	}
 
 	$result = $query->execute();
