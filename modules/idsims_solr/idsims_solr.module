@@ -371,20 +371,39 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 
 					/* Publisher ID publisher_id */
 					$publisher_org_country = FALSE;
+					$publisher_objects = array();
 					foreach($node->field_publishers[$field_language] as $publisher_item){
 						$publisher_entity_id =  $publisher_item['target_id'];
 						$publisher_node = node_load($publisher_entity_id);
 						if(isset($publisher_node->field_object_id[LANGUAGE_NONE][0]['value'])){
-							foreach($publisher_node->field_object_id[LANGUAGE_NONE] as $publisher_id_object){
-								$document->addField('publisher_id', $publisher_id_object['value']);
+							if(isset($publisher_node->field_object_id[LANGUAGE_NONE][0]['value'])){
+								$publisher_object_id = $publisher_node->field_object_id[LANGUAGE_NONE][0]['value'];
+								$document->addField('publisher_id', $publisher_object_id);
 								if(!$publisher_org_country){
 									if(isset($publisher_node->field_location_country[LANGUAGE_NONE][0]['tid'])){
 										$country_term = taxonomy_term_load($publisher_node->field_location_country[LANGUAGE_NONE][0]['tid']);
 										$publisher_org_country = $country_term->name;
 									}
 								}
+								$publisher_object = array();
+								$publisher_object['object_id'] = $publisher_object_id;
+								$publisher_object['object_type'] = 'Organisation';
+								$publisher_object['object_name'] = $publisher_node->title;
+								if($publisher_org_country){
+									$publisher_object['Country'] = $publisher_org_country;
+								}
+								$publisher_object['role'] = 'Publisher';
+								if(isset($publisher_node->field_object_id[LANGUAGE_NONE][0]['value'])){
+									
+								}
+								$publisher_objects[] = $publisher_object;
 							}
 						}
+					}
+					/* Publisher Array: publisher_array */
+					if(count($publisher_objects)){
+						$xmlString = _idsims_solr_build_list_object_array_field('publisher', $publisher_objects);
+						$document->setField('publisher_array', $xmlString);
 					}
 
 					/* Publisher Country publisher_country */
