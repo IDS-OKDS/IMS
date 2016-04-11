@@ -431,6 +431,7 @@
 		<field name="logo_url" type="string" indexed="false" stored="true" />
 		<field name="acronym" type="string" indexed="true" stored="true" />
 		<field name="alternative_acronym" type="string" indexed="true" stored="true" />
+		<field name="location_country" type="string" indexed="true" stored="true" />
 		<field name="organisation_type" type="string" indexed="true" stored="true" />
 		<field name="organisation_url" type="string" indexed="true" stored="true" />
 
