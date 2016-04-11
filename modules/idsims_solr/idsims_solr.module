@@ -17,14 +17,23 @@
  */
 function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchApiIndex $index, array $items) {
 
-	$sites_terms = _ids_main_get_all_site_terms();
-	$language_terms = _ids_main_get_all_language_terms();
+	$valid_server_machine_names = array('eldis_ims_solr_server_dev', 'bridge_ims_solr_server_dev', 
+										'eldis_ims_solr_server_test', 'bridge_ims_solr_server_test',
+										'eldis_ims_solr_server_live', 'bridge_ims_solr_server_live');
 
 	$server = $index->server();
 	$server_machine_name = $server->machine_name;
+	
+	if(!in_array($server_machine_name, $valid_server_machine_names)){
+		return;
+	}
+	
 	$server_site_machine_name_arr = explode('_', $server_machine_name);
 	$server_site_machine_name = $server_site_machine_name_arr[0];
 
+	$sites_terms = _ids_main_get_all_site_terms();
+	$language_terms = _ids_main_get_all_language_terms();	
+	
 	foreach ($documents as $document_key => $document) {
 		$index_id_arr = $document->getField('index_id');
 		$index_id = $index_id_arr['value'];
