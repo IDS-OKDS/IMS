@@ -388,18 +388,20 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 							if(isset($publisher_node->field_object_id[LANGUAGE_NONE][0]['value'])){
 								$publisher_object_id = $publisher_node->field_object_id[LANGUAGE_NONE][0]['value'];
 								$document->addField('publisher_id', $publisher_object_id);
+								$this_publisher_org_country = '';
+								if(isset($publisher_node->field_location_country[LANGUAGE_NONE][0]['tid'])){
+									$country_term = taxonomy_term_load($publisher_node->field_location_country[LANGUAGE_NONE][0]['tid']);
+									$this_publisher_org_country = $country_term->name;
+								}								
 								if(!$publisher_org_country){
-									if(isset($publisher_node->field_location_country[LANGUAGE_NONE][0]['tid'])){
-										$country_term = taxonomy_term_load($publisher_node->field_location_country[LANGUAGE_NONE][0]['tid']);
-										$publisher_org_country = $country_term->name;
-									}
+									$publisher_org_country = $this_publisher_org_country;
 								}
 								$publisher_object = array();
 								$publisher_object['object_id'] = $publisher_object_id;
 								$publisher_object['object_type'] = 'Organisation';
 								$publisher_object['object_name'] = $publisher_node->title;
-								if($publisher_org_country){
-									$publisher_object['Country'] = $publisher_org_country;
+								if($this_publisher_org_country){
+									$publisher_object['Country'] = $this_publisher_org_country;
 								}
 								$publisher_object['role'] = 'Publisher';
 								if(isset($publisher_node->field_object_id[LANGUAGE_NONE][0]['value'])){
