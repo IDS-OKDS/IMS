@@ -380,13 +380,17 @@ fieldset.date-combo .container-inline-date .date-padding {
 	clear:both;
 }
 
+.my-basket-item {
+	overflow:hidden;
+}
+
 .my-basket-item .item-link {
 	float:left;
 	display:inline-block;
 }
 
 .my-basket-actions {
-	margin-top:4em;
+	margin-top:1.5em;
 }
 
 .my-basket-actions a {
