@@ -17,9 +17,7 @@
  */
 function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchApiIndex $index, array $items) {
 
-	$valid_server_machine_names = array('eldis_ims_solr_server_dev', 'bridge_ims_solr_server_dev', 
-										'eldis_ims_solr_server_test', 'bridge_ims_solr_server_test',
-										'eldis_ims_solr_server_live', 'bridge_ims_solr_server_live');
+	$valid_server_machine_names = array('eldis_ims_solr_server', 'bridge_ims_solr_server');
 
 	$server = $index->server();
 	$server_machine_name = $server->machine_name;
