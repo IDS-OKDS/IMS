@@ -66,6 +66,7 @@
                             var value_for_form = unescape(query_item[1]);
                             if (query_item[0] == 'title') {
                                 $('#edit-title').val(value_for_form);
+                                $('#edit-title-field-und-0-value').val(value_for_form);
                             }
                             if (query_item[0] == 'url') {
                                 $('#edit-field-external-urls-und-0-value').val(value_for_form);
