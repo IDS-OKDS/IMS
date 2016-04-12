@@ -378,7 +378,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					$publication_date_raw_arr = explode('-', $publication_date_raw);
 					$document->setField('publication_year', $publication_date_raw_arr[0]);
 
-					/* Publisher ID publisher_id */
+					/* Publisher ID publisher_id Publisher Name (publisher) and prep of publisher_array and pub country */
 					$publisher_org_country = FALSE;
 					$publisher_objects = array();
 					foreach($node->field_publishers[$field_language] as $publisher_item){
@@ -388,6 +388,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 							if(isset($publisher_node->field_object_id[LANGUAGE_NONE][0]['value'])){
 								$publisher_object_id = $publisher_node->field_object_id[LANGUAGE_NONE][0]['value'];
 								$document->addField('publisher_id', $publisher_object_id);
+								$document->addField('publisher', $publisher_node->title);
 								$this_publisher_org_country = '';
 								if(isset($publisher_node->field_location_country[LANGUAGE_NONE][0]['tid'])){
 									$country_term = taxonomy_term_load($publisher_node->field_location_country[LANGUAGE_NONE][0]['tid']);
