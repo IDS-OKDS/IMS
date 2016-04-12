@@ -109,7 +109,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 							$region_term = taxonomy_term_load($region_tid);
 							$region_object_id = $region_term->field_object_id[LANGUAGE_NONE][0]['value'];
 							$document->addField('category_region_ids', $region_object_id);
-							$category_region_object = _idsims_solr_build_category_object_arr($region_tid, $term = FALSE, 'region');
+							$category_region_object = _idsims_solr_build_category_object_arr($region_tid, $region_term, 'region');
 							if($category_region_object){
 								$category_region_objects[] = $category_region_object;
 							}
@@ -236,6 +236,27 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$document->setField('date_created', $timestamp);
 				$timestamp = _idsims_solr_uxix_date_to_solr_friendly_date($node->changed);
 				$document->setField('date_updated', $timestamp);
+				
+				/* Country Focus country_focus */
+				$country_focus_objects = array();
+				foreach($node->field_countries[$field_language] as $country_item){
+					$country_tid =  $country_item['tid'];
+					$country_term = taxonomy_term_load($country_item['tid']);
+					$country_object_id = $country_term->field_object_id[LANGUAGE_NONE][0]['value'];
+					$document->addField('country_focus', $country_term->name);
+					$document->addField('country_focus_ids', $country_object_id);
+					$country_focus_object = _idsims_solr_build_category_object_arr($country_tid, $country_term, 'country');
+					if($country_focus_object){
+						$country_focus_object_xml = _idsims_solr_build_list_object_output($country_focus_object, 'country');
+						$document->addField('country_focus_objects', $country_focus_object_xml);
+						$country_focus_objects[] = $country_focus_object;
+					}
+				}
+				/* Country Focus Array: country_focus_array */
+				if(count($country_focus_objects)){
+					$xmlString = _idsims_solr_build_list_object_array_field('country', $country_focus_objects);
+					$document->setField('country_focus_array', $xmlString);
+				}				
 				
 				/* Keyword */
 				foreach($node->field_tags[$field_language] as $keyword_item){
@@ -594,7 +615,16 @@ function _idsims_solr_build_category_object_arr($tid = FALSE, $term = FALSE, $ca
 		return FALSE;
 	}
 	$category_object['object_name'] = $term->name;
-	$category_object['level'] = _idsims_main_get_term_depth($term->tid);
+	if($category_ref == 'country'){
+		$alternative_name = $term->name;
+		if(isset($term->field_alternative_name[LANGUAGE_NONE][0]['value'])){
+			$alternative_name = $term->field_alternative_name[LANGUAGE_NONE][0]['value'];
+		}
+		$category_object['alternative_name'] = $alternative_name;
+		$category_object['iso_two_letter_code'] = $term->field_iso_two_code[LANGUAGE_NONE][0]['value'];
+	} else {
+		$category_object['level'] = _idsims_main_get_term_depth($term->tid);
+	}
 	if(isset($term->field_archived[LANGUAGE_NONE][0]['value'])){
 		$category_object['archived'] = ($term->field_archived[LANGUAGE_NONE][0]['value']) ? 'true':'false';
 	}
