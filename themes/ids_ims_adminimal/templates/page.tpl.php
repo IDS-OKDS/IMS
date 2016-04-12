@@ -29,6 +29,10 @@
 
 <div id="navigation">
 
+<?php if (isset($page['navigation'])): ?>
+<div id="pre_local_tasks"><?php print render($page['navigation']); ?></div>
+<?php endif; ?>
+
   <?php if ($primary_local_tasks): ?>
     <?php print render($primary_local_tasks); ?>
   <?php endif; ?>

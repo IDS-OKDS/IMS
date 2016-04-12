@@ -4,6 +4,7 @@ core = 7.x
 scripts[] = js/ids_ims_adminimal.js
 
 regions[hidden] = Hidden
+regions[navigation] = Navigation
 regions[branding_right] = Branding Right
 regions[content_before] = Before Content
 regions[sidebar_left] = Sidebar Left

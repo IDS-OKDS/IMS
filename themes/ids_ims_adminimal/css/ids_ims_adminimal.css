@@ -434,3 +434,41 @@ fieldset.date-combo .container-inline-date .date-padding {
 }
 
 
+/* Main menu */
+#pre_local_tasks ul.menu {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}
+
+#pre_local_tasks ul.menu li {
+	list-style-type: none;
+	list-style-image: none;
+    float: left;
+}
+
+#pre_local_tasks ul.menu li.first {
+	margin-left:3em;
+}
+
+#pre_local_tasks ul.menu li a {
+    display: inline-block;
+    color: white;
+    text-align: center;
+    padding: 1em 1em;
+    text-decoration: none;
+}
+
+#pre_local_tasks ul.menu li a:hover {
+    background-color: #111;
+}
+
+#pre_local_tasks ul.menu li a.active {
+    background-color: #ddd;
+    color: #000;	
+}
+
+
+
