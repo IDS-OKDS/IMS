@@ -896,6 +896,18 @@ function _idsims_import_process_import_extras_orgs($nid, &$context) {
 
 
 function _idsims_import_process_import_extras_update_organisation_node(&$node, &$field_data, $assetid) {
+	/*
+	 * First check we haven't already run this process
+	 */
+	if(isset($node->field_build_xml_complete[LANGUAGE_NONE][0]['value'])){
+		if($node->field_build_xml_complete[LANGUAGE_NONE][0]['value']){
+			/* We have already run this, exit */
+			return;
+		}
+		/* Set the flag so we don't run again */
+		$node->field_build_xml_complete[LANGUAGE_NONE][0]['value'] = 1;
+	}	
+	
 	$node_updated = FALSE;
 
 	/*
@@ -957,6 +969,18 @@ function _idsims_import_process_import_extras_update_organisation_node(&$node, &
 
 
 function _idsims_import_process_import_extras_update_node(&$node, &$field_data, $assetid) {
+	/*
+	 * First check we haven't already run this process
+	 */
+	if(isset($node->field_build_xml_complete[LANGUAGE_NONE][0]['value'])){
+		if($node->field_build_xml_complete[LANGUAGE_NONE][0]['value']){
+			/* We have already run this, exit */
+			return;
+		}
+		/* Set the flag so we don't run again */
+		$node->field_build_xml_complete[LANGUAGE_NONE][0]['value'] = 1;
+	}
+	
 	/*
 	 * Journal/Volume information
 	 */
@@ -1098,6 +1122,19 @@ function _idsims_import_process_import_extras_api_update_term(&$term, &$field_da
 }
 
 function _idsims_import_process_import_extras_api_update_node(&$node, &$field_data, $assetid) {
+	/*
+	 * First check we haven't already run this process
+	 */
+	if(isset($node->field_build_api_complete[LANGUAGE_NONE][0]['value'])){
+		if($node->field_build_api_complete[LANGUAGE_NONE][0]['value']){
+			/* We have already run this, exit */
+			return;
+		}
+		/* Set the flag so we don't run again */
+		$node->field_build_api_complete[LANGUAGE_NONE][0]['value'] = 1;
+	}
+	
+	
 	$node_updated = FALSE;
 
 	/*
@@ -1249,7 +1286,7 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 
 	if($node_updated){
 		node_save($node);
-		_idsims_set_created_updated_date($node);
+		//_idsims_set_created_updated_date($node);
 	}
 }
 
@@ -1505,6 +1542,17 @@ function _idsims_import_process_import_post_process_update_node_taxonomy_referen
 
 function _idsims_import_process_import_post_process_update_node(&$node, &$context) {
 	/*
+	 * First check we haven't already run this process
+	 */
+	if(isset($node->field_build_pp_complete[LANGUAGE_NONE][0]['value'])){
+		if($node->field_build_pp_complete[LANGUAGE_NONE][0]['value']){
+			/* We have already run this, exit */
+			return;
+		}
+		/* Set the flag so we don't run again */
+		$node->field_build_pp_complete[LANGUAGE_NONE][0]['value'] = 1;
+	}
+	/*
 	 * Create node references from asset IDs
 	 *
 	 * Publisher IDs from IDS API Module import to Publisher Node reference
@@ -1592,11 +1640,8 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 	
 	if($node_updated){
 		node_save($node);
-		_idsims_set_created_updated_date($node);
 	}
-
-
-
+	_idsims_set_created_updated_date($node);
 }
 
 /*
