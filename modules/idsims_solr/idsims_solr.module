@@ -123,7 +123,13 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					$document->setField('category_id', $category_id);
 
 					/* Category path (category_path) */
-					$document->setField('category_path', _idsims_main_get_term_path($taxonomy_term->tid));
+					$category_path = _idsims_main_get_term_path($taxonomy_term->tid);
+					$document->setField('category_path', $category_path);
+					
+					/* Category path sort (category_path_sort) */
+					$category_path_sort = str_replace(' ', '_', $category_path);
+					$document->setField('category_path_sort', $category_path_sort);					
+					
 					/* Category term level (also wries cat_level) */
 					$level = _idsims_main_get_term_depth($taxonomy_term->tid);
 					$document->setField('level', $level);
@@ -142,8 +148,11 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 						$document->setField('parent_object_array', $xmlString);
 					}
 					/* First Parent / Super Parent (vocabulary ID) */
+					$oryx_top_level_category_id = _idsims_solr_get_oryx_id_top_level_categories($taxonomy_term->vid);
 					if(count($parent_tids)){
-						$document->setField('cat_first_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $parent_tids[0]));
+						$cat_first_parent = _idsims_main_get_numeric_asset_id('taxonomy_term', $parent_tids[0]);
+						$document->setField('cat_first_parent', $cat_first_parent);
+						$document->setField('toplevel_object_id', $cat_first_parent);
 						$cat_parent_tid = $parent_tids[count($parent_tids)-1];
 						$document->setField('cat_parent', _idsims_main_get_numeric_asset_id('taxonomy_term', $cat_parent_tid));
 						$cat_parent_term = taxonomy_term_load($cat_parent_tid);
@@ -153,10 +162,13 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 						}
 					} else {
 						$document->setField('cat_first_parent', $category_id);
-						$document->setField('cat_parent', $taxonomy_term->vid);
-						$document->setField('parent_object_id', $taxonomy_term->vid); /* This probably doesn't make sence (but there is no level object ID in the new system this is the vocab ID) */
+						$document->setField('toplevel_object_id', $category_id);
+						$document->setField('cat_parent', $oryx_top_level_category_id);
+						$document->setField('parent_object_id', 'C' . $oryx_top_level_category_id); /* for backwards compatibility! */
 					}
-					$document->setField('cat_superparent', $taxonomy_term->vid);
+					$document->setField('cat_superparent', $oryx_top_level_category_id);
+					
+					$document->setField('superparent_object_id', 'C' . $oryx_top_level_category_id);
 					/* Child array */
 					$child_tids = _idsims_main_get_child_tid_array($taxonomy_term->tid);
 					$category_objects = array();
@@ -713,6 +725,23 @@ function _idsims_solr_iso_code_to_ids_api_lang_id_for_drupal($lang_iso_code){
 	$lang_code_arr = array_flip($lang_code_arr);
 	if(isset($lang_code_arr[$lang_iso_code])){
 		return $lang_code_arr[$lang_iso_code];
+	}
+	return FALSE;
+}
+
+/*
+ * Drupal vocab ids to old Oryx top level category IDs
+ */
+function _idsims_solr_get_oryx_id_top_level_categories($vocab_id){
+	$top_level_categories = array();
+	$top_level_categories[13] = 1; /* Eldis Regions */
+	$top_level_categories[11] = 2; /* Eldis Themes */
+	$top_level_categories[15] = 4; /* Eldis Subject */
+	$top_level_categories[14] = 1; /* BRIDGE Regions */
+	$top_level_categories[12] = 2; /* BRIDGE Themes */
+	$top_level_categories[16] = 4; /* BRIDGE Subject */
+	if(isset($top_level_categories[$vocab_id])){
+		return $top_level_categories[$vocab_id];
 	}
 	return FALSE;
 }

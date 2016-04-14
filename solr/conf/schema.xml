@@ -608,7 +608,6 @@
 		<copyField source="category_path" dest="category_path_autocomplete" />
 
 		<copyField source="category_path" dest="category_path_facet" />
-		<copyField source="category_path" dest="category_path_sort" />
 		<copyField source="level" dest="cat_level" />
 
 
