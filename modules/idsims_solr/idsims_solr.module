@@ -43,11 +43,11 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				/* Index TAXONOMY TERMS */
 				$vocabulary_machine_name = $taxonomy_term->vocabulary_machine_name;
 				/* Object ID (object_id) */
-				$field_language = _idsims_main_field_language($vocabulary_machine_name, $taxonomy_term, 'field_site_ref');
-				if(!isset($taxonomy_term->field_object_id[$field_language])){
+				
+				if(!isset($taxonomy_term->field_object_id[LANGUAGE_NONE])){
 					drupal_set_message('NO object ID set for :' . $taxonomy_term->name);
 				}
-				$object_id = $taxonomy_term->field_object_id[$field_language][0]['value'];
+				$object_id = $taxonomy_term->field_object_id[LANGUAGE_NONE][0]['value'];
 				$document->setField('object_id', $object_id);
 				/* Title (title_field) */
 				$document->setField('title', $taxonomy_term->name);
@@ -73,14 +73,14 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					$site_machine_name = $server_site_machine_name;
 					$object_type = 'Country';
 					/* ISO number/codes */
-					$iso_data = $taxonomy_term->field_iso_three_code[$field_language][0]['value'];
+					$iso_data = $taxonomy_term->field_iso_three_code[LANGUAGE_NONE][0]['value'];
 					$document->setField('iso_three_letter_code', $iso_data);
-					$iso_data = $taxonomy_term->field_iso_two_code[$field_language][0]['value'];
+					$iso_data = $taxonomy_term->field_iso_two_code[LANGUAGE_NONE][0]['value'];
 					$document->setField('iso_two_letter_code', $iso_data);
-					$iso_data = $taxonomy_term->field_iso_number[$field_language][0]['value'];
+					$iso_data = $taxonomy_term->field_iso_number[LANGUAGE_NONE][0]['value'];
 					$document->setField('iso_number', $iso_data);
 					/* Asset ID (asset_id) */
-					$assetid = substr($taxonomy_term->field_object_id[$field_language][0]['value'], 1);/*remove 'A' at front of asset ID */
+					$assetid = substr($taxonomy_term->field_object_id[LANGUAGE_NONE][0]['value'], 1);/*remove 'A' at front of asset ID */
 					$document->setField('asset_id', $assetid);
 					/* Website URL */
 					$website_url = '';
@@ -96,13 +96,13 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					/* Country name */
 					$document->setField('country_name', $taxonomy_term->name);
 					/* Alternative name */
-					$alternative_name = $taxonomy_term->field_alternative_name[$field_language][0]['value'];
+					$alternative_name = $taxonomy_term->field_alternative_name[LANGUAGE_NONE][0]['value'];
 					$document->setField('alternative_name', $alternative_name);
 					/* Category Region Array */
 					$category_region_ids = array();
 					$category_region_objects = array();
-					if(isset($taxonomy_term->field_region_eldis[$field_language][0]['tid'])){
-						foreach($taxonomy_term->field_region_eldis[$field_language] as $region_tid_obj){
+					if(isset($taxonomy_term->field_region_eldis[LANGUAGE_NONE][0]['tid'])){
+						foreach($taxonomy_term->field_region_eldis[LANGUAGE_NONE] as $region_tid_obj){
 							$region_tid = $region_tid_obj['tid'];
 							$region_term = taxonomy_term_load($region_tid);
 							$region_object_id = $region_term->field_object_id[LANGUAGE_NONE][0]['value'];
@@ -193,13 +193,11 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 			/* Index NODES */
 			$node = node_load($item_id_arr['value']);
 			if($node){
-
-				$field_language = _idsims_main_field_language($node->type, $node, 'field_site_ref');
-				$site_term_tid = $node->field_site_ref[$field_language][0]['tid'];
+				$site_term_tid = $node->field_site_ref[LANGUAGE_NONE][0]['tid'];
 				$site_term = taxonomy_term_load($site_term_tid);
 
 				/* Object ID (object_id) */
-				$document->setField('object_id', $node->field_object_id[$field_language][0]['value']);
+				$document->setField('object_id', $node->field_object_id[LANGUAGE_NONE][0]['value']);
 
 				/* Object type */
 				$object_type = 'Document';
@@ -209,16 +207,19 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$document->setField('object_type', $object_type);
 
 				/* Asset ID (asset_id) */
-				$assetid = substr($node->field_object_id[$field_language][0]['value'], 1);/*remove 'A' at front of asset ID */
+				$assetid = substr($node->field_object_id[LANGUAGE_NONE][0]['value'], 1);/*remove 'A' at front of asset ID */
 				$document->setField('asset_id', $assetid);
 
 				/* Site (site_ref) */
-				$site_ref_tid = $node->field_site_ref[$field_language][0]['tid'];
+				$site_ref_tid = $node->field_site_ref[LANGUAGE_NONE][0]['tid'];
 				$site_machine_name = $sites_terms[$site_ref_tid]->field_machine_name[LANGUAGE_NONE][0]['value'];
 				$document->setField('site', $site_machine_name);
 
 				/* Title (title_field) */
-				$document->setField('title', $node->title_field[$field_language][0]['value']);
+				$field_language = _idsims_main_field_language('node', $node, 'title_field');
+				if(isset($node->title_field[$field_language][0]['value'])){
+					$document->setField('title', $node->title_field[$field_language][0]['value']);
+				}
 
 				/* We need to write the timestamp out explicitly even though Drupal adds it anyway
 				 * as it needs to be in this format for the API or it errors
@@ -227,6 +228,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				$document->setField('timestamp', $timestamp_now);
 
 				/* Description/Abstract */
+				$field_language = _idsims_main_field_language('node', $node, 'body');
 				$document->setField('description', $node->body[$field_language][0]['value']);
 				
 				/* Regions (field_SITE_regions) */
@@ -249,7 +251,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				
 				/* Country Focus country_focus */
 				$country_focus_objects = array();
-				foreach($node->field_countries[$field_language] as $country_item){
+				foreach($node->field_countries[LANGUAGE_NONE] as $country_item){
 					$country_tid =  $country_item['tid'];
 					$country_term = taxonomy_term_load($country_item['tid']);
 					$country_object_id = $country_term->field_object_id[LANGUAGE_NONE][0]['value'];
@@ -269,7 +271,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				}				
 				
 				/* Keyword */
-				foreach($node->field_tags[$field_language] as $keyword_item){
+				foreach($node->field_tags[LANGUAGE_NONE] as $keyword_item){
 					$keyword_term = taxonomy_term_load($keyword_item['tid']);
 					$document->addField('keyword', $keyword_term->name);
 				}
@@ -292,7 +294,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				if($node->type == 'ids_document'){
 
 					$author_collection_ids = array();
-					foreach($node->field_authors_collection[$field_language] as $author_collection_item){
+					foreach($node->field_authors_collection[LANGUAGE_NONE] as $author_collection_item){
 						$author_collection_id = $author_collection_item['value'];
 						$author_collection_ids[] = $author_collection_id;
 					}
@@ -329,25 +331,26 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					}
 
 					/* Document medium (change to an array? Keeping inline with old API which is single value string) */
-					foreach($node->field_media[$field_language] as $document_medium_item){
+					foreach($node->field_media[LANGUAGE_NONE] as $document_medium_item){
 						$document_medium_term = taxonomy_term_load($document_medium_item['tid']);
 						$document->addField('document_medium', $document_medium_term->name);
 						break;
 					}
 
 					/* Document types */
-					foreach($node->field_document_medium[$field_language] as $document_medium_item){
+					foreach($node->field_document_medium[LANGUAGE_NONE] as $document_medium_item){
 						$document_medium_term = taxonomy_term_load($document_medium_item['tid']);
 						$document->addField('document_medium', $document_medium_term->name);
 					}
 
 					/* Et al. */
-					if(isset($node->field_et_al[$field_language][0]['value'])){
-						$et_al_value = ($node->field_et_al[$field_language][0]['value']) ? 'true':'false';
+					if(isset($node->field_et_al[LANGUAGE_NONE][0]['value'])){
+						$et_al_value = ($node->field_et_al[LANGUAGE_NONE][0]['value']) ? 'true':'false';
 						$document->setField('et_al', $et_al_value);
 					}
 
 					/* Headline */
+					$field_language = _idsims_main_field_language('node', $node, 'field_headline');
 					if(isset($node->field_headline[$field_language][0]['value'])){
 						$document->setField('headline', $node->field_headline[$field_language][0]['value']);
 					}
@@ -389,7 +392,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					}
 
 					/* Licence Type */
-					foreach($node->field_licence_type_term[$field_language] as $licence_type_item){
+					foreach($node->field_licence_type_term[LANGUAGE_NONE] as $licence_type_item){
 						$licence_type_term = taxonomy_term_load($licence_type_item['tid']);
 						$document->addField('licence_type', $licence_type_term->name);
 						break;
@@ -398,21 +401,21 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					/*
 					 * Permission to Host
 					 */
-					if(isset($node->field_permission_to_host_info[$field_language][0]['value'])){
-						$document->setField('permission_to_host_info', $node->field_permission_to_host_info[$field_language][0]['value']);
+					if(isset($node->field_permission_to_host_info[LANGUAGE_NONE][0]['value'])){
+						$document->setField('permission_to_host_info', $node->field_permission_to_host_info[LANGUAGE_NONE][0]['value']);
 					}
 					
 					/* Corporate Author (corporate_author) */
 					
-					if(isset($node->field_corporate_author_text[$field_language][0]['value'])){
-						foreach($node->field_corporate_author_text[$field_language] as $corporate_author_text_obj){
+					if(isset($node->field_corporate_author_text[LANGUAGE_NONE][0]['value'])){
+						foreach($node->field_corporate_author_text[LANGUAGE_NONE] as $corporate_author_text_obj){
 							$document->setField('corporate_author', $corporate_author_text_obj['value']); /* Note this only writes the last corporate author found - legacy bug maintained for backwards compatibility - use corporate_author_name field */
 							$document->addField('corporate_author_name', $corporate_author_text_obj['value']);
 						}
 					}
 
 					/* Publication date / year */
-					$publication_date_raw = $node->field_publication_date[$field_language][0]['value'];
+					$publication_date_raw = $node->field_publication_date[LANGUAGE_NONE][0]['value'];
 					$timestamp = _idsims_solr_drupal_field_date_to_solr_friendly_date($publication_date_raw);
 					$document->setField('publication_date', $timestamp);
 					$publication_date_raw_arr = explode('-', $publication_date_raw);
@@ -421,7 +424,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					/* Publisher ID publisher_id Publisher Name (publisher) and prep of publisher_array and pub country */
 					$publisher_org_country = FALSE;
 					$publisher_objects = array();
-					foreach($node->field_publishers[$field_language] as $publisher_item){
+					foreach($node->field_publishers[LANGUAGE_NONE] as $publisher_item){
 						$publisher_entity_id =  $publisher_item['target_id'];
 						$publisher_node = node_load($publisher_entity_id);
 						if(isset($publisher_node->field_object_id[LANGUAGE_NONE][0]['value'])){
@@ -461,8 +464,8 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 
 					/* Publisher Country publisher_country */
 					$publisher_country = FALSE;
-					if(isset($node->field_country_of_publication[$field_language][0]['tid'])){
-						$country_term = taxonomy_term_load($node->field_country_of_publication[$field_language][0]['tid']);
+					if(isset($node->field_country_of_publication[LANGUAGE_NONE][0]['tid'])){
+						$country_term = taxonomy_term_load($node->field_country_of_publication[LANGUAGE_NONE][0]['tid']);
 						$publisher_country = $country_term->name;
 					}
 					if(!$publisher_country){
@@ -474,7 +477,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 
 					/* Document URLs */
 					$document_url_entity_id_arr = array();
-					foreach($node->field_document_urls[$field_language] as $document_url_item){
+					foreach($node->field_document_urls[LANGUAGE_NONE] as $document_url_item){
 						$document_url_entity_id_arr[] = $document_url_item['target_id'];
 					}
 					$document_url_objects = array();
@@ -526,55 +529,55 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				if($node->type == 'ids_organisation'){
 					
 					/* Alternative name */
-					if(isset($node->field_alternative_name[$field_language][0]['value'])){
-						$document->setField('alternative_name', $node->field_alternative_name[$field_language][0]['value']);
+					if(isset($node->field_alternative_name[LANGUAGE_NONE][0]['value'])){
+						$document->setField('alternative_name', $node->field_alternative_name[LANGUAGE_NONE][0]['value']);
 					}
 
 					/* Acronym */
-					if(isset($node->field_acronym[$field_language][0]['value'])){
-						$document->setField('acronym', $node->field_acronym[$field_language][0]['value']);
+					if(isset($node->field_acronym[LANGUAGE_NONE][0]['value'])){
+						$document->setField('acronym', $node->field_acronym[LANGUAGE_NONE][0]['value']);
 					}
 					
 					/* Alternative acronym */
-					if(isset($node->field_alternative_acronym[$field_language][0]['value'])){
-						$document->setField('alternative_acronym', $node->field_alternative_acronym[$field_language][0]['value']);
+					if(isset($node->field_alternative_acronym[LANGUAGE_NONE][0]['value'])){
+						$document->setField('alternative_acronym', $node->field_alternative_acronym[LANGUAGE_NONE][0]['value']);
 					}
 					
 					/* Organisation type */
-					if(isset($node->field_organisation_type[$field_language][0]['value'])){
-						$document->setField('organisation_type', $node->field_organisation_type[$field_language][0]['value']);
+					if(isset($node->field_organisation_type[LANGUAGE_NONE][0]['value'])){
+						$document->setField('organisation_type', $node->field_organisation_type[LANGUAGE_NONE][0]['value']);
 					}
 					
 					/* Organisation URL */
-					if(isset($node->field_organisation_url[$field_language][0]['value'])){
-						$document->setField('organisation_url', $node->field_organisation_url[$field_language][0]['value']);
+					if(isset($node->field_organisation_url[LANGUAGE_NONE][0]['value'])){
+						$document->setField('organisation_url', $node->field_organisation_url[LANGUAGE_NONE][0]['value']);
 					}
 					
 					/* Location country */
-					if(isset($node->field_location_country[$field_language][0]['tid'])){
-						$country_term = taxonomy_term_load($node->field_location_country[$field_language][0]['tid']);
+					if(isset($node->field_location_country[LANGUAGE_NONE][0]['tid'])){
+						$country_term = taxonomy_term_load($node->field_location_country[LANGUAGE_NONE][0]['tid']);
 						$document->setField('location_country', $country_term->name);
 					}	
 
 					/* Licence type */
-					if(isset($node->field_licence_type_term[$field_language][0]['tid'])){
-						$term = taxonomy_term_load($node->field_licence_type_term[$field_language][0]['tid']);
+					if(isset($node->field_licence_type_term[LANGUAGE_NONE][0]['tid'])){
+						$term = taxonomy_term_load($node->field_licence_type_term[LANGUAGE_NONE][0]['tid']);
 						$document->setField('licence_type', $term->name);
 					}	
 									
 					/* Has hosting copyright clearance */
-					if(isset($node->field_has_hosting_copyright[$field_language][0]['value'])){
-						$document->setField('copyright_clearance', $node->field_has_hosting_copyright[$field_language][0]['value']);
+					if(isset($node->field_has_hosting_copyright[LANGUAGE_NONE][0]['value'])){
+						$document->setField('copyright_clearance', $node->field_has_hosting_copyright[LANGUAGE_NONE][0]['value']);
 					}
 					
 					/* Has redistribute copyright clearance */
-					if(isset($node->field_has_redistribute_copyright[$field_language][0]['value'])){
-						$document->setField('redistribute_clearance', $node->field_has_redistribute_copyright[$field_language][0]['value']);
+					if(isset($node->field_has_redistribute_copyright[LANGUAGE_NONE][0]['value'])){
+						$document->setField('redistribute_clearance', $node->field_has_redistribute_copyright[LANGUAGE_NONE][0]['value']);
 					}
 					
 					/* Permission to host information */
-					if(isset($node->field_permission_to_host_info[$field_language][0]['value'])){
-						$document->setField('permission_to_host_info', $node->field_permission_to_host_info[$field_language][0]['value']);
+					if(isset($node->field_permission_to_host_info[LANGUAGE_NONE][0]['value'])){
+						$document->setField('permission_to_host_info', $node->field_permission_to_host_info[LANGUAGE_NONE][0]['value']);
 					}
 										
 					/* Logo is either an uploaded file (Drupal file path) or a remote URL (text) (NEW)*/
