@@ -342,6 +342,7 @@
 		<field name="publication_date" type="date" indexed="true" stored="true" />
 		<field name="asset_publication_date" type="date" indexed="true" stored="true" />
 		<field name="publisher" type="text" indexed="true" stored="true" />
+		<field name="publisher_name" type="text" indexed="true" stored="true" multiValued="true" />
 		<field name="corporate_author" type="text" indexed="true" stored="true" />
 		<field name="publisher_facet" type="string" indexed="true" stored="true" />
 		
