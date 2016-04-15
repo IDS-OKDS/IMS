@@ -344,6 +344,7 @@
 		<field name="publisher" type="text" indexed="true" stored="true" />
 		<field name="publisher_name" type="text" indexed="true" stored="true" multiValued="true" />
 		<field name="corporate_author" type="text" indexed="true" stored="true" />
+		<field name="corporate_author_name" type="text" indexed="true" stored="true" multiValued="true" />
 		<field name="publisher_facet" type="string" indexed="true" stored="true" />
 		
 		<field name="headline" type="text" indexed="true" stored="true" />

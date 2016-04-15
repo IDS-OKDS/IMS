@@ -401,6 +401,15 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					if(isset($node->field_permission_to_host_info[$field_language][0]['value'])){
 						$document->setField('permission_to_host_info', $node->field_permission_to_host_info[$field_language][0]['value']);
 					}
+					
+					/* Corporate Author (corporate_author) */
+					
+					if(isset($node->field_corporate_author_text[$field_language][0]['value'])){
+						foreach($node->field_corporate_author_text[$field_language] as $corporate_author_text_obj){
+							$document->setField('corporate_author', $corporate_author_text_obj['value']); /* Note this only writes the last corporate author found - legacy bug maintained for backwards compatibility - use corporate_author_name field */
+							$document->addField('corporate_author_name', $corporate_author_text_obj['value']);
+						}
+					}
 
 					/* Publication date / year */
 					$publication_date_raw = $node->field_publication_date[$field_language][0]['value'];
