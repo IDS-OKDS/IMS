@@ -1222,6 +1222,7 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 	 */
 	$default_languge = LANGUAGE_NONE;
 	if(isset($field_data['results']['language_id'][0])){
+		/* For Documents */
 		$lang_code = _idsims_import_ids_api_lang_id_to_iso_code_for_drupal($field_data['results']['language_id'][0]);
 		if($lang_code){
 			$default_languge = $lang_code;
@@ -1237,21 +1238,34 @@ function _idsims_import_process_import_extras_api_update_node(&$node, &$field_da
 					}
 				}
 			}
-			/* these two we know are in the default language just need to copy to lang specific filed array */
-			$node->title_field[$default_languge][0]['value'] = $node->title_field[LANGUAGE_NONE][0]['value'];
-			$node->title_field[$default_languge][0]['safe_value'] = $node->title_field[LANGUAGE_NONE][0]['safe_value'];
-			$node->body[$default_languge][0]['value'] = $node->body[LANGUAGE_NONE][0]['value'];
-			$node->body[$default_languge][0]['safe_value'] = $node->body[LANGUAGE_NONE][0]['safe_value'];
-			$node->body[$default_languge][0]['format'] = 'full_html';
-			/* Save the node in the Default language -- there should be no Language Neutral nodes */
-			node_save($node);
 		} else {
 			drupal_set_message('LOOKUP::'.print_r($field_data, TRUE) . '$lang_code:'.$lang_code);
 		}
 	}
+	/* 
+	 * For organistions 
+	 * Let's default organisations to English
+	 */
+	if($node->type == 'ids_organisation'){
+		$default_languge = 'en';
+	}
+	
 	if($default_languge == LANGUAGE_NONE){
 		drupal_set_message('Warning: No default language set for Node ID('.$node->nid.') Asset ID('.$assetid.')');
 		drupal_set_message('$field_data:' . print_r($field_data, TRUE));
+	} else {
+		/* these two we know are in the default language just need to copy to lang specific field array */
+		$node->title_field[$default_languge][0]['value'] = $node->title_field[LANGUAGE_NONE][0]['value'];
+		$node->title_field[$default_languge][0]['safe_value'] = $node->title_field[LANGUAGE_NONE][0]['safe_value'];
+		$node->body[$default_languge][0]['value'] = $node->body[LANGUAGE_NONE][0]['value'];
+		$node->body[$default_languge][0]['safe_value'] = $node->body[LANGUAGE_NONE][0]['safe_value'];
+		$node->body[$default_languge][0]['format'] = 'full_html';
+		if(isset($node->field_alternative_name[LANGUAGE_NONE][0]['value'])){
+			$node->field_alternative_name[$default_languge][0]['value'] = $node->field_alternative_name[LANGUAGE_NONE][0]['value'];
+			$node->field_alternative_name[$default_languge][0]['safe_value'] = $node->field_alternative_name[LANGUAGE_NONE][0]['safe_value'];
+		}
+		/* Save the node in the Default language -- there should be no Language Neutral nodes */
+		node_save($node);
 	}
 	
 	
