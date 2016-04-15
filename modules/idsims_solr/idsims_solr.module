@@ -162,7 +162,7 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 						}
 					} else {
 						$document->setField('cat_first_parent', $category_id);
-						$document->setField('toplevel_object_id', $category_id);
+						$document->setField('toplevel_object_id', 'C' . $category_id);
 						$document->setField('cat_parent', $oryx_top_level_category_id);
 						$document->setField('parent_object_id', 'C' . $oryx_top_level_category_id); /* for backwards compatibility! */
 					}
