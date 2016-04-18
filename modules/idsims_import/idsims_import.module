@@ -436,7 +436,7 @@ function idsims_import_import_amalgamate_orgs_form() {
     return $form;
 }
 
-function _idsims_import_set_batch_jobs($batch_name, $batch_id, &$form, &$form_state, $asset_type_id = 'ids_document'){
+function _idsims_import_set_batch_jobs($batch_name, $batch_id, &$form, &$form_state, $asset_type_id = 'ids_document', $field_conditions = FALSE){
 	variable_set('idsims_import_batch_process_running', 1);
 	$import_limit = $form_state['values']['import_limit'];
         $start_offset = (isset($form_state['values']['start_offset'])) ? $form_state['values']['start_offset']:0;
@@ -461,6 +461,12 @@ function _idsims_import_set_batch_jobs($batch_name, $batch_id, &$form, &$form_st
 	->entityCondition('bundle', $asset_type_id, $asset_type_operator)
 	->propertyCondition('status', NODE_PUBLISHED)
 	->addMetaData('account', user_load(1)); // Run the query as user 1.
+        
+        if(is_array($field_conditions)){
+            foreach($field_conditions as $field_condition){
+               $query->fieldCondition($field_condition->field_name, $field_condition->column_name, $field_condition->value, $field_condition->operator); 
+            }
+        }
 
 	if($import_limit){
 		$query->range($start_offset,$import_limit);
@@ -479,15 +485,27 @@ function _idsims_import_set_batch_jobs($batch_name, $batch_id, &$form, &$form_st
 }
 
 function idsims_import_import_extras_form_submit(&$form, &$form_state) {
-	_idsims_import_set_batch_jobs('Importing Extra fields', 'import_extras', $form, $form_state);
+        $field_condition = new stdClass();
+        $field_condition->field_name = 'field_build_xml_complete';
+        $field_condition->column_name = 'value';
+        $field_condition->value = 1;
+        $field_condition->operator = '!=';
+        $field_conditions = array($field_condition);
+	_idsims_import_set_batch_jobs('Importing Extra fields', 'import_extras', $form, $form_state, 'ids_document', $field_conditions);
 }
 
 function idsims_import_import_extras_api_form_submit(&$form, &$form_state) {
-	_idsims_import_set_batch_jobs('Importing Extra fields API', 'import_extras_api', $form, $form_state);
+	_idsims_import_set_batch_jobs('Importing Extra fields API', 'import_extras_api', $form, $form_state, array('ids_document', 'ids_organisation'));
 }
 
 function idsims_import_import_extras_orgs_form_submit(&$form, &$form_state) {
-	_idsims_import_set_batch_jobs('Importing Extra fields for organisations', 'import_extras_orgs', $form, $form_state, 'ids_organisation');
+        $field_condition = new stdClass();
+        $field_condition->field_name = 'field_build_xml_complete';
+        $field_condition->column_name = 'value';
+        $field_condition->value = 1;
+        $field_condition->operator = '!=';
+        $field_conditions = array($field_condition);
+	_idsims_import_set_batch_jobs('Importing Extra fields for organisations', 'import_extras_orgs', $form, $form_state, 'ids_organisation', $field_conditions);
 }
 
 function idsims_import_import_post_process_form_submit(&$form, &$form_state) {
@@ -842,10 +860,11 @@ function _idsims_import_process_import_extras($nid, &$context) {
 /**
  * Process an asset for extra fields from API import
  */
-function _idsims_import_process_import_extras_api($nid, &$context) {
+function _idsims_import_process_import_extras_api($nid, $asset_type, &$context) {
 	$node = node_load($nid);
 	$siteid = $node->field_site[LANGUAGE_NONE][0]['value'];
-	$xml_feed_path_root = 'http://api.ids.ac.uk/openapi/'.$siteid.'/get/documents/';
+        $asset_type = ($node->type == 'ids_document') ? 'documents':'organisations';
+	$xml_feed_path_root = 'http://api.ids.ac.uk/openapi/'.$siteid.'/get/' . $asset_type . '/';
 	$assetid = $node->field_object_id[LANGUAGE_NONE][0]['value'];
 	$idsapi_api_key = variable_get('idsapi_api_key', '');
 	if($idsapi_api_key){
