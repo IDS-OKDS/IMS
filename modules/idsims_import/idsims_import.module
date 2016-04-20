@@ -1583,7 +1583,7 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 			return;
 		}
 		/* Set the flag so we don't run again */
-		$node->field_build_pp_complete[LANGUAGE_NONE][0]['value'] = 1;
+		//$node->field_build_pp_complete[LANGUAGE_NONE][0]['value'] = 1;
 	}
 	/*
 	 * Create node references from asset IDs
@@ -1671,10 +1671,42 @@ function _idsims_import_process_import_post_process_update_node(&$node, &$contex
 		}
 	}
 	
+	if($node->type == 'ids_organisation'){
+		if(function_exists('_idsims_main_save_entity_translation')){
+			$default_languge = 'en';
+			if(isset($node->field_eldis_subjects[LANGUAGE_NONE])){
+				foreach($node->field_eldis_subjects[LANGUAGE_NONE] as $subject_tid_obj){
+					if($subject_tid_obj['tid'] == 96203){
+						$default_languge = 'es';
+					}
+				}
+			}
+			if(isset($node->field_bridge_subjects[LANGUAGE_NONE])){
+				foreach($node->field_bridge_subjects[LANGUAGE_NONE] as $subject_tid_obj){
+					if($subject_tid_obj['tid'] == 100940){
+						$default_languge = 'es';
+					}
+					elseif($subject_tid_obj['tid'] == 102329){
+						$default_languge = 'fr';
+					}
+				}
+			}
+			$node->language = $default_languge;
+			$field_array = array();
+			$node->body[$default_languge] = $node->body[LANGUAGE_NONE];
+			$node->title_field[$default_languge] = $node->title_field[LANGUAGE_NONE];
+			if(isset($node->field_alternative_name[LANGUAGE_NONE][0]['value'])){
+				$node->field_alternative_name[$default_languge] = $node->field_alternative_name[LANGUAGE_NONE];
+			}
+			/* Save the node in the Default language -- there should be no Language Neutral nodes */
+			$node_updated = true; /* already saved */
+		}
+	}
+	
 	if($node_updated){
 		node_save($node);
 	}
-	_idsims_set_created_updated_date($node);
+	//_idsims_set_created_updated_date($node);
 }
 
 /*
