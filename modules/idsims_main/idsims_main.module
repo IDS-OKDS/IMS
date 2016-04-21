@@ -446,7 +446,7 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 		 */
 		unset($form['options']['promote']);
 		unset($form['options']['sticky']);
-
+		
 		_idsims_main_entity_translate_ids_document_node_form_alter($form, $form_state, $form_id);
 	}
 }
@@ -461,7 +461,68 @@ function idsims_main_inline_entity_form_entity_form_alter(&$entity_form, &$form_
 			$entity_form['#groups']['group_more']->children[] = 'title';
 			$entity_form['#group_children']['title'] = 'group_more';
 		}
+		/* add custom validation function to doucument URL field */
+		if(isset($entity_form['field_document_url'])){
+			$entity_form['field_document_url']['#element_validate'] = array('_ids_main_ids_document_url_entity_document_url_field_form_validate');
+		}
 	}
+}
+
+/*
+ * Custom validation for IDS Document URL entity form
+ */
+function _ids_main_ids_document_url_entity_document_url_field_form_validate($form, &$form_state) {
+	/*
+	 * Check that we don't have another Asset with a different object_id, but the same URL
+	 */
+	/* get all doument URLs applied to the inline entity form */
+	$parent_object_id = $form_state['values']['field_object_id'][LANGUAGE_NONE][0]['value'];
+	if(!$parent_object_id){
+		/*
+		 * If the parent asset has an object ID then we assume user is doing a Site copy 
+		 */
+		$field_document_urls_inline_form = $form_state['values']['field_document_urls'][LANGUAGE_NONE]['form'];
+		$field_document_url_objs = $field_document_urls_inline_form['field_document_url'][LANGUAGE_NONE];
+		foreach($field_document_url_objs as $delta => $field_document_url_obj){
+			/* loop through and check if already in DB */
+			$field_document_url = $field_document_url_obj['value'];
+			if($field_document_url){ /* we only care if there is an actual value */
+				/* Lookup document URL */
+				$query = new EntityFieldQuery();
+				$query->entityCondition('entity_type', 'ids_document_url')
+				->entityCondition('bundle', 'ids_document_url')
+				->fieldCondition('field_document_url', 'value', $field_document_url, '=')
+				->addMetaData('account', user_load(1)); // Run the query as user 1.
+			
+				$result = $query->execute();
+				
+				if (!empty($result['ids_document_url'])) {
+					foreach($result['ids_document_url'] as $ids_document_url_id => $ids_document_url_entity){
+						
+						/* Lookup the asset this document URL is attached to */
+						$query = new EntityFieldQuery();
+						$query->entityCondition('entity_type', 'node')
+						->entityCondition('bundle', 'ids_document')
+						->fieldCondition('field_document_urls', 'target_id', $ids_document_url_id, '=')
+						->addMetaData('account', user_load(1)); // Run the query as user 1.
+					
+						$result_node = $query->execute();
+						
+						if (!empty($result_node['node'])) {
+							foreach($result_node['node'] as $ids_document_node_nid => $ids_document_node){
+								$linked_asset = node_load($ids_document_node_nid);
+								/* Error and show a link to the Asset that has this Document URL applied */
+								form_set_error('field_document_url','This URL has been used on another asset '  . $linked_asset->field_object_id[LANGUAGE_NONE][0]['value'] . ' (' . l($linked_asset->title, 'node/'.$linked_asset->nid) . ')');	
+							}
+						}					
+	
+					}
+				}
+			}
+		}
+		
+	}
+
 }
 
 
