@@ -551,14 +551,17 @@ function idsims_main_preprocess_html(&$vars) {
  * Implementation of hook_preprocess_page
  */
 function idsims_main_preprocess_page(&$vars) {
-	$entity_type = 'ids_document';
 	$vars['idsims_document_site_logo_url'] = '';
 	$vars['idsims_document_num_translations'] = 0;
 	if(isset($vars['node'])){
 		if(isset($vars['node']->translations->data)){
 			$vars['idsims_document_num_translations'] = count($vars['node']->translations->data);
 		}
-		if($vars['node']->type == $entity_type){
+		if(in_array($vars['node']->type, array('ids_document', 'ids_organsiation'))){
+			$asset_id = $vars['node']->field_object_id[LANGUAGE_NONE][0]['value'];	
+			$vars['title'] = '<span class="title-asset-id">' . $asset_id . '</span> <span class="title-seperator"> - </span> <span class="title-title">' . $vars['node']->title . '</span>';
+		}
+		if($vars['node']->type == 'ids_document'){
 			if(isset($vars['node']->field_site_ref)){
 				$field_language = _idsims_main_field_language('node', $vars['node'], 'field_site_ref');
 				if(isset($vars['node']->field_site_ref[$field_language][0]['tid'])){
