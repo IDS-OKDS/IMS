@@ -538,4 +538,7 @@ fieldset.date-combo .container-inline-date .date-padding {
 	padding-right:20px;
 }
 
+.node-lang-info .lang-name {
+	font-weight:bold;
+}
 
