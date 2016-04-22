@@ -533,4 +533,9 @@ fieldset.date-combo .container-inline-date .date-padding {
 	font-style: italic;	
 }
 
+#block-system-main-menu ul.menu li.last a {
+	background:url('../images/basket-icon-white.png') no-repeat right; 	
+	padding-right:20px;
+}
+
 
