@@ -83,6 +83,7 @@
 ?>
 <div id="node-<?php print $node->nid; ?>" class="<?php print $classes; ?> clearfix"<?php print $attributes; ?>>
 
+  <?php if ($page): ?><div class="ids-document-node-header"><?php endif; ?>  
   <?php print $user_picture; ?>
 
   <?php print render($title_prefix); ?>
@@ -97,20 +98,21 @@
     </div>
   <?php endif; ?>
   
-  <?php if ($idsims_other_site_version_links || $idsims_copy_site_link): ?>
-  	<div class="site-version-info">
+  <?php 
+  global $language;
+  $lang_name = $language->name ;
+
+  if ($idsims_other_site_version_links || $lang_name): ?>
+  	<div class="ids-documnet-node-info">
+  		<?php if ($lang_name): ?>
+  		<div class="node-lang-info"><span class="lang-label">Metadata language: </span><span class="lang-name"><?php print($lang_name); ?></span></div>
+  		<?php endif; ?>
 	  <?php if ($idsims_other_site_version_links): ?>
 	    <div class="ids-other-site-links">
 	      <h3>Other sites versions: </h3>
 	      <?php print $idsims_other_site_version_links; ?>
 	    </div>
 	  <?php endif; ?>
-	    
-	   <?php if ($idsims_copy_site_link): ?>
-	    <div class="ids-copy-site-link">
-	      <?php print $idsims_copy_site_link; ?>
-	    </div>
-	  <?php endif; ?> 
 	</div>
   <?php endif; ?> 
 
@@ -119,8 +121,10 @@
       <?php print $submitted; ?>
     </div>
   <?php endif; ?>
-
-  <div class="content"<?php print $content_attributes; ?>>
+  
+  <?php if ($page): ?>&nbsp;</div><?php endif; ?> 
+  
+  <div class="content ids-document-node-content"<?php print $content_attributes; ?>>
     <?php
       // We hide the comments and links now so that we can render them later.
       hide($content['comments']);

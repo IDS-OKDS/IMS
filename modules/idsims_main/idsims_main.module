@@ -552,8 +552,6 @@ function idsims_main_preprocess_html(&$vars) {
  */
 function idsims_main_preprocess_node(&$vars) {
 	if($vars['node']->type == 'ids_document'){
-		/* Link to Copy site version if available */
-		$vars['idsims_copy_site_link'] = _idsims_main_site_copy_link($vars['node']->nid);
 		/* Links to other site versions if available */
 		$vars['idsims_other_site_version_links'] = _idsims_other_site_version_links($vars['node']);
 	}
@@ -566,6 +564,15 @@ function idsims_main_preprocess_page(&$vars) {
 	$vars['idsims_document_site_logo_url'] = '';
 	$vars['idsims_document_num_translations'] = 0;
 	if(isset($vars['node'])){
+		/* Remove 'Log' from primary tabs, set on Feeds import */
+		if (is_array($vars['tabs']['#primary'])) {
+			foreach ($vars['tabs']['#primary'] as $key => $primary_tab) {
+				if ($primary_tab['#link']['title'] == 'Log') {
+					unset($vars['tabs']['#primary'][$key]);
+				}
+			}
+		}
+
 		if(isset($vars['node']->translations->data)){
 			$vars['idsims_document_num_translations'] = count($vars['node']->translations->data);
 		}
@@ -575,6 +582,24 @@ function idsims_main_preprocess_page(&$vars) {
 			$vars['title'] = '<span class="title-asset-id">' . $asset_id . '</span> <span class="title-seperator"> - </span> <span class="title-title">' . $vars['node']->title . '</span>';
 		}
 		if($vars['node']->type == 'ids_document'){
+
+			/* Link to Copy site version if available -- add to primary tasks menu */
+			if(_idsims_main_site_copy_link($vars['node']->nid)){
+				/* we got link back so we know it's valid */
+				$vars['tabs']['#primary'][] = array(
+					'#theme' => 'menu_local_task',
+					'access' => 1,
+					'#link' => array(
+						'title' => t('Copy'),
+						'href' => 'copy/' . $vars['node']->nid, 
+						'path' => 'copy/' . $vars['node']->nid, 
+						'localized_options' => array(
+							'html' => TRUE
+						)
+					)
+				);
+			}
+
 			if(isset($vars['node']->field_site_ref)){
 				/* Get appropriate Site logo for version currently viewing */
 				$field_language = _idsims_main_field_language('node', $vars['node'], 'field_site_ref');
@@ -588,7 +613,6 @@ function idsims_main_preprocess_page(&$vars) {
 		}
 	}
 }
-
 /* 
 * Returns Links to other site versions if available 
 */

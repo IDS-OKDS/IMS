@@ -189,9 +189,12 @@ div.breadcrumb a {
 	margin:4em 0 0 0;
 	float:right;
 }
-
+.ids-document-node-header {
+	min-height:85px;
+}
 #block-system-main {
-	background-position: right 20px top 60px;
+	/* background-position: right 20px top 60px; */
+	background-position: center top;
 	background-repeat:no-repeat;	
 }
 
@@ -376,10 +379,10 @@ fieldset.date-combo .container-inline-date .date-padding {
 }
 
 .flag-wrapper a.flag-action {
-	background:url('../images/add-icon.png') no-repeat top left; 	
+	background:url('../images/add-icon.png') no-repeat left; 	
 }
 .flag-wrapper a.unflag-action {
-	background:url('../images/minus-icon.png') no-repeat top left; 	
+	background:url('../images/minus-icon.png') no-repeat left; 	
 }
 
 .my-basket-actions,
@@ -441,7 +444,7 @@ fieldset.date-combo .container-inline-date .date-padding {
 #branding #block-views-site-toggle-block {
     float: right;
     width: 50%;
-    margin-top: -30px;	
+    margin-top: 0px;	
 }
 
 
@@ -481,5 +484,53 @@ fieldset.date-combo .container-inline-date .date-padding {
     color: #000;	
 }
 
+.ids-other-site-links h3 {
+	font-size:1em; 
+	display:inline;
+}
+
+.ids-other-site-links ul {
+    font-size: 1em;
+    padding: 0;
+    line-height: 1.385em;
+    overflow: hidden;
+    background-color: #fff;
+    width: 100%;
+}
+
+.ids-document-links-row ul li,
+.ids-other-site-links ul li {
+    float: left;
+}
+.ids-document-links-row ul li a,
+.ids-other-site-links ul li a {
+    border-radius: 0;
+    padding: 10px 10px;
+	display: inline-block;
+    color: #777;
+    border-bottom: 1px solid #EBEBEB;
+    transition: all, 0.3s;
+}
+.ids-document-links-row ul li a.active,
+.ids-other-site-links ul li a.active {
+    color: #0074BD;
+    background: transparent;
+    box-shadow: none;
+    border-color: #0074BD;
+}
+
+.ids-documnet-node-info {
+	float:right;
+}
+
+.ids-document-node-content {
+	clear:both;
+}
+
+.submitted {
+	padding:0.5em 0;
+	clear:left;
+	font-style: italic;	
+}
 
 
