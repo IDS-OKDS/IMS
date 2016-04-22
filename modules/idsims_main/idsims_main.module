@@ -895,4 +895,19 @@ function _idsims_main_get_oryx_id_iso_lang_arr(){
 	return $lang_code_arr;
 }
 
+/*
+* Helper function to return copy link if access rights are correct
+*/
+function _idsims_main_site_copy_link($nid){
+	$rooter_url = 'copy/' . $nid;
+	$item = menu_get_item($rooter_url);
+	if (!empty($item['access'])){
+		if($item['access']){
+			return l(t('Copy'), $rooter_url);
+		}
+	}
+	return '';
+}
+
+
 
