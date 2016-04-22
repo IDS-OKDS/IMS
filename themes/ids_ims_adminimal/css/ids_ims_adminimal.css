@@ -350,7 +350,12 @@ fieldset.date-combo .container-inline-date .date-padding {
 	margin-bottom:0;
 }
 
-.flag-wrapper {
+.flag-wrapper a.flag {
+	padding-left:18px;
+}
+
+.my-basket-item .flag-wrapper,
+.views-field-ops .flag-wrapper {
 	float:left;
 	display: inline-block;
     padding: 0;
@@ -359,13 +364,15 @@ fieldset.date-combo .container-inline-date .date-padding {
     margin-top: -0.2em;
 }
 
-.flag-wrapper a.flag {
+.my-basket-item .flag-wrapper a.flag,
+.views-field-ops .flag-wrapper a.flag {
 	display:inline-block;
 	height:15px; 
 	width:15px;
 	font-size:0;
 	line-height:0;
 	text-indent:-5000px; 
+	padding-left:0;
 }
 
 .flag-wrapper a.flag-action {
