@@ -96,6 +96,23 @@
       <?php print render($content['links']); ?>
     </div>
   <?php endif; ?>
+  
+  <?php if ($idsims_other_site_version_links || $idsims_copy_site_link): ?>
+  	<div class="site-version-info">
+	  <?php if ($idsims_other_site_version_links): ?>
+	    <div class="ids-other-site-links">
+	      <h3>Other sites versions: </h3>
+	      <?php print $idsims_other_site_version_links; ?>
+	    </div>
+	  <?php endif; ?>
+	    
+	   <?php if ($idsims_copy_site_link): ?>
+	    <div class="ids-copy-site-link">
+	      <?php print $idsims_copy_site_link; ?>
+	    </div>
+	  <?php endif; ?> 
+	</div>
+  <?php endif; ?> 
 
   <?php if ($display_submitted): ?>
     <div class="submitted">
