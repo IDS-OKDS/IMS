@@ -33,6 +33,16 @@
 	      }
 	  });
       }
+      /* Save node if user hits language switch tab */
+      $(".page-node-edit .language-link").click(function(){
+	  var redirect_after_submit_url = $(this).attr('href');
+	  var form_submit_url = $("form.node-form").attr('action');
+	  var temp = redirect_after_submit_url.split('node');
+	  var redirect_after_submit_url_lang_neutral = 'node' + temp[1];
+	  $("form.node-form").attr('action', form_submit_url + '?destination=' + redirect_after_submit_url_lang_neutral);
+	  $("form.node-form").submit();
+	  return false;
+      });
     });
   }
 
