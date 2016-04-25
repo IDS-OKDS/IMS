@@ -37,9 +37,9 @@
       $(".page-node-edit .language-link").click(function(){
 	  var redirect_after_submit_url = $(this).attr('href');
 	  var form_submit_url = $("form.node-form").attr('action');
-	  var temp = redirect_after_submit_url.split('node');
-	  var redirect_after_submit_url_lang_neutral = 'node' + temp[1];
-	  $("form.node-form").attr('action', form_submit_url + '?destination=' + redirect_after_submit_url_lang_neutral);
+	  var temp = form_submit_url.split('node');
+	  var form_submit_url_lang_neutral = '/node' + temp[1]; /* If we don't do this we get double lang code and page not found */
+	  $("form.node-form").attr('action', form_submit_url_lang_neutral + '?destination=' + redirect_after_submit_url);
 	  $("form.node-form").submit();
 	  return false;
       });

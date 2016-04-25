@@ -579,7 +579,13 @@ function idsims_main_preprocess_page(&$vars) {
 		if(in_array($vars['node']->type, array('ids_document', 'ids_organsiation'))){
 			/* Page title prefixed with Asset ID */
 			$asset_id = $vars['node']->field_object_id[LANGUAGE_NONE][0]['value'];	
-			$vars['title'] = '<span class="title-asset-id">' . $asset_id . '</span> <span class="title-seperator"> - </span> <span class="title-title">' . $vars['node']->title . '</span>';
+			$localised_title = $vars['node']->title;
+			global $language;
+			$lang_code = $language->language;
+			if(isset($vars['node']->title_field[$lang_code][0]['value'])){
+				$localised_title = $vars['node']->title_field[$lang_code][0]['value'];
+			}
+			$vars['title'] = '<span class="title-asset-id">' . $asset_id . '</span> <span class="title-seperator"> - </span> <span class="title-title">' . $localised_title . '</span>';
 		}
 		if($vars['node']->type == 'ids_document'){
 
