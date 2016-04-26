@@ -561,6 +561,9 @@ function idsims_main_preprocess_node(&$vars) {
  * Implementation of hook_preprocess_page
  */
 function idsims_main_preprocess_page(&$vars) {
+	$languages = language_list();
+	$request_path = request_path();
+	$language_url_objs = language_url_split_prefix($request_path, $languages);
 	$vars['idsims_document_site_logo_url'] = '';
 	$vars['idsims_document_num_translations'] = 0;
 	$reset_lang_to_neutral = TRUE;
@@ -576,6 +579,20 @@ function idsims_main_preprocess_page(&$vars) {
 		}
 
 		if(isset($vars['node']->translations->data)){
+			/* 
+			 * FIRST check if we are trying to look at the language not set (default EN) and if there isn't 
+			 * a 'en' version then set to first one we find that's valid and reload
+			 */
+			if(isset($language_url_objs[0])){
+				if(!$language_url_objs[0]){
+					if(!isset($vars['node']->translations->data['en'])){
+						foreach($vars['node']->translations->data as $key => $data){
+							drupal_goto($language_url_objs[1], array('language' => $languages[$key]));
+						}
+					}
+				}
+			}
+			/* OR we are happy so contiue and set the num translation variable for the template */
 			$vars['idsims_document_num_translations'] = count($vars['node']->translations->data);
 		}
 		if(in_array($vars['node']->type, array('ids_document', 'ids_organsiation'))){
@@ -624,10 +641,7 @@ function idsims_main_preprocess_page(&$vars) {
 		}
 	}
 	if($reset_lang_to_neutral){
-		$languages = language_list();
 		$path = current_path();
-		$request_path = request_path();
-		$language_url_objs = language_url_split_prefix($request_path, $languages);
 		//drupal_set_message(print_r($language_url_objs, true));
 		//drupal_set_message('$request_path='.$request_path.' $path='.$path.' $language_url_objs[1]='.$language_url_objs[1]);
 		if(isset($language_url_objs[1])){
