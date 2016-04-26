@@ -563,6 +563,8 @@ function idsims_main_preprocess_node(&$vars) {
 function idsims_main_preprocess_page(&$vars) {
 	$vars['idsims_document_site_logo_url'] = '';
 	$vars['idsims_document_num_translations'] = 0;
+	$reset_lang_to_neutral = TRUE;
+	global $language;
 	if(isset($vars['node'])){
 		/* Remove 'Log' from primary tabs, set on Feeds import */
 		if (is_array($vars['tabs']['#primary'])) {
@@ -577,6 +579,7 @@ function idsims_main_preprocess_page(&$vars) {
 			$vars['idsims_document_num_translations'] = count($vars['node']->translations->data);
 		}
 		if(in_array($vars['node']->type, array('ids_document', 'ids_organsiation'))){
+			$reset_lang_to_neutral = FALSE;
 			/* Page title prefixed with Asset ID */
 			$asset_id = $vars['node']->field_object_id[LANGUAGE_NONE][0]['value'];	
 			$localised_title = $vars['node']->title;
@@ -584,6 +587,8 @@ function idsims_main_preprocess_page(&$vars) {
 			$lang_code = $language->language;
 			if(isset($vars['node']->title_field[$lang_code][0]['value'])){
 				$localised_title = $vars['node']->title_field[$lang_code][0]['value'];
+			} else {
+				$reset_lang_to_neutral = TRUE;
 			}
 			$vars['title'] = '<span class="title-asset-id">' . $asset_id . '</span> <span class="title-seperator"> - </span> <span class="title-title">' . $localised_title . '</span>';
 		}
@@ -615,6 +620,20 @@ function idsims_main_preprocess_page(&$vars) {
 						$vars['idsims_document_site_logo_url'] = file_create_url($site_term->field_site_logo[LANGUAGE_NONE][0]['uri']);
 					}
 				}
+			}
+		}
+	}
+	if($reset_lang_to_neutral){
+		$languages = language_list();
+		$path = current_path();
+		$request_path = request_path();
+		$language_url_objs = language_url_split_prefix($request_path, $languages);
+		//drupal_set_message(print_r($language_url_objs, true));
+		//drupal_set_message('$request_path='.$request_path.' $path='.$path.' $language_url_objs[1]='.$language_url_objs[1]);
+		if(isset($language_url_objs[1])){
+			if($language_url_objs[1] != $request_path){
+				/* redirect to language-neutral as there is no translation for language we are currently in */
+				drupal_goto($language_url_objs[1], array('language' => (object)array('language' => FALSE)));
 			}
 		}
 	}
