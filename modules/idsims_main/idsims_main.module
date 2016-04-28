@@ -864,6 +864,8 @@ function _idsims_main_get_url_mime_type($url) {
  */
 function _idsims_main_sanitize_file_name($filename) {
 	$filename_raw = $filename;
+	$special_chars = array(' ', '%20', '%2520');
+	$filename = str_replace($special_chars, '-', $filename);
 	$special_chars = array("?", "[", "]", "/", "\\", "=", "<", ">", ":", ";", ",", "'", "\"", "&", "$", "#", "*", "(", ")", "|", "~", "`", "!", "{", "}");
 	$filename = str_replace($special_chars, '', $filename);
 	$filename = preg_replace('/[\s-]+/', '-', $filename);

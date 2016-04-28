@@ -54,8 +54,9 @@ function _idsims_main_save_full_document_url_info(&$entity){
  * Create image file from remote PDF
  */
 function _idsims_main_thumb_pdf($pdf, $width = 300) {
-	if(!variable_get('idsims_import_batch_process_running', 0) ||
-	(variable_get('idsims_import_do_set_cover_thumb_image', 0) && variable_get('idsims_import_batch_process_running', 0)) ){
+	drupal_set_message($pdf);
+	//if(!variable_get('idsims_import_batch_process_running', 0) ||
+	//(variable_get('idsims_import_do_set_cover_thumb_image', 0) && variable_get('idsims_import_batch_process_running', 0)) ){
 		try {
 			$files_directory_path = variable_get('file_public_path', conf_path() . '/files');
 			$storageprefix = "public://";
@@ -107,7 +108,7 @@ function _idsims_main_thumb_pdf($pdf, $width = 300) {
 		catch(Exception $e) {
 			echo $e->getMessage();
 		}
-	}
+	//}
 	return FALSE;
 }
 
