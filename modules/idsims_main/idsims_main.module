@@ -4,6 +4,7 @@
  * Module for bespoke IDS IMS customisations
  */
 define('IDSIMS_ENTITY_NEXT_ID_START', 100000);
+define('IDSIMS_SOURCE_VIA_BOOKMARKLET_TID', 96637);
 
 /*
  * Implimentation of hook_init()
@@ -29,7 +30,17 @@ function idsims_main_menu() {
     'weight' => -15,
     'page callback' => 'system_admin_menu_block_page',
     'access arguments' => array('access administration pages'),
+	'file path' => drupal_get_path('module', 'system'),
     'file' => 'system.admin.inc',
+	);
+	$items['admin/config/ids-ims/email-alerts'] = array(
+    'title' => 'Email alerts',
+    'description' => 'Email alerts certain IMS actions',
+    'position' => 'left',
+    'weight' => 0,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('idsims_import_email_actions_form'),
+    'access arguments' => array('access administration pages'),
 	);
 	$items['copy'] = array(
     'title' => 'Copy',
@@ -41,6 +52,23 @@ function idsims_main_menu() {
 	'type' => MENU_CALLBACK,
 	);
 	return $items ;
+}
+
+function idsims_import_email_actions_form(){
+	$form['#attributes'] = array(
+    'enctype' => 'multipart/form-data'
+    );
+    $form['intro_text'] = array(
+    '#markup' => '<h2>Any email actions that are needed in the IMS</h2>');
+    $form['idsims_emails_for_bookmarklet_submission'] = array(
+    '#title' => t('Email on Bookmarklet submit'),
+    '#type'  => 'textfield',
+    '#size' => 60,
+    '#maxlength' => 1024,
+    '#description' => t('Enter the emails that should be alerted when a Document is submitted through thte bookmarklet (comma separate).'), 
+    '#default_value' => variable_get('idsims_emails_for_bookmarklet_submission', ''),  
+    );
+    return system_settings_form($form);
 }
 
 //function _ids_main_copy_page_callback($copy_from_nid){
@@ -706,9 +734,77 @@ function idsims_main_entity_presave($entity, $type) {
 	}
 	if($type == 'ids_document_url'){
 		/* get/save info for Full Document URLs -- If batch import NOT running OR if batch is runnning and import mime type on import global setting set */
-		if(!variable_get('idsims_import_batch_process_running', 0) ||
-		(variable_get('idsims_import_do_set_mime_types', 0) && variable_get('idsims_import_batch_process_running', 0)) ){
+		//if(!variable_get('idsims_import_batch_process_running', 0) ||
+		//(variable_get('idsims_import_do_set_mime_types', 0) && variable_get('idsims_import_batch_process_running', 0)) ){
 			_idsims_main_save_full_document_url_info($entity);
+		//}
+	}
+}
+
+/*
+ * Implimentaion of hook_node_insert
+ */
+function idsims_main_node_insert($node){
+	/*
+	 * preform email actions
+	 */
+	$asset_id = $node->field_object_id[LANGUAGE_NONE][0]['value'];
+	_idsims_main_entity_save_email_actions($node, 'node', $asset_id);
+}
+
+/*
+ * Email actions on entity_save
+ */
+function _idsims_main_entity_save_email_actions($entity, $type, $asset_id){
+	if($entity->type == 'ids_document'){
+		if(arg(1) == 'add'){
+			$sourced_via_bookmarklet = FALSE;
+			if(isset($entity->field_sourced_via[LANGUAGE_NONE])){
+				foreach($entity->field_sourced_via[LANGUAGE_NONE] as $sourced_via_item){
+					if($sourced_via_item['tid'] == IDSIMS_SOURCE_VIA_BOOKMARKLET_TID){
+						$sourced_via_bookmarklet = TRUE;
+					}
+				}
+			}
+			if($sourced_via_bookmarklet){
+				/* 
+				 * Send an email to alert that item has been added through the bookmarklet
+				 */
+				global $user;
+			    $module = 'idsims_main';
+			    $key = 'email_alert';
+			    $language = language_default();
+			    $params = array();
+			    $from = NULL;
+			    $send = TRUE;
+			    $email = trim(variable_get('idsims_emails_for_bookmarklet_submission', ''));
+			    $pos = strpos($email, $user->mail);
+			    if($email && $pos === false){
+			    	$email .= ',';
+			    } 
+			    if($pos === false){
+			    	$email .= $user->mail; 
+			    }
+			    $message = drupal_mail($module, $key, $email, $language, $params, $from, $send);
+			
+			    $subject = 'A new document ('. $asset_id .') has been added to the IMS via the bookmarklet';
+			    $field_language = _idsims_main_field_language('node', $entity, 'body');
+			    $message['subject'] = $subject;
+			    $message['body'] = array();
+			    $message['body'][] = $entity->title_field[$field_language][0]['value'];
+			    $message['body'][] = '';
+			    $message['body'][] = $entity->body[$field_language][0]['value'];
+			    $message['body'][] = l('Edit ' . $asset_id, 'node/' . $entity->nid . '/edit');
+			
+			    // Retrieve the responsible implementation for this message.
+			    $system = drupal_mail_system($module, $key);
+			
+			    // Format the message body.
+			    $message = $system->format($message);
+			
+			    // Send e-mail.
+			    $message['result'] = $system->mail($message);
+			}
 		}
 	}
 }
