@@ -67,6 +67,11 @@
                             if (query_item[0] == 'title') {
                                 $('#edit-title').val(value_for_form);
                                 $('#edit-title-field-und-0-value').val(value_for_form);
+                                /*
+                                 * We also know we are adding from the bookmarklet so add the term 
+                                 * Bookmarklet (tid=96637) to Sourced Via
+                                 */
+                                $('#edit-field-sourced-via-und').val([96637]);
                             }
                             if (query_item[0] == 'url') {
                                 $('#edit-field-external-urls-und-0-value').val(value_for_form);
