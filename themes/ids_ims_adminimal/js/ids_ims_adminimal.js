@@ -5,7 +5,7 @@
 
             $(window).ready(function () {
                 // Execute code once the window is ready.
-        	$('.view-site-toggle #edit-user-1-field-selected-site-und').change(function(){
+        	$('.view-site-toggle .field-name-field-selected-site select').change(function(){
         	    $('#editableviews-entity-form-site-toggle').submit();
         	});
         	/* Add help to labels on forms */
