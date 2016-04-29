@@ -251,17 +251,19 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				
 				/* Country Focus country_focus */
 				$country_focus_objects = array();
-				foreach($node->field_countries[LANGUAGE_NONE] as $country_item){
-					$country_tid =  $country_item['tid'];
-					$country_term = taxonomy_term_load($country_item['tid']);
-					$country_object_id = $country_term->field_object_id[LANGUAGE_NONE][0]['value'];
-					$document->addField('country_focus', $country_term->name);
-					$document->addField('country_focus_ids', $country_object_id);
-					$country_focus_object = _idsims_solr_build_category_object_arr($country_tid, $country_term, 'country');
-					if($country_focus_object){
-						$country_focus_object_xml = _idsims_solr_build_list_object_output($country_focus_object, 'country');
-						$document->addField('country_focus_objects', $country_focus_object_xml);
-						$country_focus_objects[] = $country_focus_object;
+				if(isset($node->field_countries[LANGUAGE_NONE])){
+					foreach($node->field_countries[LANGUAGE_NONE] as $country_item){
+						$country_tid =  $country_item['tid'];
+						$country_term = taxonomy_term_load($country_item['tid']);
+						$country_object_id = $country_term->field_object_id[LANGUAGE_NONE][0]['value'];
+						$document->addField('country_focus', $country_term->name);
+						$document->addField('country_focus_ids', $country_object_id);
+						$country_focus_object = _idsims_solr_build_category_object_arr($country_tid, $country_term, 'country');
+						if($country_focus_object){
+							$country_focus_object_xml = _idsims_solr_build_list_object_output($country_focus_object, 'country');
+							$document->addField('country_focus_objects', $country_focus_object_xml);
+							$country_focus_objects[] = $country_focus_object;
+						}
 					}
 				}
 				/* Country Focus Array: country_focus_array */
@@ -294,9 +296,11 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 				if($node->type == 'ids_document'){
 
 					$author_collection_ids = array();
-					foreach($node->field_authors_collection[LANGUAGE_NONE] as $author_collection_item){
-						$author_collection_id = $author_collection_item['value'];
-						$author_collection_ids[] = $author_collection_id;
+					if(isset($node->field_authors_collection[LANGUAGE_NONE])){
+						foreach($node->field_authors_collection[LANGUAGE_NONE] as $author_collection_item){
+							$author_collection_id = $author_collection_item['value'];
+							$author_collection_ids[] = $author_collection_id;
+						}
 					}
 
 					if(count($author_collection_ids)){
@@ -338,9 +342,11 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					}
 
 					/* Document types */
-					foreach($node->field_document_medium[LANGUAGE_NONE] as $document_medium_item){
-						$document_medium_term = taxonomy_term_load($document_medium_item['tid']);
-						$document->addField('document_medium', $document_medium_term->name);
+					if(isset($node->field_document_medium[LANGUAGE_NONE])){
+						foreach($node->field_document_medium[LANGUAGE_NONE] as $document_medium_item){
+							$document_medium_term = taxonomy_term_load($document_medium_item['tid']);
+							$document->addField('document_medium', $document_medium_term->name);
+						}
 					}
 
 					/* Et al. */
@@ -392,10 +398,12 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					}
 
 					/* Licence Type */
-					foreach($node->field_licence_type_term[LANGUAGE_NONE] as $licence_type_item){
-						$licence_type_term = taxonomy_term_load($licence_type_item['tid']);
-						$document->addField('licence_type', $licence_type_term->name);
-						break;
+					if(isset($node->field_licence_type_term[LANGUAGE_NONE])){
+						foreach($node->field_licence_type_term[LANGUAGE_NONE] as $licence_type_item){
+							$licence_type_term = taxonomy_term_load($licence_type_item['tid']);
+							$document->addField('licence_type', $licence_type_term->name);
+							break;
+						}
 					}
 
 					/*
@@ -424,35 +432,37 @@ function idsims_solr_search_api_solr_documents_alter(array &$documents, SearchAp
 					/* Publisher ID publisher_id Publisher Name (publisher) and prep of publisher_array and pub country */
 					$publisher_org_country = FALSE;
 					$publisher_objects = array();
-					foreach($node->field_publishers[LANGUAGE_NONE] as $publisher_item){
-						$publisher_entity_id =  $publisher_item['target_id'];
-						$publisher_node = node_load($publisher_entity_id);
-						if(isset($publisher_node->field_object_id[LANGUAGE_NONE][0]['value'])){
+					if(isset($node->field_publishers[LANGUAGE_NONE])){
+						foreach($node->field_publishers[LANGUAGE_NONE] as $publisher_item){
+							$publisher_entity_id =  $publisher_item['target_id'];
+							$publisher_node = node_load($publisher_entity_id);
 							if(isset($publisher_node->field_object_id[LANGUAGE_NONE][0]['value'])){
-								$publisher_object_id = $publisher_node->field_object_id[LANGUAGE_NONE][0]['value'];
-								$document->addField('publisher_id', $publisher_object_id);
-								$document->setField('publisher', $publisher_node->title); /* Note this only writes the last publisher found - legacy bug maintained for backwards compatibility - use publisher_name field */
-								$document->addField('publisher_name', $publisher_node->title);
-								$this_publisher_org_country = '';
-								if(isset($publisher_node->field_location_country[LANGUAGE_NONE][0]['tid'])){
-									$country_term = taxonomy_term_load($publisher_node->field_location_country[LANGUAGE_NONE][0]['tid']);
-									$this_publisher_org_country = $country_term->name;
-								}								
-								if(!$publisher_org_country){
-									$publisher_org_country = $this_publisher_org_country;
-								}
-								$publisher_object = array();
-								$publisher_object['object_id'] = $publisher_object_id;
-								$publisher_object['object_type'] = 'Organisation';
-								$publisher_object['object_name'] = $publisher_node->title;
-								if($this_publisher_org_country){
-									$publisher_object['Country'] = $this_publisher_org_country;
-								}
-								$publisher_object['role'] = 'Publisher';
 								if(isset($publisher_node->field_object_id[LANGUAGE_NONE][0]['value'])){
-									
+									$publisher_object_id = $publisher_node->field_object_id[LANGUAGE_NONE][0]['value'];
+									$document->addField('publisher_id', $publisher_object_id);
+									$document->setField('publisher', $publisher_node->title); /* Note this only writes the last publisher found - legacy bug maintained for backwards compatibility - use publisher_name field */
+									$document->addField('publisher_name', $publisher_node->title);
+									$this_publisher_org_country = '';
+									if(isset($publisher_node->field_location_country[LANGUAGE_NONE][0]['tid'])){
+										$country_term = taxonomy_term_load($publisher_node->field_location_country[LANGUAGE_NONE][0]['tid']);
+										$this_publisher_org_country = $country_term->name;
+									}								
+									if(!$publisher_org_country){
+										$publisher_org_country = $this_publisher_org_country;
+									}
+									$publisher_object = array();
+									$publisher_object['object_id'] = $publisher_object_id;
+									$publisher_object['object_type'] = 'Organisation';
+									$publisher_object['object_name'] = $publisher_node->title;
+									if($this_publisher_org_country){
+										$publisher_object['Country'] = $this_publisher_org_country;
+									}
+									$publisher_object['role'] = 'Publisher';
+									if(isset($publisher_node->field_object_id[LANGUAGE_NONE][0]['value'])){
+										
+									}
+									$publisher_objects[] = $publisher_object;
 								}
-								$publisher_objects[] = $publisher_object;
 							}
 						}
 					}
@@ -670,18 +680,20 @@ function _idsims_solr_build_category_fields(&$document, $node, $category_ref, $s
 	}
 	$category_objects = array();
 	foreach($category_ref_field_arr as $category_ref_field){
-		foreach($node->{$category_ref_field}[LANGUAGE_NONE] as $term_ref_item){
-			$term = taxonomy_term_load($term_ref_item['tid']);
-			$category_object = _idsims_solr_build_category_object_arr(FALSE, $term, $category_ref);
-			if(isset($term->field_object_id[LANGUAGE_NONE][0]['value'])){
-				$category_object_id = $term->field_object_id[LANGUAGE_NONE][0]['value'];
-				$document->addField('category_' . $category_ref . '_ids', $category_object_id);
-			}
-			$document->addField('category_' . $category_ref . '_path', _idsims_main_get_term_path($term->tid));
-			$category_object_output = _idsims_solr_build_list_object_output($category_object, $category_ref, $object_xml);
-			$document->addField('category_' . $category_ref . '_objects', $category_object_output);
-			if($category_object){
-				$category_objects[] = $category_object;
+		if(isset($node->{$category_ref_field}[LANGUAGE_NONE])){
+			foreach($node->{$category_ref_field}[LANGUAGE_NONE] as $term_ref_item){
+				$term = taxonomy_term_load($term_ref_item['tid']);
+				$category_object = _idsims_solr_build_category_object_arr(FALSE, $term, $category_ref);
+				if(isset($term->field_object_id[LANGUAGE_NONE][0]['value'])){
+					$category_object_id = $term->field_object_id[LANGUAGE_NONE][0]['value'];
+					$document->addField('category_' . $category_ref . '_ids', $category_object_id);
+				}
+				$document->addField('category_' . $category_ref . '_path', _idsims_main_get_term_path($term->tid));
+				$category_object_output = _idsims_solr_build_list_object_output($category_object, $category_ref, $object_xml);
+				$document->addField('category_' . $category_ref . '_objects', $category_object_output);
+				if($category_object){
+					$category_objects[] = $category_object;
+				}
 			}
 		}
 	}
