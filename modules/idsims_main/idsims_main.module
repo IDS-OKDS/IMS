@@ -461,8 +461,8 @@ function idsims_main_form_alter(&$form, &$form_state, $form_id) {
 		/*
 		 * Make sure Site and Object ID are not editable (as these are set programatically)
 		 */
-		$form['field_site_ref']['#disabled'] = TRUE;
-		$form['field_object_id']['#disabled'] = TRUE;
+		$form['field_site_ref']['#attributes']['onclick'] = 'return false';
+		$form['field_object_id']['#attributes']['onclick'] = 'return false';
 
 		/*
 		 * Reorder Authoring/Publishng info tabs on edit screens so that Publising Options are top and therefore open
